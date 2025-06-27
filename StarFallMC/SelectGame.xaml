@@ -1,0 +1,134 @@
+﻿<Page x:Class="StarFallMC.SelectGame"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:StarFallMC"
+      mc:Ignorable="d"
+      KeepAlive="True"
+      Title="SelectGame" Height="395" Width="800"
+      Unloaded="SelectGame_OnUnloaded">
+    <Page.Resources>
+        <ResourceDictionary Source="Style/SelectGameStyle.xaml"></ResourceDictionary>
+    </Page.Resources>
+    <Page.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard>
+                <Storyboard TargetName="DirSelectBorder" TargetProperty="Width">
+                    <DoubleAnimation From="0" To="305" Duration="0:0:0.5" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+            <BeginStoryboard>
+                <Storyboard TargetName="GameSelect" TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)">
+                    <DoubleAnimation From="-500" To="0" Duration="0:0:0.5" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Page.Triggers>
+    <Grid Background="Transparent">
+        <Border Style="{StaticResource FrameBg}"></Border>
+        
+        <Border Name="DirSelectBorder" 
+                Width="305" 
+                HorizontalAlignment="Left" 
+                Style="{StaticResource Rect}"
+                Margin="20 20 0 15" 
+                Background="#aaD7C6C5">
+            <Grid>
+                <TextBlock 
+                    Text="选择文件夹:" 
+                    Foreground="#001D1F"
+                    Margin="15 15"
+                    FontSize="15"
+                    Height="20" 
+                    VerticalAlignment="Top"></TextBlock>
+                <StackPanel Orientation="Horizontal" Height="25" Width="150" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
+                    <Button Name="AddDir" Width="25" 
+                            Style="{StaticResource PlainBtn}" 
+                            FontSize="18" 
+                            ToolTip="添加" Click="AddDir_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe95b;"></TextBlock>
+                    </Button>
+                    <Button Name="DelDir" Width="25" 
+                            Style="{StaticResource PlainBtn}" 
+                            Margin="5 0 2.5 0" 
+                            FontSize="18" 
+                            ToolTip="删除该文件夹" Click="DelDir_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe959;"></TextBlock>
+                    </Button>
+                    <Button Name="OpenDir" Width="25" 
+                            Style="{StaticResource PlainBtn}" 
+                            Margin="2.5 0 5 0" 
+                            FontSize="16" 
+                            ToolTip="打开文件夹" Click="OpenDir_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe957;"></TextBlock>
+                    </Button>
+                    <Button Name="RefreshDir" Width="25" 
+                            Style="{StaticResource PlainBtn}" 
+                            Content="↺" FontSize="14" 
+                            ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick"></Button>
+                    <Button Name="DelGame" Width="25" 
+                            Style="{StaticResource PlainBtn}" 
+                            FontSize="14" 
+                            Margin="5 0"
+                            ToolTip="删除当前选中版本" Click="DelGame_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
+                    </Button>
+                </StackPanel>
+                <Border Margin="10 38"
+                        Height="1" 
+                        VerticalAlignment="Top" 
+                        Background="#001D1F"></Border>
+                <ScrollViewer 
+                    Width="300"
+                    HorizontalAlignment="Left"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Auto"
+                    Margin="0 40 0 6"
+                >
+                    <ListView
+                        Name="DirSelect"
+                        Width="290"
+                        HorizontalAlignment="Left"
+                        ItemsSource="{Binding Dirs}"
+                        ItemContainerStyle="{StaticResource DirSelectStyle}"
+                        SelectionChanged="DirSelect_OnSelectionChanged"
+                    ></ListView>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+        
+        <Grid Name="GameSelectGrid"
+              Width="450"
+              HorizontalAlignment="Right"
+              Margin="0 20 15 10">
+            <Grid.RenderTransform>
+                <TranslateTransform Y="0"></TranslateTransform>
+            </Grid.RenderTransform>
+            <ScrollViewer Name="GameSelectScroll"
+                          HorizontalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Auto">
+                <ListView 
+                    Name="GameSelect" 
+                    Width="420" 
+                    HorizontalAlignment="Right" 
+                    ItemsSource="{Binding Games}" 
+                    SelectionChanged="GameSelect_OnSelectionChanged"
+                    ItemContainerStyle="{StaticResource GameSelectStyle}"
+                >
+                    <ListView.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </ListView.RenderTransform>
+                </ListView>
+            </ScrollViewer>
+            <Border Name="NoGame" Width="300" Height="80" Style="{StaticResource Rect}">
+                <TextBlock HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" 
+                           Text="未找到Minecraft版本"
+                           FontSize="25"
+                           Foreground="#001D1F"></TextBlock>
+            </Border>
+        </Grid>
+        
+    </Grid>
+</Page>

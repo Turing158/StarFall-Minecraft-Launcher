@@ -1,0 +1,185 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="TabBlock" TargetType="Rectangle">
+        <Setter Property="Fill" Value="#001D1F"></Setter>
+        <Setter Property="RadiusX" Value="20"></Setter>
+        <Setter Property="RadiusY" Value="20"></Setter>
+    </Style>
+    <Style x:Key="TabBtn" TargetType="Button">
+        <!-- <Setter Property="Foreground" Value="#D7C6C5"></Setter> -->
+        <Setter Property="Foreground" Value="#001D1F"></Setter>
+        <Setter Property="FontWeight" Value="Normal"></Setter>
+        <Setter Property="FontSize" Value="14"></Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Border" Background="#00D7C6C5" CornerRadius="20">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"></ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard
+                                        TargetName="Border"
+                                        TargetProperty="Background.Color">
+                                        <ColorAnimation Duration="0:0:0.15" To="#22D7C6C5"></ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard
+                                        TargetName="Border"
+                                        TargetProperty="Background.Color">
+                                        <ColorAnimation Duration="0:0:0.15" To="#00D7C6C5"></ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="OperateBtn" TargetType="Button">
+        <Setter Property="FontSize" Value="25"></Setter>
+        <Setter Property="Margin" Value="10,0"></Setter>
+        <Setter Property="Foreground" Value="#001D1F"></Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Border" Background="#00D7C6C5" CornerRadius="35">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"></ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard
+                                        TargetName="Border"
+                                        TargetProperty="Background.Color">
+                                        <ColorAnimation Duration="0:0:0.15" To="#55D7C6C5"></ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard
+                                        TargetName="Border"
+                                        TargetProperty="Background.Color">
+                                        <ColorAnimation Duration="0:0:0.15" To="#00D7C6C5"></ColorAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard
+                            TargetProperty="FontSize">
+                            <DoubleAnimationUsingKeyFrames Duration="0:0:0.2">
+                                
+                                <EasingDoubleKeyFrame Value="29" KeyTime="33%"></EasingDoubleKeyFrame>
+                                <EasingDoubleKeyFrame Value="15" KeyTime="66%"></EasingDoubleKeyFrame>
+                                <EasingDoubleKeyFrame Value="25" KeyTime="100%"></EasingDoubleKeyFrame>
+                                
+                            </DoubleAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    
+    <ElasticEase x:Key="ElasticEaseOut" Oscillations="1" Springiness="10" EasingMode="EaseOut"></ElasticEase>
+    
+    
+    
+    <Storyboard x:Key="InitTopFrame" TargetName="TopFrame" TargetProperty="Height">
+        <DoubleAnimation From="0" To="55" Duration="0:0:0.5">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+    
+    
+    <Storyboard x:Key="HomeBtnEnter">
+        <ColorAnimation Storyboard.TargetName="HomeBtn" Storyboard.TargetProperty="Foreground.Color" Duration="0:0:0.15" To="#D7C6C5"></ColorAnimation>
+        <ColorAnimation Storyboard.TargetName="SettingBtn" Storyboard.TargetProperty="Foreground.Color" Duration="0:0:0.15" To="#001D1F"></ColorAnimation>
+        <DoubleAnimation Storyboard.TargetName="ActiveTF" Storyboard.TargetProperty="X" 
+                         Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="Opacity" 
+                         To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="SettingBtnEnter">
+        <ColorAnimation Storyboard.TargetName="SettingBtn" Storyboard.TargetProperty="Foreground.Color" Duration="0:0:0.15" To="#D7C6C5"></ColorAnimation>
+        <ColorAnimation Storyboard.TargetName="HomeBtn" Storyboard.TargetProperty="Foreground.Color" Duration="0:0:0.15" To="#001D1F"></ColorAnimation>
+        <DoubleAnimation Storyboard.TargetName="ActiveTF" Storyboard.TargetProperty="X" 
+                         Duration="0:0:0.5" To="90" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="Opacity" 
+                         To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+    </Storyboard>
+    
+    
+    
+    
+    
+    <Storyboard x:Key="SubFrameShow">
+        <ParallelTimeline>
+            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" Duration="0:0:0.2" To="1"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainFrame" Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Duration="0:0:0.2" To="10"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Title" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" Duration="0:0:0.5" To="0">
+                <DoubleAnimation.EasingFunction>
+                    <StaticResource ResourceKey="ElasticEaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="OperateGrid" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" Duration="0:0:0.5" To="-55">
+                <DoubleAnimation.EasingFunction>
+                    <StaticResource ResourceKey="ElasticEaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BackBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" Duration="0:0:0.5" To="0">
+                <DoubleAnimation.EasingFunction>
+                    <StaticResource ResourceKey="ElasticEaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Icon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" Duration="0:0:0.5" To="-50">
+                <DoubleAnimation.EasingFunction>
+                    <StaticResource ResourceKey="ElasticEaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </ParallelTimeline>
+    </Storyboard>
+    <Storyboard x:Key="SubFrameHide">
+        <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" Duration="0:0:0.2" To="0"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="MainFrame" Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" Duration="0:0:0.2" To="0"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="Title" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" Duration="0:0:0.5" To="-55">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="OperateGrid" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" Duration="0:0:0.5" To="0">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="BackBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" Duration="0:0:0.5" To="-50">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="Icon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" Duration="0:0:0.5" To="0">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+</ResourceDictionary>

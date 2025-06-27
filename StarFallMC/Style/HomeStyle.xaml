@@ -1,0 +1,141 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ElasticEase x:Key="ElasticEaseOut" Oscillations="1" Springiness="10" EasingMode="EaseOut"></ElasticEase>
+    
+    <Storyboard x:Key="InitBottomFrame" TargetName="BottomFrame" TargetProperty="Height">
+        <DoubleAnimation From="0" To="80" Duration="0:0:0.5">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="InitStartGameBtn" TargetName="StartGameBtn" TargetProperty="Width">
+        <DoubleAnimation From="0" To="50" Duration="0:0:1">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+    
+    <Storyboard x:Key="CurrentPlayerEnter" TargetName="CurrentPlayer" TargetProperty="Width">
+        <DoubleAnimation To="180" Duration="0:0:0.5">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="CurrentPlayerExit" TargetName="CurrentPlayer" TargetProperty="Width">
+        <DoubleAnimation To="60" BeginTime="0:0:1" Duration="0:0:0.5">
+            <DoubleAnimation.EasingFunction>
+                <StaticResource ResourceKey="ElasticEaseOut" />
+            </DoubleAnimation.EasingFunction>
+        </DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="AvatarEnter">
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Width" 
+                         To="180" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Height" 
+                         To="60" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         To="10" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="Width"
+                         To="40" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="Height"
+                         To="40" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="20" Duration="0:0:0.5" 
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="AvatarLeave">
+        <StaticResource ResourceKey="AvatarEnter"/>
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Width" 
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Height" 
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         To="30" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="Width"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="Height"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="PlayerAvatar" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="30" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="GameEnter">
+        <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Width"
+                         To="200" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Height"
+                         To="60" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="Width"
+                         To="40" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="Height"
+                         To="40" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="-70" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="GameLeave">
+        <StaticResource ResourceKey="GameEnter"/>
+        <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Width"
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Height"
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="Width"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="Height"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="LaunchEnter">
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Width"
+                         To="150" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Height"
+                         To="60" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="15" Duration="0:0:0.5"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtnTextBlock" Storyboard.TargetProperty="Opacity"
+                         To="1" Duration="0:0:0.3"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtnIcon" Storyboard.TargetProperty="Opacity"
+                         To="0" Duration="0:0:0.1"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="LaunchLeave">
+        <StaticResource ResourceKey="LaunchEnter"/>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Width"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Height"
+                         To="50" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                         To="0" Duration="0:0:0.5" BeginTime="0:0:1"
+                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtnTextBlock" Storyboard.TargetProperty="Opacity"
+                         To="0" Duration="0:0:0.1" BeginTime="0:0:1"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="StartGameBtnIcon" Storyboard.TargetProperty="Opacity"
+                         To="1" Duration="0:0:0.3" BeginTime="0:0:1"></DoubleAnimation>
+    </Storyboard>
+</ResourceDictionary>

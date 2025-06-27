@@ -1,0 +1,107 @@
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Security.Policy;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using StarFallMC.Entity;
+using StarFallMC.Util;
+
+namespace StarFallMC;
+
+public partial class Home : Page {
+
+    private ViewModel viewModel = new ViewModel();
+    
+    public static Action<MinecraftItem> SetGameInfo;
+    public static Action<Player> SetPlayer;
+    
+    public Home() {
+        
+        InitializeComponent();
+        
+        DataContext = viewModel;
+
+        viewModel.PlayerName = "";
+        //这里之后要获取配置文件中的
+        
+        SetGameInfo += setGameInfo;
+        SetPlayer += setPlayerFunc;
+        var (player, players) = PropertiesUtil.loadPlayers();
+        setPlayerFunc(player);
+    }
+    
+    public class ViewModel : INotifyPropertyChanged {
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private string _playerName;
+        private MinecraftItem _currentGame;
+
+        public string PlayerName {
+            get => _playerName;
+            set {
+                SetField(ref _playerName, value);
+            }
+        }
+
+        public MinecraftItem CurrentGame {
+            get => _currentGame;
+            set {
+                SetField(ref _currentGame, value);
+            }
+        }
+        
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
+        }
+    }
+    
+
+    private void CurrentGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        MainWindow.SubFrameNavigate?.Invoke("SelectGame", "Minecraft");
+    }
+
+    private void CurrentPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        MainWindow.SubFrameNavigate?.Invoke("PlayerManage", "Players");
+    }
+    
+
+    private void setGameInfo(MinecraftItem item) {
+        if (item == null) {
+            viewModel.CurrentGame = new MinecraftItem("未选择版本","","","/assets/DefaultGameIcon/unknowGame.png");
+
+        } else {
+            viewModel.CurrentGame = item;
+        }
+
+        Console.WriteLine(viewModel.CurrentGame.ToString());
+    }
+
+    private void setPlayerFunc(Player player) {
+        Console.WriteLine("当前玩家名称："+player.Name);
+        string skin;
+        if (string.IsNullOrEmpty(player.Name)) {
+            viewModel.PlayerName = "未登录";
+            skin = PlayerManage.DefaultSKin;
+        } else {
+            viewModel.PlayerName = player.Name;
+            skin = player.Skin;
+        }
+        BitmapImage newImage = new BitmapImage();
+        newImage.BeginInit();
+        newImage.UriSource = new Uri(skin, UriKind.RelativeOrAbsolute);
+        newImage.CacheOption = BitmapCacheOption.OnLoad;
+        newImage.EndInit();
+        Application.Current.Resources["PlayerSkin"] = newImage;
+    }
+}

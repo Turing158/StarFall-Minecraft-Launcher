@@ -1,0 +1,116 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="assets\ico.png" />
+      <Resource Include="assets\ico.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\bg.png" />
+      <Resource Include="assets\bg.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\1.RV-Pre1.png" />
+      <Resource Include="assets\DefaultGameIcon\1.RV-Pre1.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\3D Shareware v1.34.png" />
+      <Resource Include="assets\DefaultGameIcon\3D Shareware v1.34.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\15w14a.png" />
+      <Resource Include="assets\DefaultGameIcon\15w14a.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\20w14infinite.png" />
+      <Resource Include="assets\DefaultGameIcon\20w14infinite.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\22w13oneBlockAtATime.png" />
+      <Resource Include="assets\DefaultGameIcon\22w13oneBlockAtATime.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\23w13a_or_b.png" />
+      <Resource Include="assets\DefaultGameIcon\23w13a_or_b.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\24w14potato.png" />
+      <Resource Include="assets\DefaultGameIcon\24w14potato.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\alpha.png" />
+      <Resource Include="assets\DefaultGameIcon\alpha.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\classic.png" />
+      <Resource Include="assets\DefaultGameIcon\classic.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\indev.png" />
+      <Resource Include="assets\DefaultGameIcon\indev.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\Minecraft.png" />
+      <Resource Include="assets\DefaultGameIcon\Minecraft.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\NeoForge.png" />
+      <Resource Include="assets\DefaultGameIcon\NeoForge.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\pre-classic.png" />
+      <Resource Include="assets\DefaultGameIcon\pre-classic.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\steve.png" />
+      <Resource Include="assets\DefaultGameIcon\steve.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\steve.png" />
+      <Resource Include="assets\steve.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\font\Silver.ttf" />
+      <Resource Include="assets\font\Silver.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\unknowGame.png" />
+      <Resource Include="assets\DefaultGameIcon\unknowGame.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\icon\iconfont.ttf" />
+      <Resource Include="assets\icon\iconfont.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Update="PlayerManage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="Style\HomeStyle.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="Style\GlobalStyle.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
+</Project>
