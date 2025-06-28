@@ -79,3 +79,7 @@ There have been too many exams during this period, with intermittent writing met
 5. Obtain the loader for Minecraft
 6. Obtain the startup loading class
 7. Other miscellaneous methods
+
+---
+
+Please refer to the commit for details
