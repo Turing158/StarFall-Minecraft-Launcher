@@ -14,9 +14,8 @@
                             BorderThickness="1"
                             BorderBrush="#001D1F">
                             <Grid>
-                                <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Source="{Binding Icon}"></Image>
                                 <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
-                                <TextBlock Name="GameVersion" Foreground="#001D1F" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Version}" Margin="5"></TextBlock>
+                                <TextBlock Name="GameLoader" Foreground="#001D1F" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
                             </Grid>
                         </Border>
                         <Border
@@ -29,11 +28,15 @@
                             BorderBrush="#001D1F"
                             Opacity="0">
                             <Grid>
-                                <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" Source="{Binding Icon}"></Image>
                                 <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
-                                <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Version}" Margin="5"></TextBlock>
+                                <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
                             </Grid>
                         </Border>
+                        <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"  RenderOptions.BitmapScalingMode="NearestNeighbor">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding Icon}" CacheOption="OnLoad"></BitmapImage>
+                            </Image.Source>
+                        </Image>
                     </Grid>
                     
                     <ControlTemplate.Triggers>
@@ -43,7 +46,7 @@
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#264446" Duration="0:0:0.15"></ColorAnimation>
                                         <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameVersion" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
+                                        <ColorAnimation Storyboard.TargetName="GameLoader" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -52,7 +55,7 @@
                                     <Storyboard>
                                         <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
                                         <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameVersion" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
+                                        <ColorAnimation Storyboard.TargetName="GameLoader" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

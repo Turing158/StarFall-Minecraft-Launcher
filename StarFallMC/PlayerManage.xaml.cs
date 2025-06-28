@@ -65,7 +65,7 @@ public partial class PlayerManage : Page {
         
         PropertiesUtil.LoadPlayerManage(ref viewModel);
         PlayerListView.SelectedIndex = viewModel.Players.IndexOf(viewModel.CurrentPlayer);
-        NoUser.Opacity = viewModel.Players.Count == 0 ? 1 : 0;
+        NoUser.Visibility = viewModel.Players.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
     
 
@@ -238,11 +238,11 @@ public partial class PlayerManage : Page {
                 // players.RemoveAt(index);
                 if (viewModel.Players.Count() != 0) {
                     PlayerListView.SelectedIndex = 0;
-                    NoUser.Opacity = 0;
+                    NoUser.Visibility = Visibility.Collapsed;
                 }
                 else {
                     PlayerListView.SelectedIndex = -1;
-                    NoUser.Opacity = 1;
+                    NoUser.Visibility = Visibility.Visible;
                 }
             }
         }
@@ -279,10 +279,11 @@ public partial class PlayerManage : Page {
     }
 
     private void PlayerListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        Player player = new Player();
         if (PlayerListView.SelectedIndex != -1) {
-            var player = viewModel.Players[PlayerListView.SelectedIndex];
-            updatePlayerSkinTimer(player);
+            player = viewModel.Players[PlayerListView.SelectedIndex];
         }
+        updatePlayerSkinTimer(player);
     }
 
     private void SetLoadingTextFunc(string text) {

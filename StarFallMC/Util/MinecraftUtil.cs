@@ -30,6 +30,7 @@ public class MinecraftUtil {
     public enum LoaderType {
         Minecraft,
         OptiFine,
+        LiteLoader,
         Forge,
         Fabric,
         Quilt,
@@ -94,8 +95,9 @@ public class MinecraftUtil {
         }
         foreach (var minecraftVersionPath in Directory.GetDirectories(versionPath)) {
             string minecraftName = Path.GetFileName(minecraftVersionPath);
-            if (File.Exists(minecraftVersionPath + "/" + minecraftName + ".json")) {
-                minecrafts.Add(new MinecraftItem(minecraftName,minecraftName,Path.GetFullPath(minecraftVersionPath),"/assets/DefaultGameIcon/Minecraft.png"));
+            string path = minecraftVersionPath + "/" + minecraftName + ".json";
+            if (File.Exists(path)) {
+                minecrafts.Add(GetMinecraftItem(minecraftVersionPath,path));
             }
         }
         return minecrafts;
@@ -162,6 +164,75 @@ public class MinecraftUtil {
         JObject root = JObject.Parse(json);
         return root["mainClass"]?.ToString() ?? "net.minecraft.client.main.Main";
     }
+
+    public static MinecraftItem GetMinecraftItem(string versionPath,string jsonPath) {
+        MinecraftItem item = new MinecraftItem();
+        JObject root = JObject.Parse(File.ReadAllText(jsonPath));
+        item.Name = root["id"].ToString();
+        item.Path = versionPath;
+        if (root["type"] != null) {
+            item.Loader = "Minecraft";
+            if (root["type"].ToString() == "release") {
+                item.Icon = "/assets/DefaultGameIcon/Minecraft.png";
+            }
+            else {
+                item.Icon = "/assets/DefaultGameIcon/snapshot.png";
+            }
+        }
+        else {
+            item.Loader = "Unknown";
+            item.Icon = "/assets/DefaultGameIcon/unknowGame.png";
+        }
+        var patches = root["patches"];
+        patches ??= new JArray();
+        if (patches.Count() != 0) {
+            string loaderName = patches[patches.Count()-1]["id"].ToString();
+            switch (loaderName) {
+                case "game":
+                    item.Loader = "Minecraft";
+                    if (root["type"].ToString() == "release") {
+                        item.Icon = "/assets/DefaultGameIcon/Minecraft.png";
+                    }
+                    else {
+                        item.Icon = "/assets/DefaultGameIcon/snapshot.png";
+                    }
+                    break;
+                case "optifine":
+                    item.Loader = "OptiFine";
+                    item.Icon = "/assets/DefaultGameIcon/Optifine.png";
+                    break;
+                case "liteloader":
+                    item.Loader = "LiteLoader";
+                    item.Icon = "/assets/DefaultGameIcon/Liteloader.png";
+                    break;
+                case "forge":
+                    item.Loader = "Forge";
+                    item.Icon = "/assets/DefaultGameIcon/Forge.png";
+                    break;
+                case "fabric":
+                    item.Loader = "Fabric";
+                    item.Icon = "/assets/DefaultGameIcon/Fabric.png";
+                    break;
+                case "quiltmc":
+                    item.Loader = "Quilt";
+                    item.Icon = "/assets/DefaultGameIcon/Quilt.png";
+                    break;
+                case "neoforged":
+                    item.Loader = "NeoForged";
+                    item.Icon = "/assets/DefaultGameIcon/NeoForged.png";
+                    break;
+                default:
+                    item.Loader = "Unknown";
+                    item.Icon = "/assets/DefaultGameIcon/unknowGame.png";
+                    break;
+            }
+        }
+
+        if (File.Exists(versionPath+"/ico.png")) {
+            item.Icon = versionPath+"/ico.png";
+        }
+        return item;
+    }
     
     // 获取Minecraft加载器版本
     public static string GetLoaderVersion(string json,LoaderType loaderType) {
@@ -174,10 +245,13 @@ public class MinecraftUtil {
         string loaderName = "";
         switch (loaderType) {
             case LoaderType.Minecraft:
-                loaderName = "minecraft";
+                loaderName = "game";
                 break;
             case LoaderType.OptiFine:
                 loaderName = "optifine";
+                break;
+            case LoaderType.LiteLoader:
+                loaderName = "liteloader";
                 break;
             case LoaderType.Forge:
                 loaderName = "forge";

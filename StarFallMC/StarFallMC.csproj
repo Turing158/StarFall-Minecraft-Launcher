@@ -17,56 +17,12 @@
       <Resource Include="assets\bg.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
-      <None Remove="assets\DefaultGameIcon\1.RV-Pre1.png" />
-      <Resource Include="assets\DefaultGameIcon\1.RV-Pre1.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\3D Shareware v1.34.png" />
-      <Resource Include="assets\DefaultGameIcon\3D Shareware v1.34.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\15w14a.png" />
-      <Resource Include="assets\DefaultGameIcon\15w14a.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\20w14infinite.png" />
-      <Resource Include="assets\DefaultGameIcon\20w14infinite.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\22w13oneBlockAtATime.png" />
-      <Resource Include="assets\DefaultGameIcon\22w13oneBlockAtATime.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\23w13a_or_b.png" />
-      <Resource Include="assets\DefaultGameIcon\23w13a_or_b.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\24w14potato.png" />
-      <Resource Include="assets\DefaultGameIcon\24w14potato.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\alpha.png" />
-      <Resource Include="assets\DefaultGameIcon\alpha.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\classic.png" />
-      <Resource Include="assets\DefaultGameIcon\classic.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\indev.png" />
-      <Resource Include="assets\DefaultGameIcon\indev.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
       <None Remove="assets\DefaultGameIcon\Minecraft.png" />
       <Resource Include="assets\DefaultGameIcon\Minecraft.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
       <None Remove="assets\DefaultGameIcon\NeoForge.png" />
       <Resource Include="assets\DefaultGameIcon\NeoForge.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\DefaultGameIcon\pre-classic.png" />
-      <Resource Include="assets\DefaultGameIcon\pre-classic.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
       <None Remove="assets\DefaultGameIcon\steve.png" />
@@ -87,6 +43,37 @@
       </Resource>
       <None Remove="assets\icon\iconfont.ttf" />
       <Resource Include="assets\icon\iconfont.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\Fabric.png" />
+      <Resource Include="assets\DefaultGameIcon\Fabric.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\Forge.png" />
+      <Resource Include="assets\DefaultGameIcon\Forge.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\Optifine.png" />
+      <Resource Include="assets\DefaultGameIcon\Optifine.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\pre-classic.png" />
+      <None Remove="assets\DefaultGameIcon\1.RV-Pre1.png" />
+      <None Remove="assets\DefaultGameIcon\3D Shareware v1.34.png" />
+      <None Remove="assets\DefaultGameIcon\15w14a.png" />
+      <None Remove="assets\DefaultGameIcon\20w14infinite.png" />
+      <None Remove="assets\DefaultGameIcon\22w13oneBlockAtATime.png" />
+      <None Remove="assets\DefaultGameIcon\23w13a_or_b.png" />
+      <None Remove="assets\DefaultGameIcon\24w14potato.png" />
+      <None Remove="assets\DefaultGameIcon\alpha.png" />
+      <None Remove="assets\DefaultGameIcon\classic.png" />
+      <None Remove="assets\DefaultGameIcon\indev.png" />
+      <None Remove="assets\DefaultGameIcon\snapshot.png" />
+      <Resource Include="assets\DefaultGameIcon\snapshot.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\LiteLoader.png" />
+      <Resource Include="assets\DefaultGameIcon\LiteLoader.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
     </ItemGroup>
