@@ -185,4 +185,9 @@
     <Storyboard x:Key="OnlineLoadingShow" TargetName="Loading" TargetProperty="Opacity">
         <DoubleAnimation From="0" To="1" Duration="0:0:0.3"></DoubleAnimation>
     </Storyboard>
+    
+    <Storyboard x:Key="NameTipsShow" TargetName="NameTips" TargetProperty="Opacity">
+        <DoubleAnimation To="1" Duration="0:0:0.15"></DoubleAnimation>
+        <DoubleAnimation To="0" Duration="0:0:0.15" BeginTime="0:0:1"></DoubleAnimation>
+    </Storyboard>
 </ResourceDictionary>

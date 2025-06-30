@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -191,6 +192,7 @@ public partial class PlayerManage : Page {
     }
 
     private void OutlineBtn_OnClick(object sender, RoutedEventArgs e) {
+        OutlineInput.Text = "";
         OutlinePageShow.Begin();
         
     }
@@ -253,6 +255,28 @@ public partial class PlayerManage : Page {
     }
 
     private void OutlineConfirm_OnClick(object sender, RoutedEventArgs e) {
+        bool flag = true;
+        if (OutlineInput.Text.Length < 2) {
+            NameTips.Text = "游戏名至少需要3个字符";
+            flag = false;
+        }
+        if (OutlineInput.Text == "") {
+            NameTips.Text = "游戏名不能为空";
+            flag = false;
+        }
+        string pattern = @"^\w+$";
+        if (!Regex.IsMatch(OutlineInput.Text,pattern)) {
+            NameTips.Text = "游戏名只能包含字母、数字和下划线";
+            flag = false;
+        }
+        if (viewModel.Players.Any(i => i.Name == OutlineInput.Text && i.IsOnline == false)) {
+            NameTips.Text = "游戏名已存在";
+            flag = false;
+        }
+        if (!flag) {
+            ((Storyboard)FindResource("NameTipsShow")).Begin();
+            return;
+        }
         var player = new Player(OutlineInput.Text,DefaultSKin,false,Guid.NewGuid().ToString().Replace("-", ""));
         viewModel.Players.Add(player);
         PlayerListView.SelectedIndex = viewModel.Players.Count-1;
