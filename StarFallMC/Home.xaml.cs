@@ -104,4 +104,27 @@ public partial class Home : Page {
         newImage.EndInit();
         Application.Current.Resources["PlayerSkin"] = newImage;
     }
+
+    private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
+        bool flag = true;
+        if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
+            ((Storyboard)FindResource("GameEnter")).Begin();
+            flag = false;
+        }
+        if (string.IsNullOrEmpty(viewModel.PlayerName) || viewModel.PlayerName == "未登录") {
+            ((Storyboard)FindResource("AvatarEnter")).Begin();
+            flag = false;
+        }
+        if (!flag) {
+            return;
+        }
+        StartingBorder.Visibility = Visibility.Visible;
+        ((Storyboard)FindResource("Starting")).Begin();
+        Console.WriteLine("开始游戏");
+    }
+
+    private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
+        StartingBorder.Visibility = Visibility.Collapsed;
+        ((Storyboard)FindResource("Started")).Begin();
+    }
 }

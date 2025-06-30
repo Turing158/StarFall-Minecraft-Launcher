@@ -112,6 +112,9 @@
                         RenderTransformOrigin="0.5,0.5"
                         MouseLeftButtonDown="CurrentGame_OnMouseLeftButtonDown"
                         ToolTip="点击切换Minecraft版本">
+                    <Border.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </Border.RenderTransform>
                     <StackPanel Orientation="Horizontal">
                         <Border Background="Transparent" Width="45" Height="45" Margin="5"></Border>
                         <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" Margin="2" TextWrapping="Wrap" Text="{Binding CurrentGame.Name}" Foreground="#113032" FontSize="13"></TextBlock>
@@ -152,7 +155,13 @@
                     </Image.Triggers>
                 </Image>
                 <!-- Width="150" Height="60" -->
-                <Button Name="StartGameBtn" Width="50" Height="50" Style="{StaticResource Btn}" HorizontalAlignment="Right" Margin="0 0 30 0" RenderTransformOrigin="0.5,0.5">
+                <Button Name="StartGameBtn" 
+                        Width="50" Height="50" 
+                        Style="{StaticResource Btn}" 
+                        HorizontalAlignment="Right" 
+                        Margin="0 0 30 0" 
+                        RenderTransformOrigin="0.5,0.5"
+                        Click="StartGameBtn_OnClick">
                     <Button.RenderTransform>
                         <TranslateTransform X="0"></TranslateTransform>
                     </Button.RenderTransform>
@@ -173,6 +182,36 @@
                         </EventTrigger>
                         <EventTrigger RoutedEvent="MouseLeave">
                             <BeginStoryboard Storyboard="{StaticResource LaunchLeave}"></BeginStoryboard>
+                        </EventTrigger>
+                    </Button.Triggers>
+                </Button>
+                <Border Name="StartingBorder" 
+                        Width="400" Height="70" 
+                        HorizontalAlignment="Right" 
+                        Margin="0 0 200 0" 
+                        Opacity="0" 
+                        Background="Black"
+                        Visibility="Collapsed"></Border>
+                <!-- Width="180" Height="60" -->
+                <Button Name="StartingBtn"
+                        Width="0"
+                        Height="60"
+                        Style="{StaticResource Btn}"
+                        HorizontalAlignment="Right"
+                        Margin="0 0 15 0"
+                        FontSize="15"
+                        RenderTransformOrigin="0,0"
+                        Click="StartingBtn_OnClick">
+                    <Grid>
+                        <TextBlock Name="StatusText" Text="正在状态中..." FontSize="18" Opacity="1" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Name="cancelText" Text="取  消  启  动" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                    </Grid>
+                    <Button.Triggers>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard Storyboard="{StaticResource StartingBtnEnter}"></BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <BeginStoryboard Storyboard="{StaticResource StartingBtnExit}"></BeginStoryboard>
                         </EventTrigger>
                     </Button.Triggers>
                 </Button>
