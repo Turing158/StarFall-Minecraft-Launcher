@@ -84,9 +84,15 @@ public partial class Home : Page {
             viewModel.CurrentGame = item;
         }
 
+        
+        string iconPath = viewModel.CurrentGame.Icon ?? "/assets/DefaultGameIcon/unknowGame.png";
+        if (!iconPath.Contains(":")) {
+            iconPath = "pack://application:,,,/;component"+iconPath;
+        }
+        updateBitmapImage( "CurrentGameIcon",iconPath);
         Console.WriteLine(viewModel.CurrentGame.ToString());
     }
-
+    
     private void setPlayerFunc(Player player) {
         Console.WriteLine("当前玩家名称："+player.Name);
         string skin;
@@ -97,12 +103,17 @@ public partial class Home : Page {
             viewModel.PlayerName = player.Name;
             skin = player.Skin;
         }
+        updateBitmapImage("PlayerSkin",skin);
+    }
+    
+    private void updateBitmapImage(string resourceKey, string uri) {
         BitmapImage newImage = new BitmapImage();
         newImage.BeginInit();
-        newImage.UriSource = new Uri(skin, UriKind.RelativeOrAbsolute);
+        newImage.UriSource = new Uri(uri, UriKind.RelativeOrAbsolute);
         newImage.CacheOption = BitmapCacheOption.OnLoad;
+        newImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
         newImage.EndInit();
-        Application.Current.Resources["PlayerSkin"] = newImage;
+        Application.Current.Resources[resourceKey] = newImage;
     }
 
     private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {

@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC"
+      xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       KeepAlive="True"
       Title="SelectGame" Height="395" Width="800"
@@ -65,14 +66,15 @@
                     </Button>
                     <Button Name="RefreshDir" Width="25" 
                             Style="{StaticResource PlainBtn}" 
-                            Content="↺" FontSize="14" 
+                            Content="↺" FontSize="18" 
                             ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick"></Button>
-                    <Button Name="DelGame" Width="25" 
+                    <Button Name="GameInfo" Width="25"
                             Style="{StaticResource PlainBtn}" 
-                            FontSize="14" 
-                            Margin="5 0"
-                            ToolTip="删除当前选中版本" Click="DelGame_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
+                            FontSize="22" 
+                            Margin="5 0 0 0"
+                            ToolTip="查看Minecraft属性" Click="GameInfo_OnClick"
+                            >
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe7f9;"></TextBlock>
                     </Button>
                 </StackPanel>
                 <Border Margin="10 38"
@@ -129,6 +131,78 @@
                            Foreground="#001D1F"></TextBlock>
             </Border>
         </Grid>
-        
+        <component:MaskControl x:Name="MaskControl">
+            <Border Width="600" Height="190" Style="{StaticResource Rect}">
+                <StackPanel Orientation="Vertical">
+                    <Grid Height="70" VerticalAlignment="Top">
+                        <Image Width="40" Height="40"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"
+                               Margin="30 15"
+                               Source="{DynamicResource CurrentGameIcon}"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor"
+                               RenderTransformOrigin="0.5,0.5">
+                            <Image.RenderTransform>
+                                <ScaleTransform></ScaleTransform>
+                            </Image.RenderTransform>
+                            <Image.Triggers>
+                                <EventTrigger RoutedEvent="MouseEnter">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="MouseLeave">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Image.Triggers>
+                        </Image>
+                        <Border Height="50" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="90 0 0 0" Style="{StaticResource Rect}" Padding="15 0">
+                            <Grid Height="40">
+                                <TextBlock HorizontalAlignment="Left" 
+                                           VerticalAlignment="Top" 
+                                           FontSize="18"
+                                           Style="{StaticResource TextBlock}"
+                                           Margin="0 2 0 0"
+                                           Text="{Binding CurrentGame.Name}"></TextBlock>
+                                <TextBlock HorizontalAlignment="Left" 
+                                           VerticalAlignment="Bottom" 
+                                           Style="{StaticResource TextBlock}"
+                                           FontSize="10"
+                                           Text="{Binding CurrentGame.Path}"></TextBlock>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <Border Width="560" Height="1" Background="#001D1F"></Border>
+                    <Grid Margin="20 10" Height="85">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Button Style="{StaticResource GameInfoBtn}" Content="查看版本文件夹" Click="OpenVersionDir_OnClick"></Button>
+                        <Button Grid.Column="1" Style="{StaticResource GameInfoBtn}" Content="修改版本名称" Click="SettingVersionName_OnClick"></Button>
+                        <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10 5" >
+                            <Button Width="128" Style="{StaticResource PlainBtn}" FontSize="15" Content="修改版本图标" Click="SettingVersionIcon_OnClick"></Button>
+                            <Button Width="32" Margin="5 0" Style="{StaticResource PlainBtn}" FontSize="18" Content="↺" Click="DefaultVersionIcon_OnClick"></Button>
+                        </StackPanel>
+                        <Button Grid.Row="1" Style="{StaticResource GameInfoBtn}" Content="查看模组文件夹" Click="OpenModDir_OnClick"></Button>
+                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource GameInfoBtn}" Content="查看资源文件夹" Click="OpenResourcesDir_OnClick"></Button>
+                        <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource GameInfoBtn}" Content="删除版本" Click="DelGame_OnClick"></Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </component:MaskControl>
     </Grid>
 </Page>

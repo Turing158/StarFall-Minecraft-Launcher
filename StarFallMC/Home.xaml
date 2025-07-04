@@ -129,7 +129,7 @@
                     </Border.Triggers>
                 </Border>
                 <Image Name="GameIcon" 
-                       Source="{Binding CurrentGame.Icon}" 
+                       Source="{DynamicResource CurrentGameIcon}" 
                        RenderOptions.BitmapScalingMode="NearestNeighbor" 
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"

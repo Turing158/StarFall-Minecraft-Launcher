@@ -9,8 +9,8 @@
     <ElasticEase x:Key="ElasticEaseIn" Oscillations="1" Springiness="10" EasingMode="EaseIn"></ElasticEase>
     <CubicEase x:Key="CubicEase"></CubicEase>
     
-    
-    <BitmapImage x:Key="PlayerSkin" UriSource="../assets/steve.png" CacheOption="OnLoad"/>
+    <BitmapImage x:Key="CurrentGameIcon" UriSource="../assets/DefaultGameIcon/unknowGame.png" CacheOption="OnLoad" CreateOptions="IgnoreImageCache"/>
+    <BitmapImage x:Key="PlayerSkin" UriSource="../assets/steve.png" CacheOption="OnLoad" CreateOptions="IgnoreImageCache"/>
     
     <Style x:Key="FrameBg" TargetType="Border">
         <Setter Property="Background" Value="#f1f1f1"></Setter>
@@ -19,8 +19,12 @@
     </Style>
     
     <Style TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Time now roman"></Setter>
+        <Setter Property="FontFamily" Value="Time now romans"></Setter>
         <Setter Property="FontWeight" Value="Bold"></Setter>
+    </Style>
+    
+    <Style x:Key="TextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="Foreground" Value="#001D1F"></Setter>
     </Style>
     
     <Style TargetType="ToolTip">

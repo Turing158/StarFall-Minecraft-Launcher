@@ -32,9 +32,9 @@
                                 <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
                             </Grid>
                         </Border>
-                        <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"  RenderOptions.BitmapScalingMode="NearestNeighbor">
+                        <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" RenderOptions.BitmapScalingMode="NearestNeighbor">
                             <Image.Source>
-                                <BitmapImage UriSource="{Binding Icon}" CacheOption="OnLoad"></BitmapImage>
+                                <BitmapImage UriSource="{Binding Icon}" CacheOption="OnLoad" CreateOptions="IgnoreImageCache"></BitmapImage>
                             </Image.Source>
                         </Image>
                     </Grid>
@@ -156,6 +156,10 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <Style x:Key="GameInfoBtn" TargetType="Button" BasedOn="{StaticResource PlainBtn}">
+        <Setter Property="Margin" Value="10 5"></Setter>
+        <Setter Property="FontSize" Value="15"></Setter>
     </Style>
     <Storyboard x:Key="GameListChangeAnim" TargetName="GameSelectGrid">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
