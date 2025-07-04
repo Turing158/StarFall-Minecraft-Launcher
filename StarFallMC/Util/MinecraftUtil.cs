@@ -169,7 +169,7 @@ public class MinecraftUtil {
         MinecraftItem item = new MinecraftItem();
         JObject root = JObject.Parse(File.ReadAllText(jsonPath));
         item.Name = root["id"].ToString();
-        item.Path = versionPath;
+        item.Path = Path.GetFullPath(versionPath);
         if (root["type"] != null) {
             item.Loader = "Minecraft";
             if (root["type"].ToString() == "release") {
