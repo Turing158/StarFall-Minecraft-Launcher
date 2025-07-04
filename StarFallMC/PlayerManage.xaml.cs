@@ -317,4 +317,28 @@ public partial class PlayerManage : Page {
     private void PlayerManage_OnUnloaded(object sender, RoutedEventArgs e) {
         PropertiesUtil.SavePlayerManageArgs();
     }
+
+    private void SkinChangeBtn_OnClick(object sender, RoutedEventArgs e) {
+        if (viewModel.CurrentPlayer.Name == "") {
+            return;
+        }
+        if (viewModel.CurrentPlayer.IsOnline) {
+            NetworkUtil.OpenUrl("https://www.minecraft.net/zh-hans/msaprofile/mygames/editskin");
+        }
+        else {
+            
+        }
+    }
+
+    private void NameChangeBtn_OnClick(object sender, RoutedEventArgs e) {
+        if (viewModel.CurrentPlayer.Name == "") {
+            return;
+        }
+        if (viewModel.CurrentPlayer.IsOnline) {
+            NetworkUtil.OpenUrl("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile");
+        }
+        else {
+            
+        }
+    }
 }

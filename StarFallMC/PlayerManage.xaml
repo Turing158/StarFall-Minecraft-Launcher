@@ -121,6 +121,24 @@
                         </StackPanel>
                     </Border>
                 </Viewbox>
+                <Grid Height="35" VerticalAlignment="Bottom" Margin="0 0 0 10">
+                    <Button Name="SkinChangeBtn" 
+                            Width="80" 
+                            HorizontalAlignment="Left" 
+                            Margin="25 0" 
+                            Style="{StaticResource PlainBtn}" 
+                            Content="更换皮肤"
+                            FontSize="15"
+                            Click="SkinChangeBtn_OnClick"></Button>
+                    <Button Name="NameChangeBtn" 
+                            Width="80" 
+                            HorizontalAlignment="Right" 
+                            Margin="25 0" 
+                            Style="{StaticResource PlainBtn}"
+                            Content="更改名称"
+                            FontSize="15"
+                            Click="NameChangeBtn_OnClick"></Button>
+                </Grid>
             </Grid>
         </Border>
         
