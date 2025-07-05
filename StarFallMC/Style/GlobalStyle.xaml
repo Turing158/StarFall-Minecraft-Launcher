@@ -189,36 +189,18 @@
     </Style>
     
     
-    <Style x:Key="Thumb" TargetType="Thumb">
+    <Style TargetType="Thumb">
         <Setter Property="Background" Value="Transparent"></Setter>
         <Setter Property="Width" Value="6"></Setter>
         <Setter Property="IsTabStop" Value="False"></Setter>
         <Setter Property="BorderThickness" Value="0"></Setter>
-        <Setter Property="Opacity" Value="0.1"></Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
                     <Border
-                        x:Name="Border"
                         Background="#001D1F"
                         CornerRadius="5"
                     ></Border>
-                    <ControlTemplate.Triggers>
-                        <EventTrigger RoutedEvent="MouseEnter">
-                            <BeginStoryboard>
-                                <Storyboard TargetProperty="Opacity">
-                                    <DoubleAnimation Duration="0:0:0.2" To="0.4"></DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                        <EventTrigger RoutedEvent="MouseLeave">
-                            <BeginStoryboard>
-                                <Storyboard TargetProperty="Opacity">
-                                    <DoubleAnimation BeginTime="0:0:1" Duration="0:0:0.2" To="0.1"></DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -229,19 +211,34 @@
         <Setter Property="Stylus.IsFlicksEnabled" Value="false"/>
         <Setter Property="Background" Value="Transparent"></Setter>
         <Setter Property="Width" Value="10"></Setter>
+        <Setter Property="Opacity" Value="0.1"></Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
                     <Track x:Name="PART_Track" IsDirectionReversed="True">
                         <Track.Thumb>
-                            <Thumb Name="Thumb" Style="{StaticResource Thumb}"/> 
+                            <Thumb/> 
                         </Track.Thumb>
                     </Track>
                     <ControlTemplate.Triggers>
                         <EventTrigger RoutedEvent="ValueChanged">
                             <BeginStoryboard>
-                                <Storyboard TargetName="Thumb" TargetProperty="Opacity">
+                                <Storyboard TargetProperty="Opacity">
                                     <DoubleAnimation Duration="0:0:0.2" To="0.4"></DoubleAnimation>
+                                    <DoubleAnimation BeginTime="0:0:1" Duration="0:0:0.2" To="0.1"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard>
+                                <Storyboard TargetProperty="Opacity">
+                                    <DoubleAnimation Duration="0:0:0.2" To="0.4"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <BeginStoryboard>
+                                <Storyboard TargetProperty="Opacity">
                                     <DoubleAnimation BeginTime="0:0:1" Duration="0:0:0.2" To="0.1"></DoubleAnimation>
                                 </Storyboard>
                             </BeginStoryboard>
@@ -267,17 +264,16 @@
                                           Background="Transparent"
                                           VerticalAlignment="Stretch"
                                           HorizontalAlignment="Stretch"
-                                          HorizontalScrollBarVisibility="Hidden"
-                                          VerticalScrollBarVisibility="Hidden"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto"
                                           Foreground="#001D1F"/>
-                            
                             <TextBlock 
-                                       Text="{TemplateBinding Tag}" 
-                                       Background="Transparent"
-                                       Foreground="#888"
-                                       Padding="4,0"
-                                       Visibility="Collapsed"
-                                       VerticalAlignment="Center"/>
+                                Text="{TemplateBinding Tag}" 
+                                Background="Transparent"
+                                Foreground="#888"
+                                Padding="4,0"
+                                Visibility="Collapsed"
+                                VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -348,7 +344,6 @@
                                           HorizontalScrollBarVisibility="Disabled"
                                           VerticalScrollBarVisibility="Auto"
                                           Foreground="#001D1F"/>
-                            
                             <TextBlock 
                                        Text="{TemplateBinding Tag}" 
                                        Background="Transparent"
