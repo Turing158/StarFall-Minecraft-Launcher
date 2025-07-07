@@ -28,7 +28,7 @@ public partial class MainWindow : Window {
     private Storyboard SubFrameHide;
     
     public static Action<string,string> SubFrameNavigate;
-    public static Action<string> ReloadSubFrame;
+    public static Action<string,Action> ReloadSubFrame;
     public MainWindow() {
         
         InitializeComponent();
@@ -99,10 +99,11 @@ public partial class MainWindow : Window {
         
     }
 
-    private void reloadSubFrame(string pageName) {
+    private void reloadSubFrame(string pageName,Action action) {
         SubFrame.Navigate(new Uri("Blank.xaml", UriKind.Relative));
         Dispatcher.BeginInvoke(() => {
             SubFrame.Navigate(new Uri($"{pageName}.xaml", UriKind.Relative));
+            action();
         });
     }
 }

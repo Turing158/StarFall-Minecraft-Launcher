@@ -2,10 +2,13 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
+using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 using StarFallMC.Util;
 
@@ -16,15 +19,18 @@ public partial class SelectGame : Page {
     private ViewModel viewModel = new ViewModel();
     public static Func<ViewModel> GetViewModel;
     public static Action<object,RoutedEventArgs> unloadedAction;
+    public static Action<Object, RoutedEventArgs> GameInfoShow;
 
     private Storyboard GameListChangeAnim;
     Timer GameSelectChangeTimer;
+    Timer globalTimer;
     
     public SelectGame() {
         InitializeComponent();
         DataContext = viewModel;
         GetViewModel = GetViewModelFunc;
         unloadedAction = SelectGame_OnUnloaded;
+        GameInfoShow = GameInfo_OnClick;
         PropertiesUtil.LoadSelectGameArgs(ref viewModel);
         GameListChangeAnim = (Storyboard) FindResource("GameListChangeAnim");
         DirSelect.SelectedIndex = viewModel.Dirs.IndexOf(viewModel.CurrentDir);
@@ -56,6 +62,18 @@ public partial class SelectGame : Page {
             get => _dirs;
             set => SetField(ref _dirs, value);
         }
+
+        private string _renameVersionText;
+        public string RenameVersionText {
+            get=> _renameVersionText;
+            set => SetField(ref _renameVersionText, value);
+        }
+        
+        private string _renameVersionTips;
+        public string RenameVersionTips {
+            get=> _renameVersionTips;
+            set => SetField(ref _renameVersionTips, value);
+        }
         
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -78,7 +96,6 @@ public partial class SelectGame : Page {
         var game = (MinecraftItem)GameSelect.SelectedItem;
         if (game == null || game.Name == "") {
             Home.SetGameInfo?.Invoke(null);
-            
         }
         else {
             Home.SetGameInfo?.Invoke(game);
@@ -127,7 +144,6 @@ public partial class SelectGame : Page {
             var result = MessageBox.Show("是否要删除当前选中文件夹[只会在这里删除显示，并不会真正删除该文件夹内容]", "", MessageBoxButton.OKCancel);
             if (result.Equals(MessageBoxResult.OK)) {
                 var index = DirSelect.SelectedIndex;
-                Console.WriteLine(index);
                 DirSelect.SelectedIndex = 0;
                 viewModel.Dirs.RemoveAt(index);
                 // DirList.RemoveAt(index);
@@ -183,9 +199,9 @@ public partial class SelectGame : Page {
         PropertiesUtil.SaveSelectGameArgs();
     }
 
-    private void GameInfo_OnClick(object sender, RoutedEventArgs e) {
+    public void GameInfo_OnClick(object sender, RoutedEventArgs e) {
         if (viewModel.CurrentGame != null && viewModel.CurrentGame.Name != "") {
-            MaskControl.Show();
+            GameInfoMaskControl.Show();
         }
     }
     
@@ -200,7 +216,7 @@ public partial class SelectGame : Page {
                 
                 
                 //=================
-                MaskControl.Hide();
+                GameInfoMaskControl.Hide();
                 if (viewModel.Games.Count != 0) {
                     if (index == 0) {
                         GameSelect.SelectedIndex = 0;
@@ -222,10 +238,11 @@ public partial class SelectGame : Page {
     }
 
     private void SettingVersionName_OnClick(object sender, RoutedEventArgs e) {
-        
+        viewModel.RenameVersionText = viewModel.CurrentGame.Name;
+        RenameVersion.Show();
     }
 
-    private Timer globleTimer;
+    
     private void SettingVersionIcon_OnClick(object sender, RoutedEventArgs e) {
         OpenFileDialog ofd = new OpenFileDialog();
         ofd.Filter = "图片文件(*.png)|*.png";
@@ -272,6 +289,46 @@ public partial class SelectGame : Page {
             return;
         }
         //提示不存在文件夹
+    }
+
+    private void RenameVersion_OnKeyDown(object sender, KeyEventArgs e) {
+        var tb = sender as TextBox;
+        viewModel.RenameVersionText = tb.Text;
+        if (tb.Text.Length == 0) {
+            viewModel.RenameVersionTips = "名称不能为空";
+        }
+        else if (tb.Text.StartsWith(' ')) {
+            viewModel.RenameVersionTips = "名称不能以'空格'开头";
+        }
+        else if (tb.Text.EndsWith(" ") || tb.Text.EndsWith(".")) {
+            viewModel.RenameVersionTips = "名称不能以'空格或.'结尾";
+        }
+        else if (!Regex.IsMatch(tb.Text,@"^[^\\/:*?""<>|]+$")) {
+            viewModel.RenameVersionTips = "不能包含[\\ / : * ? \" < > |]";
+        }
+        else {
+            viewModel.RenameVersionTips = "";
+            if (e.Key == Key.Enter) {
+                var item = MinecraftUtil.RenameVersion(viewModel.CurrentGame, tb.Text);
+                if (item == null) {
+                    viewModel.RenameVersionTips = "已存在该名称文件夹或版本，请删除后重试";
+                    return;
+                }
+                PropertiesUtil.loadJson["game"]["minecraft"] = JObject.FromObject(item);
+                MainWindow.ReloadSubFrame?.Invoke("SelectGame", () => {
+                    globalTimer = new Timer(o => {
+                        Dispatcher.Invoke(() => {
+                            SelectGame.GameInfoShow?.Invoke(null,null);
+                            globalTimer.Dispose();
+                        });
+                    }, null, 50, 0);
+                });
+            }
+        }
+    }
+
+    private void RenameVersion_OnOnClose(object sender, RoutedEventArgs e) {
+        viewModel.RenameVersionText = "";
     }
     
 }

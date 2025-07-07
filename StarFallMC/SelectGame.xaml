@@ -114,8 +114,10 @@
                     Name="GameSelect" 
                     Width="420" 
                     HorizontalAlignment="Right" 
-                    ItemsSource="{Binding Games}" 
+                    ItemsSource="{Binding Games, Mode=TwoWay}" 
                     SelectionChanged="GameSelect_OnSelectionChanged"
+                    VirtualizingStackPanel.IsVirtualizing="False"
+                    
                     ItemContainerStyle="{StaticResource GameSelectStyle}"
                 >
                     <ListView.RenderTransform>
@@ -131,7 +133,7 @@
                            Foreground="#001D1F"></TextBlock>
             </Border>
         </Grid>
-        <component:MaskControl x:Name="MaskControl">
+        <component:MaskControl x:Name="GameInfoMaskControl">
             <Border Width="600" Height="190" Style="{StaticResource Rect}">
                 <StackPanel Orientation="Vertical">
                     <Grid Height="70" VerticalAlignment="Top">
@@ -202,6 +204,28 @@
                         <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource GameInfoBtn}" Content="删除版本" Click="DelGame_OnClick"></Button>
                     </Grid>
                 </StackPanel>
+            </Border>
+        </component:MaskControl>
+        <component:MaskControl x:Name="RenameVersion" OnHidden="RenameVersion_OnOnClose">
+            <Border Width="400" Height="100" Style="{StaticResource Rect}">
+                <Grid>
+                    <TextBlock Style="{StaticResource TextBlock}" 
+                               FontSize="18" 
+                               Text="请输入新的版本名称[Enter确认]" 
+                               Margin="0 15 0 0" 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Top"></TextBlock>
+                    <TextBox Width="300" Height="30" 
+                             FontSize="16" 
+                             VerticalAlignment="Center"
+                             Margin="0 15 0 0" 
+                             Padding="3 0"
+                             VerticalContentAlignment="Center"
+                             KeyDown="RenameVersion_OnKeyDown" 
+                             MaxLength="48" 
+                             Text="{Binding RenameVersionText}"></TextBox>
+                    <TextBlock Width="300" VerticalAlignment="Center" Foreground="DarkRed" Margin="0 70 0 0" Text="{Binding RenameVersionTips}"></TextBlock>
+                </Grid>
             </Border>
         </component:MaskControl>
     </Grid>
