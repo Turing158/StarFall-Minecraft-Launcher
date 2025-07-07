@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Policy;
 using System.Windows;
@@ -28,8 +29,8 @@ public partial class Home : Page {
         viewModel.PlayerName = "";
         //这里之后要获取配置文件中的
         
-        SetGameInfo += setGameInfo;
-        SetPlayer += setPlayerFunc;
+        SetGameInfo = setGameInfo;
+        SetPlayer = setPlayerFunc;
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
     }
@@ -77,20 +78,22 @@ public partial class Home : Page {
     
 
     private void setGameInfo(MinecraftItem item) {
+        string iconPath = "/assets/DefaultGameIcon/unknowGame.png";
         if (item == null) {
+            GameName.Text = "未选择版本";
             viewModel.CurrentGame = new MinecraftItem("未选择版本","","","/assets/DefaultGameIcon/unknowGame.png");
+            
 
         } else {
+            GameName.Text = item.Name;
+            iconPath = item.Icon;
             viewModel.CurrentGame = item;
         }
-
-        
-        string iconPath = viewModel.CurrentGame.Icon ?? "/assets/DefaultGameIcon/unknowGame.png";
         if (!iconPath.Contains(":")) {
             iconPath = "pack://application:,,,/;component"+iconPath;
         }
         updateBitmapImage( "CurrentGameIcon",iconPath);
-        Console.WriteLine(viewModel.CurrentGame.ToString());
+        Console.WriteLine(item);
     }
     
     private void setPlayerFunc(Player player) {
@@ -107,6 +110,11 @@ public partial class Home : Page {
     }
     
     private void updateBitmapImage(string resourceKey, string uri) {
+        if (uri.Contains(":") && !uri.StartsWith("pack")) {
+            if (!File.Exists(uri)) {
+                uri = "pack://application:,,,/;component/assets/DefaultGameIcon/unknowGame.png";
+            }
+        }
         BitmapImage newImage = new BitmapImage();
         newImage.BeginInit();
         newImage.UriSource = new Uri(uri, UriKind.RelativeOrAbsolute);

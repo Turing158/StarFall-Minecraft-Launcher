@@ -28,6 +28,7 @@ public partial class MainWindow : Window {
     private Storyboard SubFrameHide;
     
     public static Action<string,string> SubFrameNavigate;
+    public static Action<string> ReloadSubFrame;
     public MainWindow() {
         
         InitializeComponent();
@@ -38,9 +39,9 @@ public partial class MainWindow : Window {
         
         SubFrameShow = (Storyboard)FindResource("SubFrameShow");
         SubFrameHide = (Storyboard)FindResource("SubFrameHide");
-        SubFrameNavigate += SubFrameNavigateFunc;
-        
-        
+        SubFrameNavigate = SubFrameNavigateFunc;
+        ReloadSubFrame = reloadSubFrame;
+
     }
 
     private void HomeBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -96,5 +97,12 @@ public partial class MainWindow : Window {
 
     private void SettingFrame_OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
         
+    }
+
+    private void reloadSubFrame(string pageName) {
+        SubFrame.Navigate(new Uri("Blank.xaml", UriKind.Relative));
+        Dispatcher.BeginInvoke(() => {
+            SubFrame.Navigate(new Uri($"{pageName}.xaml", UriKind.Relative));
+        });
     }
 }

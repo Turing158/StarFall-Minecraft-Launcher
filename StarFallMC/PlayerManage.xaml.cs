@@ -59,10 +59,10 @@ public partial class PlayerManage : Page {
 
         // viewModel.Players = new ObservableCollection<Player>(players);
         viewModel.VerifyCode = "加载中...";
-        SetLoadingText += SetLoadingTextFunc;
-        updatePlayerSkin += updatePlayerSkinFunc;
-        GetViewModel += GetViewModelFunc;
-        unloadedAction += PlayerManage_OnUnloaded;
+        SetLoadingText = SetLoadingTextFunc;
+        updatePlayerSkin = updatePlayerSkinFunc;
+        GetViewModel = GetViewModelFunc;
+        unloadedAction = PlayerManage_OnUnloaded;
         
         PropertiesUtil.LoadPlayerManage(ref viewModel);
         PlayerListView.SelectedIndex = viewModel.Players.IndexOf(viewModel.CurrentPlayer);

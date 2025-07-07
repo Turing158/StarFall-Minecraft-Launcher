@@ -117,7 +117,7 @@
                     </Border.RenderTransform>
                     <StackPanel Orientation="Horizontal">
                         <Border Background="Transparent" Width="45" Height="45" Margin="5"></Border>
-                        <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" Margin="2" TextWrapping="Wrap" Text="{Binding CurrentGame.Name}" Foreground="#113032" FontSize="13"></TextBlock>
+                        <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" Margin="2" TextWrapping="Wrap" Text="未选择版本" Foreground="#113032" FontSize="13"></TextBlock>
                     </StackPanel>
                     <Border.Triggers>
                         <EventTrigger RoutedEvent="MouseEnter">

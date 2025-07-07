@@ -23,8 +23,8 @@ public partial class SelectGame : Page {
     public SelectGame() {
         InitializeComponent();
         DataContext = viewModel;
-        GetViewModel += GetViewModelFunc;
-        unloadedAction += SelectGame_OnUnloaded;
+        GetViewModel = GetViewModelFunc;
+        unloadedAction = SelectGame_OnUnloaded;
         PropertiesUtil.LoadSelectGameArgs(ref viewModel);
         GameListChangeAnim = (Storyboard) FindResource("GameListChangeAnim");
         DirSelect.SelectedIndex = viewModel.Dirs.IndexOf(viewModel.CurrentDir);
