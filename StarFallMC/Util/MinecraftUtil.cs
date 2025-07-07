@@ -229,7 +229,7 @@ public class MinecraftUtil {
         }
 
         if (File.Exists(versionPath+"/ico.png")) {
-            item.Icon = versionPath+"/ico.png";
+            item.Icon = Path.GetFullPath(versionPath+"/ico.png");
         }
         return item;
     }
@@ -533,5 +533,35 @@ public class MinecraftUtil {
         else {
             sb = sb.Replace($"${{{key}}}", value);
         }
+    }
+    
+    public static MinecraftItem RenameVersion(MinecraftItem item,string newVersionName) {
+        string path = item.Path;
+        string newPath = DirFileUtil.GetParentPath(path) + "/" + newVersionName;
+        if (Directory.Exists(newPath)) {
+            return null;
+        }
+        string versionName = item.Name;
+        string json = File.ReadAllText(path+"/"+versionName+".json");
+        JObject root = JObject.Parse(json);
+        if (root["id"] != null) {
+            root["id"] = newVersionName;
+        }
+        if (root["jar"] != null) {
+            root["jar"] = newVersionName;
+        }
+        File.WriteAllText(path+"/"+versionName+".json",root.ToString());
+        File.Move(path+"/"+versionName+".json",path+"/"+newVersionName+".json",true);
+        File.Move(path+"/"+versionName+".jar",path+"/"+newVersionName+".jar",true);
+        if (Directory.Exists(path+"/"+versionName+"-natives")) {
+            Directory.Move(path+"/"+versionName+"-natives",path+"/"+newVersionName+"-natives");
+        }
+        Directory.Move(path,newPath);
+        item.Name = newVersionName;
+        item.Path = Path.GetFullPath(newPath);
+        if (item.Icon.Contains(":")) {
+            item.Icon = Path.GetFullPath(item.Path + "/ico.png");
+        }
+        return item;
     }
 }

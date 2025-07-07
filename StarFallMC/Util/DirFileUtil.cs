@@ -34,7 +34,6 @@ public class DirFileUtil {
 
     public static string GetParentPath(string path) {
         string[] paths = Path.GetFullPath(path).Split("\\");
-        Console.WriteLine(Path.GetFullPath(path));
         if (paths.Length == 0 || paths.Length == 2) {
             return path;
         }

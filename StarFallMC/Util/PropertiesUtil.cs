@@ -263,7 +263,8 @@ public class PropertiesUtil {
                 vm.CurrentGame = new MinecraftItem();
                 selectArgs["minecraft"] = JObject.FromObject(vm.CurrentGame);
             }
-            Home.SetGameInfo?.Invoke(vm.CurrentGame);
+
+            
             List<DirItem> dirs;
             try {
                 dirs = selectArgs["dirs"].ToObject<List<DirItem>>() ?? new List<DirItem>();
