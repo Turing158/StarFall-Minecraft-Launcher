@@ -25,7 +25,18 @@ public partial class MaskControl : UserControl {
     public static readonly DependencyProperty MaskOpacityProperty = DependencyProperty.Register(nameof(MaskOpacity),
         typeof(double), typeof(MaskControl), new PropertyMetadata(0.5, OnMaskPropertyChanged)); 
     
+    public event RoutedEventHandler OnHidden {
+        add => AddHandler(OnHiddenEvent, value);
+        remove => RemoveHandler(OnHiddenEvent, value);
+    }
+    public static readonly RoutedEvent OnHiddenEvent = EventManager.RegisterRoutedEvent(nameof(OnHidden),
+        RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(MaskControl));
 
+    private void onHiddenEventFunc() {
+        RoutedEventArgs args = new RoutedEventArgs(OnHiddenEvent);
+        RaiseEvent(args);
+    }
+    
     private Timer HideTimer;
     private static void OnMaskPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
         
@@ -52,6 +63,7 @@ public partial class MaskControl : UserControl {
         Visibility = Visibility.Visible;
     }
     public void Hide(double fadeIn = -1) {
+        onHiddenEventFunc();
         int interal = 300;
         if (fadeIn >= 0) {
             MaskHideAnim.Children[0].Duration = TimeSpan.FromSeconds(fadeIn);
@@ -63,6 +75,7 @@ public partial class MaskControl : UserControl {
             HideTimer = new Timer((s) => {
                 Dispatcher.Invoke(() => {
                     Visibility = Visibility.Collapsed;
+                    
                     HideTimer.Dispose();
                 });
             }, null, interal, 0);

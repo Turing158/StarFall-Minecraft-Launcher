@@ -10,17 +10,17 @@
              Name="Main">
     <UserControl.Resources>
         <Storyboard x:Key="MaskControlShow" TargetName="Main" TargetProperty="Opacity">
-            <DoubleAnimation To="1" Duration="0:0:0.15"></DoubleAnimation>
+            <DoubleAnimation To="1" Duration="0:0:0.08"></DoubleAnimation>
         </Storyboard>
         <Storyboard x:Key="MaskControlHide" TargetName="Main" TargetProperty="Opacity">
-            <DoubleAnimation To="0" Duration="0:0:0.15"></DoubleAnimation>
+            <DoubleAnimation To="0" Duration="0:0:0.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
         </Storyboard>
         <Style TargetType="local:MaskControl">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="local:MaskControl">
                         <Grid>
-                            <Border MouseLeftButtonDown="Mask_OnMouseLeftButtonDown" Background="{TemplateBinding MaskColor}" Opacity="{TemplateBinding MaskOpacity}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></Border>
+                            <Border MouseLeftButtonDown="Mask_OnMouseLeftButtonDown" CornerRadius="0 0 10 10" Background="{TemplateBinding MaskColor}" Opacity="{TemplateBinding MaskOpacity}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"></Border>
                             <ContentPresenter></ContentPresenter>
                         </Grid>
                     </ControlTemplate>
