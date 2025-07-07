@@ -109,3 +109,18 @@
 5. 添加游戏属性查看按钮，点击后可以查看并修改版本图标、版本名称[未完成]、删除版本等
 6. 版本图标可以在版本文件内，将图片改成`ico.png`可以更改成自定义的版本图标
 
+---
+
+## 修改版本名称功能完成，修复一些问题-2025-7-7
+
+1. TextBox的Thumb无法被找到[已修复]
+2. 统一Minecraft的属性格式
+3. 添加Version名称修改方法到MinecraftUtil类
+4. 优化委托事件的赋值
+5. 添加以及优化reloadSubFrame方法，用于刷新页面
+6. 优化Home中的setGameInfo和updateBitmapImage方法
+7. 优化MaskControl组件的遮罩样式和动画，添加OnHidden触发事件
+8. 完成Version名称修改功能
+
+---
+
