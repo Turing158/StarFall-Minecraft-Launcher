@@ -56,4 +56,10 @@ public class DirFileUtil {
         var newPaths = paths.SkipLast(1).ToList();
         return newPaths.Last();
     }
+
+    public static void DeleteDirAllContent(string path) {
+        if (Directory.Exists(path)) {
+            Directory.Delete(path,recursive:true);
+        }
+    }
 }

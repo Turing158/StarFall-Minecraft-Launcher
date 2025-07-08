@@ -564,4 +564,11 @@ public class MinecraftUtil {
         }
         return item;
     }
+    
+    public static bool GetMinecraftVersionExists(MinecraftItem item) {
+        if (Directory.Exists(item.Path) && File.Exists(item.Path + "/" + item.Name + ".json")){
+            return true;
+        }
+        return false;
+    }
 }

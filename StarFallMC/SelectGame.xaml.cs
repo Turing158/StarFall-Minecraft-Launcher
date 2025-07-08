@@ -92,8 +92,11 @@ public partial class SelectGame : Page {
     }
     
     private void GameSelect_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
-        Console.WriteLine("当前游戏版本："+GameSelect.SelectedIndex);
         var game = (MinecraftItem)GameSelect.SelectedItem;
+        if (game!= null && !MinecraftUtil.GetMinecraftVersionExists(game)) {
+            reloadGameByDir(viewModel.CurrentDir.Path);
+        }
+        Console.WriteLine("当前游戏版本："+GameSelect.SelectedIndex);
         if (game == null || game.Name == "") {
             Home.SetGameInfo?.Invoke(null);
         }
