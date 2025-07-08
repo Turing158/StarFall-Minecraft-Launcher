@@ -10,10 +10,10 @@
              Name="Main">
     <UserControl.Resources>
         <Storyboard x:Key="MaskControlShow" TargetName="Main" TargetProperty="Opacity">
-            <DoubleAnimation To="1" Duration="0:0:0.08"></DoubleAnimation>
+            <DoubleAnimation To="1" Duration="0:0:0.15"></DoubleAnimation>
         </Storyboard>
         <Storyboard x:Key="MaskControlHide" TargetName="Main" TargetProperty="Opacity">
-            <DoubleAnimation To="0" Duration="0:0:0.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
         </Storyboard>
         <Style TargetType="local:MaskControl">
             <Setter Property="Template">

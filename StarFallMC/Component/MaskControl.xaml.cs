@@ -9,6 +9,13 @@ using System.Windows.Media.Animation;
 namespace StarFallMC.Component;
 
 public partial class MaskControl : UserControl {
+
+    public bool ClickMaskToClose {
+        get => (bool)GetValue(ClickMaskToCloseProperty);
+        set => SetValue(ClickMaskToCloseProperty, value);
+    }
+    public static readonly DependencyProperty ClickMaskToCloseProperty = DependencyProperty.Register(nameof(ClickMaskToClose),
+        typeof(bool), typeof(MaskControl), new PropertyMetadata(true));
     
     public Brush MaskColor {
         get => (Brush)GetValue(MaskColorProperty);
@@ -17,13 +24,12 @@ public partial class MaskControl : UserControl {
     public static readonly DependencyProperty MaskColorProperty = DependencyProperty.Register(nameof(MaskColor),
         typeof(Brush), typeof(MaskControl), new PropertyMetadata(Brushes.Black, OnMaskPropertyChanged));
 
-
     public double MaskOpacity {
         get => (double)GetValue(MaskOpacityProperty);
         set => SetValue(MaskOpacityProperty, value);
     }
     public static readonly DependencyProperty MaskOpacityProperty = DependencyProperty.Register(nameof(MaskOpacity),
-        typeof(double), typeof(MaskControl), new PropertyMetadata(0.5, OnMaskPropertyChanged)); 
+        typeof(double), typeof(MaskControl), new PropertyMetadata(0.3, OnMaskPropertyChanged)); 
     
     public event RoutedEventHandler OnHidden {
         add => AddHandler(OnHiddenEvent, value);
@@ -84,6 +90,9 @@ public partial class MaskControl : UserControl {
     }
 
     private void Mask_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        Hide();
+        if (ClickMaskToClose) {
+            Hide();
+        }
     }
+    
 }
