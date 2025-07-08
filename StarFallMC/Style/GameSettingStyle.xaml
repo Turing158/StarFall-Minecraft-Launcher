@@ -210,19 +210,16 @@
              <ControlTemplate TargetType="{x:Type Slider}">
                  <Grid>
                      <Border Name="Border" Margin="10,0,10,0" Background="#fff" Height="1"/>
-                         <!-- Slider的背景 -->
                      <Track Name="PART_Track" IsDirectionReversed="False">
                          <Track.Thumb>
                              <Thumb>
-                                 <!-- Slider的滑块 -->
                                  <Thumb.Template>
                                      <ControlTemplate TargetType="{x:Type Thumb}">
-                                         <Ellipse x:Name="Ellipse" Width="10" Height="10" Fill="#001D1F" RenderTransformOrigin="0.5,0.5">
-                                             <Ellipse.RenderTransform>
+                                         <Rectangle x:Name="Ellipse" Width="10" Height="10" Fill="#001D1F" RenderTransformOrigin="0.5,0.5">
+                                             <Rectangle.RenderTransform>
                                                  <ScaleTransform ScaleY="1" ScaleX="1"></ScaleTransform>
-                                             </Ellipse.RenderTransform>
-                                         </Ellipse>
-                                         <!-- Slider的滑块样式 -->
+                                             </Rectangle.RenderTransform>
+                                         </Rectangle>
                                          <ControlTemplate.Triggers>
                                              <Trigger Property="IsMouseOver" Value="True">
                                                  <Trigger.EnterActions>
@@ -252,11 +249,9 @@
                          
                          <Track.DecreaseRepeatButton>
                              <RepeatButton Command="Slider.DecreaseLarge">
-                                 <!-- 划过的地方 -->
                                  <RepeatButton.Template>
                                      <ControlTemplate TargetType="{x:Type RepeatButton}">
                                          <Rectangle Height="1" Fill="#001D1F" />
-                                         <!-- 划过的地方的样式 -->
                                      </ControlTemplate>
                                  </RepeatButton.Template>
                              </RepeatButton>
