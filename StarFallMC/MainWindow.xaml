@@ -24,81 +24,76 @@
             </BeginStoryboard>
         </EventTrigger>
     </Window.Triggers>
-    
-    <Border Name="MainWindowFrame" CornerRadius="10" Background="#fff" BorderBrush="#957A78" BorderThickness="2">
-        <Border.Clip>
+    <Grid>
+        <Grid.Clip>
             <RectangleGeometry Rect="0,0,800,450" RadiusX="10" RadiusY="10"></RectangleGeometry>
-        </Border.Clip>
-        <Border>
+        </Grid.Clip>
+        <Frame Name="MainFrame" VerticalAlignment="Bottom" Source="Home.xaml">
+            <Frame.Effect>
+                <BlurEffect Radius="0"></BlurEffect>
+            </Frame.Effect>
+            <Frame.RenderTransform>
+                <TranslateTransform X="0"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
+        <Frame Name="SettingFrame" VerticalAlignment="Bottom" Source="Setting.xaml" Opacity="0" IsEnabledChanged="SettingFrame_OnIsEnabledChanged">
+            <Frame.RenderTransform>
+                <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
+        <Frame Name="SubFrame" VerticalAlignment="Bottom" Source="SelectGame.xaml" Opacity="0">
+            <Frame.RenderTransform>
+                <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
+        
+        <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" Background="#957A78" VerticalAlignment="Top" MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
             <Grid>
-                <Frame Name="MainFrame" VerticalAlignment="Bottom" Source="Home.xaml">
-                    <Frame.Effect>
-                        <BlurEffect Radius="0"></BlurEffect>
-                    </Frame.Effect>
-                    <Frame.RenderTransform>
+                <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
+                    <TextBlock Text="&#xea18;" FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
+                    <Button.RenderTransform>
+                        <TranslateTransform X="-50"></TranslateTransform>
+                    </Button.RenderTransform>
+                </Button>
+                <Image Name="Icon" Width="35" Height="35" Source="assets/ico.png" HorizontalAlignment="Left" Margin="10">
+                    <Image.RenderTransform>
                         <TranslateTransform X="0"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="SettingFrame" VerticalAlignment="Bottom" Source="Setting.xaml" Opacity="0" IsEnabledChanged="SettingFrame_OnIsEnabledChanged">
-                    <Frame.RenderTransform>
-                        <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="SubFrame" VerticalAlignment="Bottom" Source="SelectGame.xaml" Opacity="0">
-                    <Frame.RenderTransform>
-                        <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
+                    </Image.RenderTransform>
+                </Image>
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#001D1F" FontSize="20" Margin="60 0 0 0" Text="SFMCL"></TextBlock>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Button Name="MiniBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="MiniBtn_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe9ca;"></TextBlock>
+                    </Button>
+                    <Button Name="CloseBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="CloseBtn_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe90b;"></TextBlock>
+                    </Button>
+                </StackPanel>
+                <TextBlock Name="Title" TextAlignment="Center" FontSize="20" Foreground="#001D1F" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold" Text="Title">
+                    <TextBlock.RenderTransform>
+                        <TranslateTransform Y="-55"></TranslateTransform>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
+                <Grid Name="OperateGrid" HorizontalAlignment="Center" Width="180">
+                    <Grid.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </Grid.RenderTransform>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
+                    <Rectangle Grid.Column="1" Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
+                    <Rectangle Name="Active" Width="70" Height="35" Style="{StaticResource TabBlock}">
+                        <Rectangle.RenderTransform>
+                            <TranslateTransform x:Name="ActiveTF"></TranslateTransform>
+                        </Rectangle.RenderTransform>
+                    </Rectangle>
+                    <Button Name="HomeBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="主 页" Foreground="#D7C6C5" Click="HomeBtn_OnClick"></Button>
+                    <Button Grid.Column="1" Name="SettingBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="设 置" Click="SettingBtn_OnClick"></Button>
+                </Grid>
                 
-                <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" Background="#957A78" VerticalAlignment="Top" MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
-                    <Grid>
-                        <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
-                            <TextBlock Text="&#xea18;" FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
-                            <Button.RenderTransform>
-                                <TranslateTransform X="-50"></TranslateTransform>
-                            </Button.RenderTransform>
-                        </Button>
-                        <Image Name="Icon" Width="35" Height="35" Source="assets/ico.png" HorizontalAlignment="Left" Margin="10">
-                            <Image.RenderTransform>
-                                <TranslateTransform X="0"></TranslateTransform>
-                            </Image.RenderTransform>
-                        </Image>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#001D1F" FontSize="20" Margin="60 0 0 0" Text="SFMCL"></TextBlock>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                            <Button Name="MiniBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="MiniBtn_OnClick">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe9ca;"></TextBlock>
-                            </Button>
-                            <Button Name="CloseBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="CloseBtn_OnClick">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe90b;"></TextBlock>
-                            </Button>
-                        </StackPanel>
-                        <TextBlock Name="Title" TextAlignment="Center" FontSize="20" Foreground="#001D1F" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold" Text="Title">
-                            <TextBlock.RenderTransform>
-                                <TranslateTransform Y="-55"></TranslateTransform>
-                            </TextBlock.RenderTransform>
-                        </TextBlock>
-                        <Grid Name="OperateGrid" HorizontalAlignment="Center" Width="180">
-                            <Grid.RenderTransform>
-                                <TranslateTransform></TranslateTransform>
-                            </Grid.RenderTransform>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition></ColumnDefinition>
-                                <ColumnDefinition></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Rectangle Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
-                            <Rectangle Grid.Column="1" Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
-                            <Rectangle Name="Active" Width="70" Height="35" Style="{StaticResource TabBlock}">
-                                <Rectangle.RenderTransform>
-                                    <TranslateTransform x:Name="ActiveTF"></TranslateTransform>
-                                </Rectangle.RenderTransform>
-                            </Rectangle>
-                            <Button Name="HomeBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="主 页" Foreground="#D7C6C5" Click="HomeBtn_OnClick"></Button>
-                            <Button Grid.Column="1" Name="SettingBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="设 置" Click="SettingBtn_OnClick"></Button>
-                        </Grid>
-                        
-                    </Grid>
-                </Border>
             </Grid>
         </Border>
-    </Border>
+    </Grid>
 </Window>
