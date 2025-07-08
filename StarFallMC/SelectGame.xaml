@@ -114,7 +114,7 @@
                     Name="GameSelect" 
                     Width="420" 
                     HorizontalAlignment="Right" 
-                    ItemsSource="{Binding Games, Mode=TwoWay}" 
+                    ItemsSource="{Binding Games}" 
                     SelectionChanged="GameSelect_OnSelectionChanged"
                     VirtualizingStackPanel.IsVirtualizing="False"
                     

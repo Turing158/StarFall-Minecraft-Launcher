@@ -178,6 +178,7 @@ public partial class SelectGame : Page {
 
     private void reloadGameByDir(string path) {
         //重新加载该地址内的Minecraft版本
+        var item = viewModel.CurrentGame;
         viewModel.Games = new ObservableCollection<MinecraftItem>(MinecraftUtil.GetMinecraft(path));
         if (viewModel.Games == null || viewModel.Games.Count == 0) {
             GameSelect.SelectedIndex = -1;
@@ -185,8 +186,9 @@ public partial class SelectGame : Page {
             Home.SetGameInfo?.Invoke(null);
         }
         else {
-            if (viewModel.Games.Contains(viewModel.CurrentGame)) {
-                GameSelect.SelectedIndex = viewModel.Games.IndexOf(viewModel.CurrentGame);
+            if (item != null && viewModel.Games.Any(i=>i.Name == item.Name)) {
+                var currentGame = viewModel.Games.FirstOrDefault(i => i.Name == item.Name);
+                GameSelect.SelectedIndex = viewModel.Games.IndexOf(currentGame);
             }
             else {
                 GameSelect.SelectedIndex = 0;
@@ -314,17 +316,25 @@ public partial class SelectGame : Page {
                     viewModel.RenameVersionTips = "已存在该名称文件夹或版本，请删除后重试";
                     return;
                 }
-                PropertiesUtil.loadJson["game"]["minecraft"] = JObject.FromObject(item);
-                MainWindow.ReloadSubFrame?.Invoke("SelectGame", () => {
-                    globalTimer = new Timer(o => {
-                        Dispatcher.Invoke(() => {
-                            SelectGame.GameInfoShow?.Invoke(null,null);
-                            globalTimer.Dispose();
-                        });
-                    }, null, 50, 0);
-                });
+                viewModel.CurrentGame = item;
+                reloadGameByDir(viewModel.CurrentDir.Path);
+                RenameVersion.Hide();
             }
         }
+    }
+    
+    
+    //方法备用，以免往后需要
+    private void ToFixListViewRefresh(MinecraftItem item) {
+        PropertiesUtil.loadJson["game"]["minecraft"] = JObject.FromObject(item);
+        MainWindow.ReloadSubFrame?.Invoke("SelectGame", () => {
+            globalTimer = new Timer(o => {
+                Dispatcher.Invoke(() => {
+                    SelectGame.GameInfoShow?.Invoke(null,null);
+                    globalTimer.Dispose();
+                });
+            }, null, 50, 0);
+        });
     }
 
     private void RenameVersion_OnOnClose(object sender, RoutedEventArgs e) {
