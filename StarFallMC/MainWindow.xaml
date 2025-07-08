@@ -10,6 +10,10 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
         Icon="assets/ico.png"
         >
     <Window.Resources>

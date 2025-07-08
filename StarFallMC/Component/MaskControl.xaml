@@ -7,6 +7,10 @@
              mc:Ignorable="d"
              HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType"
              Name="Main">
     <UserControl.Resources>
         <Storyboard x:Key="MaskControlShow" TargetName="Main" TargetProperty="Opacity">

@@ -21,6 +21,7 @@
     <Style TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Time now romans"></Setter>
         <Setter Property="FontWeight" Value="Bold"></Setter>
+        <Setter Property="FontFamily" Value="微软雅黑"></Setter>
     </Style>
     
     <Style x:Key="TextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">

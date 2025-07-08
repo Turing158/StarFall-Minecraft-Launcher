@@ -133,7 +133,7 @@
                            Foreground="#001D1F"></TextBlock>
             </Border>
         </Grid>
-        <component:MaskControl x:Name="GameInfoMaskControl">
+        <component:MaskControl x:Name="GameInfoMaskControl" ToolTip="{Binding CurrentGame.Path}">
             <Border Width="600" Height="190" Style="{StaticResource Rect}">
                 <StackPanel Orientation="Vertical">
                     <Grid Height="70" VerticalAlignment="Top">
@@ -166,7 +166,7 @@
                                 </EventTrigger>
                             </Image.Triggers>
                         </Image>
-                        <Border Height="50" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="90 0 0 0" Style="{StaticResource Rect}" Padding="15 0">
+                        <Border Height="50" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="90 0 20 0" Style="{StaticResource Rect}" Padding="15 0 15 0">
                             <Grid Height="40">
                                 <TextBlock HorizontalAlignment="Left" 
                                            VerticalAlignment="Top" 
@@ -177,7 +177,9 @@
                                 <TextBlock HorizontalAlignment="Left" 
                                            VerticalAlignment="Bottom" 
                                            Style="{StaticResource TextBlock}"
-                                           FontSize="10"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="WordEllipsis"
+                                           FontSize="11"
                                            Text="{Binding CurrentGame.Path}"></TextBlock>
                             </Grid>
                         </Border>
