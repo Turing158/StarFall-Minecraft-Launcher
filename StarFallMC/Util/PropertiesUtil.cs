@@ -126,7 +126,7 @@ public class PropertiesUtil {
                     javaItems = new List<JavaItem>();
                     java["list"] = new JArray(javaItems);
                 }
-                javaItems.Insert(0,new JavaItem("自动选择Java版本", "", ""));
+                javaItems.Insert(0,new JavaItem("自动选择Java", "", ""));
                 vm.JavaVersions = new ObservableCollection<JavaItem>(javaItems);
             }
             var memory = gameArgs["memory"];
@@ -199,7 +199,7 @@ public class PropertiesUtil {
         }
         else {
             List<JavaItem> javaItems = MinecraftUtil.GetJavaVersions();
-            javaItems.Insert(0, new JavaItem("自动选择Java版本", "", ""));
+            javaItems.Insert(0, new JavaItem("自动选择Java", "", ""));
             vm.JavaVersions = new ObservableCollection<JavaItem>(javaItems);
         }
     }

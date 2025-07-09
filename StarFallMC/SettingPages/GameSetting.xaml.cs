@@ -208,7 +208,7 @@ public partial class GameSetting : Page {
     
     private void refreshJavaVersions() {
         var javaVersions = MinecraftUtil.GetJavaVersions();
-        javaVersions.Insert(0,new JavaItem("自动选择java","", ""));
+        javaVersions.Insert(0,new JavaItem("自动选择Java","", ""));
         viewModel.JavaVersions = new ObservableCollection<JavaItem>(javaVersions);
         JavaList.SelectedIndex = 0;
     }

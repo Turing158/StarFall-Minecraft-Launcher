@@ -17,6 +17,17 @@ public partial class MaskControl : UserControl {
     public static readonly DependencyProperty ClickMaskToCloseProperty = DependencyProperty.Register(nameof(ClickMaskToClose),
         typeof(bool), typeof(MaskControl), new PropertyMetadata(true));
     
+    public event RoutedEventHandler ClickMask {
+        add => AddHandler(OnHiddenEvent, value);
+        remove => RemoveHandler(OnHiddenEvent, value);
+    }
+    public static readonly RoutedEvent ClickMaskEvent = EventManager.RegisterRoutedEvent(nameof(ClickMask),
+        RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(MaskControl));
+    private void ClickMaskEventFunc() {
+        RoutedEventArgs args = new RoutedEventArgs(ClickMaskEvent);
+        RaiseEvent(args);
+    }
+    
     public Brush MaskColor {
         get => (Brush)GetValue(MaskColorProperty);
         set => SetValue(MaskColorProperty, value);
@@ -93,6 +104,7 @@ public partial class MaskControl : UserControl {
         if (ClickMaskToClose) {
             Hide();
         }
+        ClickMaskEventFunc();
     }
     
 }

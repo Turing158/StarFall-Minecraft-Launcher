@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using MessageBox = StarFallMC.Component.MessageBox;
 
 namespace StarFallMC;
 
@@ -142,15 +143,14 @@ public partial class SelectGame : Page {
     }
 
     private void DelDir_OnClick(object sender, RoutedEventArgs e) {
-        //删除文件夹
         if (DirSelect.SelectedIndex != 0) {
-            var result = MessageBox.Show("是否要删除当前选中文件夹[只会在这里删除显示，并不会真正删除该文件夹内容]", "", MessageBoxButton.OKCancel);
-            if (result.Equals(MessageBoxResult.OK)) {
-                var index = DirSelect.SelectedIndex;
-                DirSelect.SelectedIndex = 0;
-                viewModel.Dirs.RemoveAt(index);
-                // DirList.RemoveAt(index);
-            }
+            MessageBox.Show($"是否要删除当前选中文件夹[{(DirSelect.SelectedItem as DirItem).Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
+                if (result == MessageBox.Result.Confirm) {
+                    var index = DirSelect.SelectedIndex;
+                    DirSelect.SelectedIndex = 0;
+                    viewModel.Dirs.RemoveAt(index);
+                }
+            },"","删除");
         }
     }
 
@@ -211,30 +211,26 @@ public partial class SelectGame : Page {
     }
     
     private void DelGame_OnClick(object sender, RoutedEventArgs e) {
-        //删除版本
         if (viewModel.Games != null && viewModel.Games.Count != 0 && GameSelect.SelectedIndex != -1) {
-            var result = MessageBox.Show("是否要删除当前选中Minecraft\n注意：会直接删除版本文件夹内的所有内容", "", MessageBoxButton.OKCancel);
-            if (result.Equals(MessageBoxResult.OK)) {
-                var index = GameSelect.SelectedIndex;
-                viewModel.Games.RemoveAt(index);
-                //执行删除版本文件
-                
-                
-                //=================
-                GameInfoMaskControl.Hide();
-                if (viewModel.Games.Count != 0) {
-                    if (index == 0) {
-                        GameSelect.SelectedIndex = 0;
+            MessageBox.Show($"是否要删除当前选中Minecraft版本[{viewModel.CurrentGame.Name}]，真的会消失很久的喔！\n注意：会直接删除版本文件夹内的所有内容", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
+                if (result == MessageBox.Result.Confirm) {
+                    DirFileUtil.DeleteDirAllContent(viewModel.CurrentGame.Path);
+                    var index = GameSelect.SelectedIndex;
+                    viewModel.Games.RemoveAt(index);
+                    GameInfoMaskControl.Hide();
+                    if (viewModel.Games.Count != 0) {
+                        if (index == 0) {
+                            GameSelect.SelectedIndex = 0;
+                        }
+                        else {
+                            GameSelect.SelectedIndex = index-1;
+                        }
                     }
                     else {
-                        GameSelect.SelectedIndex = index-1;
+                        GameSelect.SelectedIndex = -1;
                     }
                 }
-                else {
-                    GameSelect.SelectedIndex = -1;
-                }
-            }
-            
+            }, "", "删除");
         }
     }
 

@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using MessageBox = StarFallMC.Component.MessageBox;
 
 namespace StarFallMC;
 
@@ -232,21 +232,23 @@ public partial class PlayerManage : Page {
 
     private void DelPlayer_OnClick(object sender, RoutedEventArgs e) {
         if (PlayerListView.SelectedItem != null) {
-            Console.WriteLine("删除:{0}",PlayerListView.SelectedItem.ToString());
-            var result = MessageBox.Show("确定要删除该角色么！","",MessageBoxButton.OKCancel);
-            if (result.Equals(MessageBoxResult.OK)) {
-                var index = PlayerListView.SelectedIndex;
-                viewModel.Players.RemoveAt(index);
-                // players.RemoveAt(index);
-                if (viewModel.Players.Count() != 0) {
-                    PlayerListView.SelectedIndex = 0;
-                    NoUser.Visibility = Visibility.Collapsed;
-                }
-                else {
-                    PlayerListView.SelectedIndex = -1;
-                    NoUser.Visibility = Visibility.Visible;
-                }
-            }
+            var item = PlayerListView.SelectedItem as Player;
+            Console.WriteLine("删除:{0}",item);
+            MessageBox.Show($"你确定要删除\" {item.Name} \"这个角色吗？它会消失很久的喔！",$"{item.Name} 提醒您：",MessageBox.BtnType.ConfirmAndCancel,
+                r => {
+                    if (r == MessageBox.Result.Confirm) {
+                        var index = PlayerListView.SelectedIndex;
+                        viewModel.Players.RemoveAt(index);
+                        if (viewModel.Players.Count() != 0) {
+                            PlayerListView.SelectedIndex = 0;
+                            NoUser.Visibility = Visibility.Collapsed;
+                        }
+                        else {
+                            PlayerListView.SelectedIndex = -1;
+                            NoUser.Visibility = Visibility.Visible;
+                        }
+                    }
+                },"","删除");
         }
     }
 
