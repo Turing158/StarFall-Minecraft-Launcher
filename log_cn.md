@@ -124,3 +124,15 @@
 
 ---
 
+## 创建组件以及修复问题-2025-7-9
+
+1. 修改Slider的Thumb样式
+2. 修改Home的代码布局和MainWindow的代码布局
+3. 优化MaskControl的动画，添加ClickMaskToClose来自定义Mask是否能被点击关闭，MaskControl组件添加ClickMask触发方法
+4. 解决文字模糊问题，修复一些文字问题
+5. 修复了修改Version名称和修改图标处的问题[之前用的傻方法，现在改好了]
+6. 修复当版本文件不存在时，版本列表出错的问题
+7. 工具类添加了一些方法
+8. 创建MessageBox组件，并代替原本的MessageBox
+
+---
