@@ -325,8 +325,15 @@ public partial class GameSetting : Page {
         }
     }
 
-
     private void GameSetting_OnUnloaded(object sender, RoutedEventArgs e) {
         PropertiesUtil.SaveGameSettingArgs();
+    }
+
+    private void JavaList_OnDropDownOpened(object? sender, EventArgs e) {
+        ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+    }
+
+    private void JavaList_OnDropDownClosed(object? sender, EventArgs e) {
+        ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
     }
 }

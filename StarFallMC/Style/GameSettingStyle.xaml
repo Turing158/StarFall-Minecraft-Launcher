@@ -31,7 +31,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBoxItem">
-                    <Border Name="Border" Height="40" Background="#D7C6C5" CornerRadius="5" Margin="5">
+                    <Border Name="Border" Height="40" Background="#D7C6C5" CornerRadius="5" Margin="10 5">
                         <Grid>
                             <Border Name="TextBorder" Background="Transparent" CornerRadius="5"></Border>
                             <TextBlock Name="name" FontSize="15" Text="{Binding Name}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10 0 0 0" Foreground="#001D1F"></TextBlock>
@@ -88,96 +88,98 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
-                        <Border Name="Border" Background="#B2908F" CornerRadius="5">
-                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"/>
-                        </Border>
-                        <Border Width="2" Margin="0 5 40 5" Background="#001D1F" HorizontalAlignment="Right"></Border>
-                        <ToggleButton FontSize="25" FontWeight="Normal"
-                                      IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                            <TextBlock Text="&#xe903;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
-                            <ToggleButton.Style>
-                                <Style TargetType="ToggleButton">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ToggleButton">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"></ColumnDefinition>
-                                                        <ColumnDefinition Width="40"></ColumnDefinition>
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Background="Transparent"></Border>
-                                                    <Border Grid.Column="1" RenderTransformOrigin="0.5,0.5" Name="Border" Background="Transparent">
-                                                        <Border.RenderTransform>
-                                                            <RotateTransform Angle="0"></RotateTransform>
-                                                        </Border.RenderTransform>
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
-                                                    </Border>
-                                                </Grid>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsChecked" Value="True">
-                                                        <Trigger.EnterActions>
-                                                            <BeginStoryboard>
-                                                                <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
-                                                                    <DoubleAnimation Duration="0:0:0.8" To="180" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </Trigger.EnterActions>
-                                                        <Trigger.ExitActions>
-                                                            <BeginStoryboard>
-                                                                <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
-                                                                    <DoubleAnimation Duration="0:0:0.8" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </Trigger.ExitActions>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ToggleButton.Style>
-                            <ToggleButton.Triggers>
-                                <EventTrigger RoutedEvent="MouseEnter">
-                                    <BeginStoryboard>
-                                        <Storyboard TargetProperty="Foreground.Color">
-                                            <ColorAnimation To="#264446" Duration="0:0:0.15"></ColorAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </EventTrigger>
-                                <EventTrigger RoutedEvent="MouseLeave">
-                                    <BeginStoryboard>
-                                        <Storyboard TargetProperty="Foreground.Color">
-                                            <ColorAnimation To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </EventTrigger>
-                            </ToggleButton.Triggers>
-                        </ToggleButton>
+                        <Grid Height="40">
+                            <Border Name="Border" Background="#B2908F" CornerRadius="5">
+                                <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Left"/>
+                            </Border>
+                            <Border Width="2" Margin="0 5 40 5" Background="#001D1F" HorizontalAlignment="Right"></Border>
+                            <ToggleButton FontSize="25" FontWeight="Normal"
+                                          IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <TextBlock Text="&#xe903;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"></ColumnDefinition>
+                                                            <ColumnDefinition Width="40"></ColumnDefinition>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Background="Transparent"></Border>
+                                                        <Border Grid.Column="1" RenderTransformOrigin="0.5,0.5" Name="Border" Background="Transparent">
+                                                            <Border.RenderTransform>
+                                                                <RotateTransform Angle="0"></RotateTransform>
+                                                            </Border.RenderTransform>
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
+                                                        </Border>
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Trigger.EnterActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                        <DoubleAnimation Duration="0:0:0.8" To="180" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </Trigger.EnterActions>
+                                                            <Trigger.ExitActions>
+                                                                <BeginStoryboard>
+                                                                    <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                        <DoubleAnimation Duration="0:0:0.8" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                                                                    </Storyboard>
+                                                                </BeginStoryboard>
+                                                            </Trigger.ExitActions>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ToggleButton.Style>
+                                <ToggleButton.Triggers>
+                                    <EventTrigger RoutedEvent="MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard TargetProperty="Foreground.Color">
+                                                <ColorAnimation To="#264446" Duration="0:0:0.15"></ColorAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard TargetProperty="Foreground.Color">
+                                                <ColorAnimation To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </ToggleButton.Triggers>
+                            </ToggleButton>
+                        </Grid>
+                        
                         <Popup
+                            x:Name="PART_Popup"
                             AllowsTransparency="True"
-                            Focusable="False"
                             IsOpen="{TemplateBinding IsDropDownOpen}"
+                            PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                             Placement="Bottom"
                             PopupAnimation="Fade">
-                            <Grid MinWidth="{TemplateBinding ActualWidth}"
-                                  MaxHeight="180"
-                                  >
-                                <Border Background="#f1f1f1"
-                                        BorderBrush="#264446"
-                                        BorderThickness="1,0,1,1"
-                                        CornerRadius="5"></Border>
+                            <Border Background="#f1f1f1"
+                                    BorderBrush="#264446"
+                                    BorderThickness="1,0,1,1"
+                                    CornerRadius="5"
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="180">
                                 <ScrollViewer
                                     Margin="1"
                                     CanContentScroll="False"
                                     HorizontalScrollBarVisibility="Hidden"
-                                    VerticalScrollBarVisibility="Auto"
-                                     PanningMode="VerticalOnly">
+                                    VerticalScrollBarVisibility="Auto">
                                     <ItemsPresenter></ItemsPresenter>
                                 </ScrollViewer>
-                            </Grid>
+                            </Border>
                         </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
