@@ -21,22 +21,18 @@
                 HorizontalAlignment="Left"
                 CornerRadius="10">
             <Grid>
-                <Border VerticalAlignment="Top" Margin=" 10 15">
+                <Border VerticalAlignment="Top" Margin=" 10 20">
                     <TextBlock Name="PlayerName"
                                MaxWidth="220"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
-                               Padding="5 2 5 0"
+                               Padding="10 5"
                                Background="#66131313"
                                Foreground="#f1f1f1"
                                Text="{Binding CurrentPlayer.Name}"
+                               FontSize="18"
                                FontWeight="Normal"
-                               TextWrapping="Wrap"
-                               RenderTransformOrigin="0.5,0"
-                               FontFamily="{StaticResource PixelFontFamily}">
-                        <TextBlock.RenderTransform>
-                            <ScaleTransform ScaleX="2" ScaleY="2"></ScaleTransform>
-                        </TextBlock.RenderTransform>
+                               TextWrapping="Wrap">
                     </TextBlock>
                 </Border>
                 <Viewbox Name="SkinBox" Width="96" Height="192" Stretch="UniformToFill">
@@ -282,7 +278,6 @@
                         </TextBlock>
                         <TextBlock Name="VerifyCodeText" HorizontalAlignment="Center"
                                    FontSize="40"
-                                   FontFamily="{StaticResource PixelFontFamily}"
                                    Margin="0 20"
                                    Text="{Binding VerifyCode}"
                                    MouseLeftButtonDown="VerifyCodeText_OnMouseLeftButtonDown"></TextBlock>

@@ -33,10 +33,6 @@
       <Resource Include="assets\steve.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
-      <None Remove="assets\font\Silver.ttf" />
-      <Resource Include="assets\font\Silver.ttf">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
       <None Remove="assets\DefaultGameIcon\unknowGame.png" />
       <Resource Include="assets\DefaultGameIcon\unknowGame.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -98,6 +94,10 @@
 
     <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="assets\font\" />
     </ItemGroup>
 
 </Project>
