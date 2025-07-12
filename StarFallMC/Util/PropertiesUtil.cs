@@ -111,7 +111,11 @@ public class PropertiesUtil {
             var java = gameArgs["java"];
             if (java != null) {
                 try {
-                    vm.CurrentJavaVersionIndex = java["index"].Value<int>();
+                    int index = java["index"].Value<int>();
+                    if (index < 0) {
+                        index = 0;
+                    }
+                    vm.CurrentJavaVersionIndex = index;
                 }
                 catch (Exception e){
                     vm.CurrentJavaVersionIndex = 0;
