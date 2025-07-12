@@ -2,7 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:starFallMc="clr-namespace:StarFallMC">
     
-    <FontFamily x:Key="PixelFontFamily">/StarFallMC;Component/assets/font/#Silver</FontFamily>
     <FontFamily x:Key="IconFontFamily">/StarFallMC;Component/assets/icon/#iconfont</FontFamily>
     
     <ElasticEase x:Key="ElasticEaseOut" Oscillations="1" Springiness="10" EasingMode="EaseOut"></ElasticEase>

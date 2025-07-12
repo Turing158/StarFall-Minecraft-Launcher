@@ -64,7 +64,11 @@
                         <TranslateTransform X="0"></TranslateTransform>
                     </Image.RenderTransform>
                 </Image>
-                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#001D1F" FontSize="20" Margin="60 0 0 0" Text="SFMCL"></TextBlock>
+                <TextBlock Name="LauncherName" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#001D1F" FontSize="20" Margin="60 0 0 0" Text="SFMCL">
+                    <TextBlock.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </TextBlock.RenderTransform>
+                </TextBlock>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                     <Button Name="MiniBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="MiniBtn_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe9ca;"></TextBlock>
