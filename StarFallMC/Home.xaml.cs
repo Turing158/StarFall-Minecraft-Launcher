@@ -139,11 +139,13 @@ public partial class Home : Page {
         }
         StartingBorder.Visibility = Visibility.Visible;
         ((Storyboard)FindResource("Starting")).Begin();
+        HomeTips.Show();
         Console.WriteLine("开始游戏");
     }
 
     private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
         StartingBorder.Visibility = Visibility.Collapsed;
+        HomeTips.Hide();
         ((Storyboard)FindResource("Started")).Begin();
     }
 }

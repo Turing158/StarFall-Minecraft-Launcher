@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC"
+      xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="Home" Height="395" Width="800" Background="Transparent">
     <Page.Resources>
@@ -29,6 +30,9 @@
         </Border>
         <Grid Name="BottomFrame" VerticalAlignment="Bottom" Height="80">
             <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 15 10" Opacity="0.65"></Border>
+            <Grid Width="200" HorizontalAlignment="Left" Margin="10">
+                <component:LittleTips x:Name="HomeTips" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
             <Border Name="CurrentPlayer" 
                     Width="0" Height="0" 
                     Style="{StaticResource Rect}" 
