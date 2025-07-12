@@ -110,7 +110,7 @@ public partial class Home : Page {
     }
     
     private void updateBitmapImage(string resourceKey, string uri) {
-        if (uri.Contains(":") && !uri.StartsWith("pack")) {
+        if (uri.Contains(":") && !uri.StartsWith("pack") && !uri.StartsWith("http")) {
             if (!File.Exists(uri)) {
                 uri = "pack://application:,,,/;component/assets/DefaultGameIcon/unknowGame.png";
             }
