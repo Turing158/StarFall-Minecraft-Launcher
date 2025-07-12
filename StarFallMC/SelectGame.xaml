@@ -65,9 +65,10 @@
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe957;"></TextBlock>
                     </Button>
                     <Button Name="RefreshDir" Width="25" 
-                            Style="{StaticResource PlainBtn}" 
-                            Content="↺" FontSize="18" 
-                            ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick"></Button>
+                            Style="{StaticResource PlainBtn}" FontSize="16" 
+                            ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick">
+                        <TextBlock Text="&#xe60c;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                    </Button>
                     <Button Name="GameInfo" Width="25"
                             Style="{StaticResource PlainBtn}" 
                             FontSize="22" 

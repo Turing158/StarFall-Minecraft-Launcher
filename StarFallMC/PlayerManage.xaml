@@ -164,9 +164,9 @@
                             VerticalAlignment="Bottom" 
                             Margin="10" 
                             Style="{StaticResource Btn}"
-                            Content="+"
                             FontSize="25"
                             Click="AddPlayer_OnClick">
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
                     </Button>
                     <Button Name="DelPlayer" Width="30" Height="30" 
                             HorizontalAlignment="Right" 
@@ -189,13 +189,13 @@
                     <Grid Name="SelectLogin" Width="300" Height="120">
                         <Button Name="LoginBtn" Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; "></TextBlock>
+                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; " FontSize="30"></TextBlock>
                                 <TextBlock Text="在线登录"></TextBlock>
                             </StackPanel>
                         </Button>
                         <Button Name="OutlineBtn" VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; "></TextBlock>
+                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; " FontSize="30"></TextBlock>
                                 <TextBlock Text="离线登录"></TextBlock>
                             </StackPanel>
                         </Button>
