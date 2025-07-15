@@ -6,6 +6,7 @@ public class Player {
     public bool IsOnline { get; set; }
     public string UUID { get; set; }
     public string RefreshAddress { get; set; }
+    public string AccessToken { get; set; }
     public string OnlineLable { get; set; }
     
     
@@ -20,16 +21,21 @@ public class Player {
     }
 
     public override string ToString() {
-        return $"Player : {Name} ({UUID}) - Skin: {Skin}, Online: {IsOnline}";
+        return $"Player(Name: {Name}, Skin: {Skin}, IsOnline: {IsOnline}, UUID: {UUID}, RefreshAddress: {RefreshAddress}, AccessToken: {AccessToken})";
     }
     
     public override bool Equals(object? obj) {
         if (obj is Player other) {
-            return other.Name == Name && other.Skin == Skin && other.IsOnline == IsOnline && other.UUID == UUID;
+            return other.Name == Name &&
+                   other.Skin == Skin &&
+                   other.IsOnline == IsOnline &&
+                   other.UUID == UUID &&
+                   other.RefreshAddress == RefreshAddress &&
+                   other.AccessToken == AccessToken;
         }
         return false;
     }
     public override int GetHashCode() {
-        return HashCode.Combine(Name, Skin, IsOnline, UUID);
+        return HashCode.Combine(Name, Skin, IsOnline, UUID, RefreshAddress, AccessToken);
     }
 }

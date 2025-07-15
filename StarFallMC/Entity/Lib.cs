@@ -38,6 +38,9 @@ public class Lib {
             }
             
             public override string ToString() {
-                return $"Lib(name: {name}, path: {path}, isNativeLinux: {isNativeLinux}, isNativeWindows: {isNativeWindows}, isNativeMacos: {isNativeMacos},\n artifact: {artifact},\n classifiers: {string.Join(", ", classifiers.Select(kv => $"{kv.Key}: {kv.Value}"))})";
+                return $"Lib(name: {name}, path: {path},\n " +
+                       $"isNativeLinux: {isNativeLinux}, isNativeWindows: {isNativeWindows}, isNativeMacos: {isNativeMacos},\n " +
+                       $"artifact: {artifact},\n " +
+                       $"classifiers: {string.Join(", ", classifiers.Select(kv => $"{kv.Key}: {kv.Value}"))})";
             }
 }
