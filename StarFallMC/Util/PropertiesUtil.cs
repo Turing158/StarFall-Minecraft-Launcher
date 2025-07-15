@@ -143,11 +143,11 @@ public class PropertiesUtil {
                     memory["auto"] = true;
                 }
                 try {
-                    vm.MemoryValue = memory["value"].Value<Double>();
+                    vm.MemoryValue = memory["value"].Value<int>();
                 }
                 catch (Exception e){
-                    vm.MemoryValue = 0.0;
-                    memory["value"] = 654.0;
+                    vm.MemoryValue = 0;
+                    memory["value"] = 654;
                 }
             }
 
