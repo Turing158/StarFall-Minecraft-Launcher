@@ -40,6 +40,7 @@ public partial class Home : Page {
 
         private string _playerName;
         private MinecraftItem _currentGame;
+        private Player _currentPlayer;
 
         public string PlayerName {
             get => _playerName;
@@ -54,6 +55,14 @@ public partial class Home : Page {
                 SetField(ref _currentGame, value);
             }
         }
+        
+        public Player CurrentPlayer {
+            get => _currentPlayer;
+            set {
+                SetField(ref _currentPlayer, value);
+            }
+        }
+        
         
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -102,9 +111,11 @@ public partial class Home : Page {
         if (string.IsNullOrEmpty(player.Name)) {
             viewModel.PlayerName = "未登录";
             skin = PlayerManage.DefaultSKin;
+            viewModel.CurrentPlayer = null;
         } else {
             viewModel.PlayerName = player.Name;
             skin = player.Skin;
+            viewModel.CurrentPlayer = player;
         }
         updateBitmapImage("PlayerSkin",skin);
     }
