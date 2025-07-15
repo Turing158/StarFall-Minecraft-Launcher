@@ -64,7 +64,7 @@ public partial class GameSetting : Page {
         Dictionary<MinecraftUtil.MemoryName,double> memoryAllInfo = MinecraftUtil.GetMemoryAllInfo();
         var freeMemory = memoryAllInfo[MinecraftUtil.MemoryName.FreeMemory];
         MemorySlider.Maximum = freeMemory;
-        MemorySlider.Minimum = freeMemory*0.1 < 656 ? 656 : freeMemory*0.1;
+        MemorySlider.Minimum = freeMemory*2/3 < 656 ? 656 : freeMemory*2/3;
         MinMemory.Text = (MemorySlider.Minimum/1024).ToString("F1")+"G";
         MaxMemory.Text = (MemorySlider.Maximum/1024).ToString("F1")+"G";
     }
@@ -97,8 +97,8 @@ public partial class GameSetting : Page {
             }
         }
         
-        private double _memoryValue;
-        public double MemoryValue {
+        private int _memoryValue;
+        public int MemoryValue {
             get { return _memoryValue; }
             set {
                 _memoryValue = value;
