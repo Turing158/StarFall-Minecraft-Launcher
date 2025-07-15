@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Windows;
 
@@ -61,5 +62,12 @@ public class DirFileUtil {
         if (Directory.Exists(path)) {
             Directory.Delete(path,recursive:true);
         }
+    }
+    
+    public static void CompressZip(string path,string orderPath) {
+        if (!Directory.Exists(orderPath)) {
+            Directory.CreateDirectory(orderPath);
+        }
+        ZipFile.ExtractToDirectory(path,orderPath,true);
     }
 }

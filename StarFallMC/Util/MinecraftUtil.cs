@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
+using StarFallMC.SettingPages;
 
 namespace StarFallMC.Util;
 
@@ -445,6 +446,22 @@ public class MinecraftUtil {
         return Regex.IsMatch(str, pattern);
     }
     
+    //获取ClassPaths的参数
+    public static string GetClassPaths(List<Lib> libs,string currentDir) {
+        StringBuilder sb = new();
+        HashSet<string> classPaths = new HashSet<string>();
+        for (int i = 0; i < libs.Count; i++) {
+            if (!classPaths.Contains(libs[i].path)) {
+                classPaths.Add(libs[i].path);
+                sb.Append(Path.GetFullPath(currentDir+"/libraries/"+libs[i].path));
+                if (i != libs.Count -1) {
+                    sb.Append(";");
+                }
+            }
+        }
+        return sb.ToString();
+    }
+    
     // 获取JVM参数
     public static string JvmArgs(string json,JvmArg jvmArg,string os = "windows",string arch = "x64") {
         StringBuilder sb = new StringBuilder();
@@ -498,6 +515,9 @@ public class MinecraftUtil {
     public static string MinecraftArgs(string json,MinecraftArg arg) {
         JObject args = JObject.Parse(json);
         StringBuilder argsSb = new StringBuilder();
+        
+        argsSb.Append(args["mainClass"]);
+        argsSb.Append(" ");
         var minecraftArguments = args["minecraftArguments"];
         var argumentsGame = args["arguments"]?["game"];
         if (minecraftArguments != null) {
@@ -516,12 +536,12 @@ public class MinecraftUtil {
         ArgReplace(ref argsSb,"version_name",arg.version);
         ArgReplace(ref argsSb,"game_directory",arg.gameDir);
         ArgReplace(ref argsSb,"assets_root",arg.assetsDir);
-        ArgReplace(ref argsSb,"assets_index_name",arg.assetIndex);
+        ArgReplace(ref argsSb,"assets_index_name",args["assets"].ToString());
         ArgReplace(ref argsSb,"auth_uuid",arg.uuid);
         ArgReplace(ref argsSb,"auth_access_token",arg.accessToken);
-        ArgReplace(ref argsSb,"user_type",arg.userType);
+        ArgReplace(ref argsSb,"user_type","msa");
         ArgReplace(ref argsSb,"version_type",arg.versionType);
-        argsSb.Append($"--width {arg.width} --height {arg.height} --fullscreen {arg.fullscreen.ToString().ToLower()}");
+        argsSb.Append($"--width {arg.width} --height {arg.height} {(arg.fullscreen ? "--fullscreen" : "")}");
         return argsSb.ToString();
     }
     
@@ -570,5 +590,112 @@ public class MinecraftUtil {
             return true;
         }
         return false;
+    }
+    
+    public static bool CompressNative(List<Lib> libs,string currentDir,string versionName){
+        string orderPath = $"{currentDir}/versions/{versionName}/{versionName}-natives";
+        foreach(var i in libs){
+            if(i.isNativeWindows){
+                if (i.classifiers != null) {
+                    foreach (var (key,value) in i.classifiers) {
+                        if (key.Contains("windows")) {
+                            string path = currentDir + "/libraries/" + value.path;
+                            if (!File.Exists(path)) {
+                                return false;
+                            }
+                            DirFileUtil.CompressZip(path,orderPath);
+                        }
+                    }
+                }
+                if (i.name.Contains("natives-windows")) {
+                    string path = currentDir + "/libraries/" + i.path;
+                    if (!File.Exists(path)) {
+                        return false;
+                    }
+                    DirFileUtil.CompressZip(path,orderPath);
+                }
+            }
+        }
+        DirFileUtil.DeleteDirAllContent($"{orderPath}/META-INF");
+        return true;
+    }
+    
+    public static List<DownloadFile> GetNeedLibrariesFile(List<Lib> libs,string currentDir) {
+        List<DownloadFile> downloadFiles = new();
+        foreach (var i in libs) {
+            if (!(i.isNativeLinux || i.isNativeMacos || i.isNativeWindows)) {
+                string name = i.name;
+                string path = currentDir + "/libraries/" + i.path;
+                string urlPath = i.path;
+                if (i.artifact != null && i.artifact.path != "") {
+                    path = currentDir + "/libraries/" + i.artifact.path;
+                    urlPath = i.artifact.path;
+                }
+                downloadFiles.Add(new (name,path,urlPath));
+            }
+            if (i.isNativeWindows) {
+                if (i.path != "") {
+                    string name = i.name;
+                    string path = currentDir + "/libraries/" + i.path;
+                    string urlPath = i.path;
+                    if (i.artifact != null && i.artifact.path != "") {
+                        path = currentDir + "/libraries/" + i.artifact.path;
+                        urlPath = i.artifact.path;
+                    }
+                    downloadFiles.Add(new (name,path,urlPath));
+                }
+                if (i.classifiers != null && i.classifiers.Count > 0) {
+                    foreach (var (key, value) in i.classifiers) {
+                        if (key.Contains("windows")) {
+                            string classifiersPath = currentDir + "/libraries/" + value.path;
+                            downloadFiles.Add(new DownloadFile(Path.GetFileName(value.path), classifiersPath, value.path));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return downloadFiles;
+    }
+    
+    public static List<DownloadFile> GetNeedDownloadFile(List<DownloadFile> files) {
+        List<DownloadFile> downloadFiles = new List<DownloadFile>();
+        foreach (var file in files) {
+            if (!File.Exists(file.FilePath)) {
+                downloadFiles.Add(file);
+            }
+        }
+        return downloadFiles;
+    }
+
+    public static string JavaArgs(string json) {
+        StringBuilder sb = new StringBuilder();
+        //内存自动分配2/3内存
+        var gsvm = GameSetting.GetViewModel?.Invoke();
+        JObject root = PropertiesUtil.loadJson;
+        var index = gsvm == null ? root["gameArgs"]["java"]["index"].ToObject<int>() - 1 : gsvm.CurrentJavaVersionIndex;
+        var javaList = gsvm == null ? root["gameArgs"]["java"]["list"].ToObject<List<JavaItem>>() : gsvm.JavaVersions.ToList();
+        if (index >= 0) {
+            sb.Append(javaList[index].Path.Contains(" ") ? $"\"{javaList[index].Path}\"" : javaList[index].Path);
+        }
+        else {
+            JObject jsonRoot = JObject.Parse(json);
+            var suitJavaVersionNum = jsonRoot["javaVersion"]["majorVersion"].ToObject<int>();
+            string suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
+            var suitJavaPath = javaList.First(i => i.Version.Contains(suitJavaVersion)).Path;
+            sb.Append(suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath);
+        }
+        bool isAuto = gsvm == null ? root["gameArgs"]["memory"]["auto"].ToObject<bool>() : !gsvm.AutoMemoryDisable;
+        sb.Append(" -Xms");
+        if (isAuto) {
+            Dictionary<MemoryName,double> memoryAllInfo = GetMemoryAllInfo();
+            var freeMemory = memoryAllInfo[MemoryName.FreeMemory];
+            sb.Append((freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m");
+        }
+        else {
+            int memory = gsvm == null ? root["gameArgs"]["memory"]["value"].ToObject<int>() : gsvm.MemoryValue;
+            sb.Append(memory + "m");
+        }
+        return sb.ToString();
     }
 }
