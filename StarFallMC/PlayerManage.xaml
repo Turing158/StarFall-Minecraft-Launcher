@@ -159,24 +159,49 @@
                         </TextBlock>
                         <TextBlock Text="点击这里添加→" FontSize="18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 0 50 15"></TextBlock>
                     </Grid>
-                    <Button Name="AddPlayer" Width="30" Height="30" 
-                            HorizontalAlignment="Right" 
-                            VerticalAlignment="Bottom" 
-                            Margin="10" 
-                            Style="{StaticResource Btn}"
-                            FontSize="25"
-                            Click="AddPlayer_OnClick">
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
-                    </Button>
-                    <Button Name="DelPlayer" Width="30" Height="30" 
-                            HorizontalAlignment="Right" 
-                            VerticalAlignment="Bottom" 
-                            Margin="10 0 10 45" 
-                            Style="{StaticResource Btn}"
-                            FontSize="18"
-                            Click="DelPlayer_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
-                    </Button>
+                    <StackPanel Width="40" Height="120" 
+                                HorizontalAlignment="Right" 
+                                VerticalAlignment="Bottom"
+                                Opacity="0.3"
+                                Margin="5">
+                        <Button Name="RefreshPlayer" Width="30" Height="30" 
+                                Style="{StaticResource Btn}"
+                                Margin="0 5"
+                                FontSize="18"
+                                Click="RefreshPlayer_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe60c;"></TextBlock>
+                        </Button>
+                        <Button Name="DelPlayer" Width="30" Height="30" 
+                                Style="{StaticResource Btn}"
+                                Margin="0 5"
+                                FontSize="18"
+                                Click="DelPlayer_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
+                        </Button>
+                        <Button Name="AddPlayer" Width="30" Height="30" 
+                                Style="{StaticResource Btn}"
+                                Margin="0 5"
+                                FontSize="25"
+                                Click="AddPlayer_OnClick">
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
+                        </Button>
+                        <StackPanel.Triggers>
+                            <EventTrigger RoutedEvent="MouseEnter">
+                                <BeginStoryboard>
+                                    <Storyboard TargetProperty="Opacity">
+                                        <DoubleAnimation To="1" Duration="0:0:0.1"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                            <EventTrigger RoutedEvent="MouseLeave">
+                                <BeginStoryboard>
+                                    <Storyboard TargetProperty="Opacity">
+                                        <DoubleAnimation To="0.3" Duration="0:0:0.2" BeginTime="0:0:0.5"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </StackPanel.Triggers>
+                    </StackPanel>
                 </Grid>
                 <Grid Name="Login" Opacity="0">
                     <Grid.RenderTransform>

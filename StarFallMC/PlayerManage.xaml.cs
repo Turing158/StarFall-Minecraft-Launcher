@@ -20,6 +20,8 @@ public partial class PlayerManage : Page {
     private ViewModel viewModel = new ViewModel();
     public static Func<ViewModel> GetViewModel;
     public static Action<object,RoutedEventArgs> unloadedAction;
+    public static Action<int> SetPlayerListIndex;
+    public static Action<Player> SetPlayerListItem;
     
     
     private Storyboard SkinBoxChange;
@@ -59,10 +61,12 @@ public partial class PlayerManage : Page {
 
         // viewModel.Players = new ObservableCollection<Player>(players);
         viewModel.VerifyCode = "加载中...";
-        SetLoadingText = SetLoadingTextFunc;
-        updatePlayerSkin = updatePlayerSkinFunc;
         GetViewModel = GetViewModelFunc;
         unloadedAction = PlayerManage_OnUnloaded;
+        SetLoadingText = setLoadingTextFunc;
+        updatePlayerSkin = updatePlayerSkinFunc;
+        SetPlayerListIndex = setPlayerListIndex;
+        SetPlayerListItem = setPlayerListItem;
         
         PropertiesUtil.LoadPlayerManage(ref viewModel);
         PlayerListView.SelectedIndex = viewModel.Players.IndexOf(viewModel.CurrentPlayer);
@@ -155,29 +159,40 @@ public partial class PlayerManage : Page {
                         if (info != "") {
                             JObject joInfo = JObject.Parse(info);
                             Loading.Visibility = Visibility.Hidden;
-                            var player = new Player(
-                                joInfo["name"].ToString(), 
-                                joInfo["skins"][0]["url"].ToString(), 
-                                true, 
-                                joInfo["id"].ToString()
-                            );
-                            player.RefreshAddress = refreshToken;
-                            bool isExist = viewModel.Players.Any(i => i.Name == player.Name && i.UUID == player.UUID);
-                            if (!isExist) {
-                                viewModel.Players.Add(player);
-                                PlayerListView.SelectedIndex = viewModel.Players.Count-1;
-                                NoUser.Opacity = 0;
+                            if (joInfo["error"] == null) {
+                                var player = new Player(
+                                    joInfo["name"].ToString(), 
+                                    joInfo["skins"][0]["url"].ToString(), 
+                                    true, 
+                                    joInfo["id"].ToString()
+                                );
+                                player.RefreshToken = refreshToken;
+                                player.AccessToken = joInfo["access_token"].ToString();
+                                var currentPlayer = viewModel.Players.First(i => i.UUID == player.UUID && i.IsOnline);
+                                if (currentPlayer == null) {
+                                    viewModel.Players.Add(player);
+                                    PlayerListView.SelectedIndex = viewModel.Players.Count-1;
+                                    NoUser.Opacity = 0;
+                                }
+                                else {
+                                    var index = viewModel.Players.IndexOf(currentPlayer);
+                                    if (index != -1) {
+                                        viewModel.Players[index] = player;
+                                        PlayerListView.SelectedIndex = index;
+                                    }
+                                    
+                                }
+                                updatePlayerSkinFunc(player);
                             }
                             else {
-                                viewModel.Players.Where(i=> i.Name == player.Name && i.UUID == player.UUID).ToList().ForEach(i => {
-                                    i.Skin = player.Skin;
-                                    i.RefreshAddress = player.RefreshAddress;
-                                });
+                                MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","认证失败");
+                                Console.WriteLine("出现问题，请重新认证");
                             }
                         }
                         else {
                             //提示重新认证
-                            Console.WriteLine("出现错误，请重新认证");
+                            MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","认证失败");
+                            Console.WriteLine("出现问题，请重新认证");
                         }
                         OnlinePageHide.Begin();
                         LoginPageHide.Begin();
@@ -187,7 +202,7 @@ public partial class PlayerManage : Page {
                     }
                 }
             });
-        }), null, 2000, 3000);
+        }), null, 5000, 3000);
         
     }
 
@@ -212,10 +227,8 @@ public partial class PlayerManage : Page {
     }
 
     private void updatePlayerSkinFunc(Player player) {
-        string skin = DefaultSKin;
         if (player != null) {
             viewModel.CurrentPlayer = player;
-            skin = player.Skin;
             Home.SetPlayer?.Invoke(player);
         }
         
@@ -312,7 +325,7 @@ public partial class PlayerManage : Page {
         updatePlayerSkinTimer(player);
     }
 
-    private void SetLoadingTextFunc(string text) {
+    private void setLoadingTextFunc(string text) {
         LoadingText.Text = text;
     }
     
@@ -342,5 +355,40 @@ public partial class PlayerManage : Page {
         else {
             
         }
+    }
+
+    private void RefreshPlayer_OnClick(object sender, RoutedEventArgs e) {
+        if (viewModel.CurrentPlayer.IsOnline) {
+            RefreshOnlinePlayer();
+        }
+    }
+
+    private async void  RefreshOnlinePlayer() {
+        Console.WriteLine(viewModel.CurrentPlayer);
+        var box = MessageBox.Show($"正在刷新 {viewModel.CurrentPlayer.Name} 玩家信息，请稍等...","刷新玩家信息",MessageBox.BtnType.None);
+        var result = await LoginUtil.RefreshMicrosoftToken(viewModel.CurrentPlayer).ConfigureAwait(true);
+        if (result != null) {
+            Console.WriteLine(result);
+            MessageBox.Show(
+                content:$"刷新完成！ {result.Name} 在启动器中的档案已更新",
+                title:"刷新玩家信息",
+                confirmBtnText:"确定",
+                callback: r => {
+                    MessageBox.Delete(box);
+                });
+            
+        }
+        else {
+            MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。\n    2.前往Minecraft官网使用Microsoft重新登录一下。\n    3.请检查网络后再试！","认证失败");
+            Console.WriteLine("出现问题，请重新认证");
+        }
+    }
+
+    public void setPlayerListIndex(int index) {
+        PlayerListView.SelectedIndex = index;
+    }
+
+    public void setPlayerListItem(Player player) {
+        setPlayerListIndex(viewModel.Players.IndexOf(player));
     }
 }
