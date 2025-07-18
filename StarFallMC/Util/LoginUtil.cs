@@ -4,7 +4,7 @@ using StarFallMC.Entity;
 namespace StarFallMC.Util;
 
 public class LoginUtil {
-    public readonly static string clientId = "11c8deff-d17f-44ae-b8cf-068200d155a8";
+    private readonly static string clientId = "11c8deff-d17f-44ae-b8cf-068200d155a8";
         
     
         //获取Microsoft Device Code
@@ -28,6 +28,59 @@ public class LoginUtil {
             return await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form).ConfigureAwait(true);
         }
 
+        //刷新Microsoft Token
+        public static async Task<Player> RefreshMicrosoftToken(Player player) {
+            Console.WriteLine("刷新Microsoft Token");
+            Dictionary<string,Object> args = new () {
+                {"client_id",clientId},
+                {"refresh_token",player.RefreshToken},
+                {"grant_type","refresh_token"},
+                {"scope","XboxLive.signin offline_access"}
+            };
+            var r =await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form).ConfigureAwait(true);
+            if(r.IsSuccess){
+                JObject jo = JObject.Parse(r.Content);
+                var refreshToken = jo["refresh_token"].ToString();
+                var result = await GetXboxLiveToken(jo["access_token"].ToString()).ConfigureAwait(true);
+                var jo2 = JObject.Parse(result);
+                if (string.IsNullOrEmpty(result) || jo2["error"] == null) {
+                    var newPlayer = new Player(
+                        jo2["name"].ToString(), 
+                        jo2["skins"][0]["url"].ToString(), 
+                        true, 
+                        jo2["id"].ToString()
+                    );
+                    newPlayer.RefreshToken = refreshToken;
+                    newPlayer.AccessToken = jo2["access_token"].ToString();
+                    RefreshPlayer(newPlayer);
+                    return newPlayer;
+                }
+            }
+            Console.WriteLine(r.ErrorMessage);
+            return null;
+        }
+
+        public static void RefreshPlayer(Player player) {
+            PlayerManage.ViewModel pmvm = PlayerManage.GetViewModel?.Invoke();
+            if (pmvm != null) {
+                var currentPlayer = pmvm.Players.First(i => i.UUID == player.UUID && i.IsOnline);
+                var index = pmvm.Players.IndexOf(currentPlayer);
+                if (index != -1) {
+                    PlayerManage.GetViewModel.Invoke().Players[index] = player;
+                }
+                PlayerManage.SetPlayerListItem.Invoke(player);
+            }
+            else {
+                PropertiesUtil.loadJson["player"]["player"] = JObject.FromObject(player);
+                var objs = PropertiesUtil.loadJson["player"]["players"].ToObject<List<Player>>();
+                int index = objs.FindIndex(i => i.UUID == player.UUID && i.IsOnline);
+                if (index != -1) {
+                    objs[index] = player;
+                }
+                PropertiesUtil.loadJson["player"]["players"] = JObject.FromObject(objs);
+                Home.SetPlayer?.Invoke(player);
+            }
+        }
         
         //获取Xbox Live Token
         public static async Task<string> GetXboxLiveToken(string accessToken) {
@@ -45,8 +98,6 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Post("https://user.auth.xboxlive.com/user/authenticate",args).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                // Console.WriteLine(jo["Token"].ToString());
-                // Console.WriteLine(jo["DisplayClaims"]["xui"][0]["uhs"].ToString());
                 return await GetXSTSToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString()).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
@@ -69,8 +120,6 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Post("https://xsts.auth.xboxlive.com/xsts/authorize",args);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                // Console.WriteLine(jo["Token"].ToString());
-                // Console.WriteLine(jo["DisplayClaims"]["xui"][0]["uhs"].ToString());
                 return await GetMinecraftToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString()).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
@@ -87,11 +136,9 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Post("https://api.minecraftservices.com/authentication/login_with_xbox",args).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                // Console.WriteLine(jo["access_token"]);
                 return await GetMinecraftInfo(jo["access_token"].ToString()).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
-
             return "";
         }
 
@@ -105,10 +152,8 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Get("https://api.minecraftservices.com/minecraft/profile",null,headers).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                // Console.WriteLine(jo["id"]);
-                // Console.WriteLine(jo["name"]);
-                // Console.WriteLine(jo["skins"][0]["url"]);
-                return r.Content;
+                jo["access_token"] = accessToken;
+                return jo.ToString();
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
