@@ -9,6 +9,7 @@ namespace StarFallMC.Component;
 public partial class MessageBox : UserControl {
     
     public enum BtnType {
+        None,
         Confirm,
         ConfirmAndCancel,
         Custom,
@@ -103,7 +104,7 @@ public partial class MessageBox : UserControl {
         }
     }
 
-    public static void Show(string content,string title = "提示",
+    public static MessageBox Show(string content,string title = "提示",
         BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
         string customBtnText = "",string confirmBtnText = "确定",string cancelBtnText = "取消",
         bool showCloseBtn = false) {
@@ -139,6 +140,7 @@ public partial class MessageBox : UserControl {
             gird.Children.Add(box);
         }
         box.ShowFunc();
+        return box; 
     }
 
     private void ShowFunc() {
@@ -173,5 +175,15 @@ public partial class MessageBox : UserControl {
 
     private void Mask_OnClickMask(object sender, RoutedEventArgs e) {
         HighlightBox.Begin();
+    }
+    
+    public static void Delete(MessageBox box) {
+        if (box.HideTimer != null) {
+            box.HideTimer.Dispose();
+        }
+        var mainWindow = Application.Current.MainWindow;
+        if (mainWindow != null && mainWindow.Content is Grid gird) {
+            gird.Children.Remove(box);
+        }
     }
 }
