@@ -8,11 +8,8 @@ public class MinecraftArg {
     public string uuid { get; set; }
     public string accessToken { get; set; }
     public string versionType { get; set; }
-    public string width { get; set; }
-    public string height { get; set; }
-    public bool fullscreen { get; set; }
 
-    public MinecraftArg(string username, string version, string gameDir, string assetsDir, string uuid, string accessToken, string versionType, string width, string height, bool fullscreen) {
+    public MinecraftArg(string username, string version, string gameDir, string assetsDir, string uuid, string accessToken, string versionType) {
         this.username = username;
         this.version = version;
         this.gameDir = gameDir;
@@ -20,8 +17,5 @@ public class MinecraftArg {
         this.uuid = uuid;
         this.accessToken = accessToken;
         this.versionType = versionType;
-        this.width = width;
-        this.height = height;
-        this.fullscreen = fullscreen;
     }
 }

@@ -58,6 +58,10 @@ public partial class MainWindow : Window {
     }
 
     private void SettingBtn_OnClick(object sender, RoutedEventArgs e) {
+        if (Home.GameStarting) {
+            Console.WriteLine("游戏正在启动中，无法进入设置");
+            return;
+        }
         if (SettingFrame.RenderTransform.Value.OffsetX != 0) {
             HomeBtnEnter.Stop();
             SettingBtnEnter.Begin();

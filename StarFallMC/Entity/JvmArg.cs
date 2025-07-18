@@ -1,4 +1,6 @@
-﻿namespace StarFallMC.Entity;
+﻿using System.IO;
+
+namespace StarFallMC.Entity;
 
 public class JvmArg {
     public string currentDir { get; set; }
@@ -16,8 +18,8 @@ public class JvmArg {
         this.launcherName = launcherName;
         this.launcherVersion = launcherVersion;
         this.classpath = classpath;
-        nativesDirectory = $"{currentDir}/versions/{versionName}/{versionName}-natives";
-        libraryDirectory = $"{currentDir}/libraries";
+        nativesDirectory = Path.GetFullPath($"{currentDir}/versions/{versionName}/{versionName}-natives");
+        libraryDirectory = Path.GetFullPath($"{currentDir}/libraries");
         primaryJarName = $"{versionName}.jar";
     }
 }

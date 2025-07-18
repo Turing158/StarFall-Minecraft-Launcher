@@ -1,11 +1,10 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.Pkcs;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.SettingPages;
 
@@ -450,13 +449,11 @@ public class MinecraftUtil {
     public static string GetClassPaths(List<Lib> libs,string currentDir) {
         StringBuilder sb = new();
         HashSet<string> classPaths = new HashSet<string>();
-        for (int i = 0; i < libs.Count; i++) {
-            if (!classPaths.Contains(libs[i].path)) {
-                classPaths.Add(libs[i].path);
-                sb.Append(Path.GetFullPath(currentDir+"/libraries/"+libs[i].path));
-                if (i != libs.Count -1) {
-                    sb.Append(";");
-                }
+        foreach (var i in libs) {
+            if (!classPaths.Contains(i.path)) {
+                classPaths.Add(i.path);
+                sb.Append(Path.GetFullPath(currentDir+"/libraries/"+i.path));
+                sb.Append(";");
             }
         }
         return sb.ToString();
@@ -466,7 +463,7 @@ public class MinecraftUtil {
     public static string JvmArgs(string json,JvmArg jvmArg,string os = "windows",string arch = "x64") {
         StringBuilder sb = new StringBuilder();
         JObject args = JObject.Parse(json);
-        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile= -Dminecraft.client.jar=\"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32m -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
+        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile= -Dminecraft.client.jar=\"{Path.GetFullPath($"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}")}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32m -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
         JArray jvm = args["arguments"]?["jvm"] as JArray;
         if (jvm != null) {
             foreach (var i in jvm) {
@@ -494,17 +491,17 @@ public class MinecraftUtil {
                     sb.Append(i);
                     sb.Append(" ");
                 }
-                
             }
+            sb.Length--;
         }
         else {
             sb.Append(defaultArgs);
         }
-        ArgReplace(ref sb,"natives_directory",jvmArg.nativesDirectory);
+        ArgReplace(ref sb,"natives_directory",Path.GetFullPath(jvmArg.nativesDirectory));
         ArgReplace(ref sb,"launcher_name",jvmArg.launcherName);
         ArgReplace(ref sb,"launcher_version",jvmArg.launcherVersion);
         ArgReplace(ref sb,"classpath",jvmArg.classpath);
-        ArgReplace(ref sb,"library_directory",jvmArg.libraryDirectory);
+        ArgReplace(ref sb,"library_directory",Path.GetFullPath(jvmArg.libraryDirectory));
         ArgReplace(ref sb,"primary_jar_name",jvmArg.primaryJarName);
         ArgReplace(ref sb,"version_name",jvmArg.versionName);
         ArgReplace(ref sb,"classpath_separator",";");
@@ -521,7 +518,7 @@ public class MinecraftUtil {
         var minecraftArguments = args["minecraftArguments"];
         var argumentsGame = args["arguments"]?["game"];
         if (minecraftArguments != null) {
-            argsSb = new StringBuilder(minecraftArguments.ToString()) ;
+            argsSb.Append(minecraftArguments) ;
         }
         else if (argumentsGame != null) {
             var argArray = argumentsGame.ToArray();
@@ -534,14 +531,29 @@ public class MinecraftUtil {
         }
         ArgReplace(ref argsSb,"auth_player_name",arg.username);
         ArgReplace(ref argsSb,"version_name",arg.version);
-        ArgReplace(ref argsSb,"game_directory",arg.gameDir);
-        ArgReplace(ref argsSb,"assets_root",arg.assetsDir);
+        ArgReplace(ref argsSb,"game_directory",Path.GetFullPath(arg.gameDir));
+        ArgReplace(ref argsSb,"assets_root",Path.GetFullPath(arg.assetsDir));
         ArgReplace(ref argsSb,"assets_index_name",args["assets"].ToString());
         ArgReplace(ref argsSb,"auth_uuid",arg.uuid);
-        ArgReplace(ref argsSb,"auth_access_token",arg.accessToken);
+        ArgReplace(ref argsSb,"auth_access_token",string.IsNullOrEmpty(arg.accessToken) ? Guid.NewGuid().ToString().Replace("-", "") : arg.accessToken);
         ArgReplace(ref argsSb,"user_type","msa");
         ArgReplace(ref argsSb,"version_type",arg.versionType);
-        argsSb.Append($"--width {arg.width} --height {arg.height} {(arg.fullscreen ? "--fullscreen" : "")}");
+        var gsvm = GameSetting.GetViewModel.Invoke();
+        string width;
+        string height;
+        bool fullscreen;
+        if (gsvm != null) {
+            width = gsvm.GameWidth;
+            height = gsvm.GameHeight;
+            fullscreen = gsvm.IsFullScreen;
+        }
+        else {
+            var root = PropertiesUtil.loadJson["window"];
+            width = root["width"].ToString();
+            height = root["height"].ToString();
+            fullscreen = root["fullscreen"].ToObject<bool>();
+        }
+        argsSb.Append($"--width {width} --height {height} {(fullscreen ? "--fullscreen" : "")}");
         return argsSb.ToString();
     }
     
@@ -673,16 +685,18 @@ public class MinecraftUtil {
         //内存自动分配2/3内存
         var gsvm = GameSetting.GetViewModel?.Invoke();
         JObject root = PropertiesUtil.loadJson;
-        var index = gsvm == null ? root["gameArgs"]["java"]["index"].ToObject<int>() - 1 : gsvm.CurrentJavaVersionIndex;
+        var index = gsvm == null ? root["gameArgs"]["java"]["index"].ToObject<int>(): gsvm.CurrentJavaVersionIndex;
         var javaList = gsvm == null ? root["gameArgs"]["java"]["list"].ToObject<List<JavaItem>>() : gsvm.JavaVersions.ToList();
-        if (index >= 0) {
-            sb.Append(javaList[index].Path.Contains(" ") ? $"\"{javaList[index].Path}\"" : javaList[index].Path);
+        if (index > 0) {
+            var path = Path.GetFullPath((gsvm == null ? javaList[index - 1].Path : javaList[index].Path) + "/bin/javaw.exe");
+            sb.Append(path.Contains(" ") ? $"\"{path}\"" : path);
+            
         }
         else {
             JObject jsonRoot = JObject.Parse(json);
             var suitJavaVersionNum = jsonRoot["javaVersion"]["majorVersion"].ToObject<int>();
             string suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
-            var suitJavaPath = javaList.First(i => i.Version.Contains(suitJavaVersion)).Path;
+            var suitJavaPath = Path.GetFullPath(javaList.First(i => i.Version.Contains(suitJavaVersion)).Path + "/bin/javaw.exe");
             sb.Append(suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath);
         }
         bool isAuto = gsvm == null ? root["gameArgs"]["memory"]["auto"].ToObject<bool>() : !gsvm.AutoMemoryDisable;
@@ -690,7 +704,7 @@ public class MinecraftUtil {
         if (isAuto) {
             Dictionary<MemoryName,double> memoryAllInfo = GetMemoryAllInfo();
             var freeMemory = memoryAllInfo[MemoryName.FreeMemory];
-            sb.Append((freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m");
+            sb.Append((int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m");
         }
         else {
             int memory = gsvm == null ? root["gameArgs"]["memory"]["value"].ToObject<int>() : gsvm.MemoryValue;

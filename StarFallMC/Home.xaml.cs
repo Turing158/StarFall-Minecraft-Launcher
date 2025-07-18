@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Policy;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using StarFallMC.Entity;
@@ -19,6 +17,7 @@ public partial class Home : Page {
     
     public static Action<MinecraftItem> SetGameInfo;
     public static Action<Player> SetPlayer;
+    public static bool GameStarting = false;
     
     public Home() {
         
@@ -145,9 +144,15 @@ public partial class Home : Page {
             ((Storyboard)FindResource("AvatarEnter")).Begin();
             flag = false;
         }
+
+        if (MinecraftUtil.GetJavaVersions().Count == 0) {
+            MessageBox.Show("未检测到系统安装的Java版本。\n    1.请前往设置或Oracle官网下载！\n    2.前往设置自行添加Java版本", "未检测到Java版本");
+            flag = false;
+        }
         if (!flag) {
             return;
         }
+        GameStarting = true;
         StartingBorder.Visibility = Visibility.Visible;
         ((Storyboard)FindResource("Starting")).Begin();
         HomeTips.Show();
@@ -155,6 +160,7 @@ public partial class Home : Page {
     }
 
     private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
+        GameStarting = false;
         StartingBorder.Visibility = Visibility.Collapsed;
         HomeTips.Hide();
         ((Storyboard)FindResource("Started")).Begin();
