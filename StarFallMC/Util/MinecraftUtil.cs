@@ -305,7 +305,7 @@ public class MinecraftUtil {
                 foreach (var j in nameSplit0Split) {
                     path+= j+"/";
                 }
-                for (int j = 0; j < nameSplit.Length; j++) {
+                for (int j = 1; j < nameSplit.Length; j++) {
                     fileName+= nameSplit[j]+"-";
                     if (j == nameSplit.Length - 1) {
                         if (IsNumber(nameSplit[j].Substring(0,1))) {
@@ -446,16 +446,17 @@ public class MinecraftUtil {
     }
     
     //获取ClassPaths的参数
-    public static string GetClassPaths(List<Lib> libs,string currentDir) {
+    public static string GetClassPaths(List<Lib> libs,string currentDir,string versionName) {
         StringBuilder sb = new();
         HashSet<string> classPaths = new HashSet<string>();
         foreach (var i in libs) {
-            if (!classPaths.Contains(i.path)) {
+            if (!classPaths.Contains(i.path) && !string.IsNullOrEmpty(i.path)) {
                 classPaths.Add(i.path);
                 sb.Append(Path.GetFullPath(currentDir+"/libraries/"+i.path));
                 sb.Append(";");
             }
         }
+        sb.Append(Path.GetFullPath($"{currentDir}/versions/{versionName}/{versionName}.jar"));
         return sb.ToString();
     }
     
@@ -553,7 +554,7 @@ public class MinecraftUtil {
             height = root["height"].ToString();
             fullscreen = root["fullscreen"].ToObject<bool>();
         }
-        argsSb.Append($"--width {width} --height {height} {(fullscreen ? "--fullscreen" : "")}");
+        argsSb.Append($" --width {width} --height {height} {(fullscreen ? "--fullscreen" : "")}");
         return argsSb.ToString();
     }
     
@@ -680,36 +681,54 @@ public class MinecraftUtil {
         return downloadFiles;
     }
 
-    public static string JavaArgs(string json) {
-        StringBuilder sb = new StringBuilder();
+    public static (string,string) JavaArgs(string json) {
+        string java = "";
         //内存自动分配2/3内存
         var gsvm = GameSetting.GetViewModel?.Invoke();
         JObject root = PropertiesUtil.loadJson;
         var index = gsvm == null ? root["gameArgs"]["java"]["index"].ToObject<int>(): gsvm.CurrentJavaVersionIndex;
         var javaList = gsvm == null ? root["gameArgs"]["java"]["list"].ToObject<List<JavaItem>>() : gsvm.JavaVersions.ToList();
         if (index > 0) {
-            var path = Path.GetFullPath((gsvm == null ? javaList[index - 1].Path : javaList[index].Path) + "/bin/javaw.exe");
-            sb.Append(path.Contains(" ") ? $"\"{path}\"" : path);
+            var path = Path.GetFullPath((gsvm == null ? javaList[index - 1].Path : javaList[index].Path) + "/bin/java.exe");
+            java += path.Contains(" ") ? $"\"{path}\"" : path;
             
         }
         else {
             JObject jsonRoot = JObject.Parse(json);
             var suitJavaVersionNum = jsonRoot["javaVersion"]["majorVersion"].ToObject<int>();
             string suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
-            var suitJavaPath = Path.GetFullPath(javaList.First(i => i.Version.Contains(suitJavaVersion)).Path + "/bin/javaw.exe");
-            sb.Append(suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath);
+            var suitJavaPath = Path.GetFullPath(javaList.First(i => i.Version.Contains(suitJavaVersion)).Path + "/bin/java.exe");
+            java += suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath;
         }
         bool isAuto = gsvm == null ? root["gameArgs"]["memory"]["auto"].ToObject<bool>() : !gsvm.AutoMemoryDisable;
-        sb.Append(" -Xms");
+        string xms = "-Xms";
         if (isAuto) {
             Dictionary<MemoryName,double> memoryAllInfo = GetMemoryAllInfo();
             var freeMemory = memoryAllInfo[MemoryName.FreeMemory];
-            sb.Append((int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m");
+            xms += (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m";
         }
         else {
             int memory = gsvm == null ? root["gameArgs"]["memory"]["value"].ToObject<int>() : gsvm.MemoryValue;
-            sb.Append(memory + "m");
+            xms += memory + "m";
         }
-        return sb.ToString();
+        return (java, xms);
+    }
+
+    public static string OutputBat(string currentDir,MinecraftItem minecraft,string java,string cmd) {
+        StringBuilder sb = new StringBuilder();
+        sb.Append("@echo off\n");
+        sb.Append($"set APPDATA={currentDir}\n");
+        sb.Append($"set INST_NAME={minecraft.Name}\n");
+        sb.Append($"set INST_ID={minecraft.Name}\n");
+        sb.Append($"set INST_DIR={minecraft.Path}\n");
+        sb.Append($"set INST_MC_DIR={currentDir}\n");
+        sb.Append($"set INST_JAVA={java}\n");
+        sb.Append("\n");
+        sb.Append($"cd /D {currentDir}\n");
+        sb.Append(cmd);
+        sb.Append("\npause\n");
+        string batPath = $"{DirFileUtil.CurrentDirPosition}/{minecraft.Name}.bat";
+        File.WriteAllText(batPath,sb.ToString());
+        return batPath;
     }
 }
