@@ -7,15 +7,13 @@ public class MinecraftArg {
     public string assetsDir { get; set; }
     public string uuid { get; set; }
     public string accessToken { get; set; }
-    public string versionType { get; set; }
 
-    public MinecraftArg(string username, string version, string gameDir, string assetsDir, string uuid, string accessToken, string versionType) {
+    public MinecraftArg(string username, string version, string gameDir, string assetsDir, string uuid, string accessToken) {
         this.username = username;
         this.version = version;
         this.gameDir = gameDir;
         this.assetsDir = assetsDir;
         this.uuid = uuid;
         this.accessToken = accessToken;
-        this.versionType = versionType;
     }
 }

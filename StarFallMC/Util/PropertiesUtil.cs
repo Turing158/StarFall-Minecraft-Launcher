@@ -8,6 +8,8 @@ namespace StarFallMC.Util;
 
 public class PropertiesUtil {
     public static string jsonPath = DirFileUtil.CurrentDirPosition + "/SFMCL.json";
+    public static string LauncherName = "StarFallMC";
+    public static string LauncherVersion = "1.0.0";
     public static JObject loadJson;
     public static void LoadPropertiesJson() {
         if (!File.Exists(jsonPath) || File.ReadAllText(jsonPath) == "") {
@@ -186,8 +188,8 @@ public class PropertiesUtil {
             }
             var others = gameArgs["other"];
             if (others != null) {
-                vm.WindowTitle = others["windowTitle"]?.Value<string>() ?? "StarFallMC";
-                vm.CustomInfo = others["customInfo"]?.Value<string>() ?? "";
+                vm.WindowTitle = others["windowTitle"]?.Value<string>() ?? "";
+                vm.CustomInfo = others["customInfo"]?.Value<string>() ?? "StarFallMC";
                 var jvmExtra = others["jvmExtra"];
                 if (jvmExtra != null) {
                     try {

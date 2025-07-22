@@ -530,6 +530,8 @@ public class MinecraftUtil {
                 }
             }
         }
+        GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
+        string CustomTitle = gsvm == null ? (PropertiesUtil.loadJson["gameArgs"]["other"]["customInfo"]?.ToString() ?? "") : gsvm.CustomInfo;
         ArgReplace(ref argsSb,"auth_player_name",arg.username);
         ArgReplace(ref argsSb,"version_name",arg.version);
         ArgReplace(ref argsSb,"game_directory",Path.GetFullPath(arg.gameDir));
@@ -538,8 +540,7 @@ public class MinecraftUtil {
         ArgReplace(ref argsSb,"auth_uuid",arg.uuid);
         ArgReplace(ref argsSb,"auth_access_token",string.IsNullOrEmpty(arg.accessToken) ? Guid.NewGuid().ToString().Replace("-", "") : arg.accessToken);
         ArgReplace(ref argsSb,"user_type","msa");
-        ArgReplace(ref argsSb,"version_type",arg.versionType);
-        var gsvm = GameSetting.GetViewModel.Invoke();
+        ArgReplace(ref argsSb,"version_type",CustomTitle == "" ? $"{PropertiesUtil.LauncherName} {PropertiesUtil.LauncherVersion}" : CustomTitle);
         string width;
         string height;
         bool fullscreen;
@@ -725,8 +726,8 @@ public class MinecraftUtil {
         sb.Append($"set INST_JAVA={java}\n");
         sb.Append("\n");
         sb.Append($"cd /D {currentDir}\n");
-        sb.Append(cmd);
-        sb.Append("\npause\n");
+        sb.Append(java + " " +cmd);
+        sb.Append("\npause");
         string batPath = $"{DirFileUtil.CurrentDirPosition}/{minecraft.Name}.bat";
         File.WriteAllText(batPath,sb.ToString());
         return batPath;
