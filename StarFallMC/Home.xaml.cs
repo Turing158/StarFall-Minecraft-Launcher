@@ -8,6 +8,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using MessageBox = StarFallMC.Component.MessageBox;
 
 namespace StarFallMC;
 
@@ -17,6 +18,8 @@ public partial class Home : Page {
     
     public static Action<MinecraftItem> SetGameInfo;
     public static Action<Player> SetPlayer;
+    public static Action<bool> HideLaunching;
+    public static Action<MinecraftItem> ErrorLaunch;
     public static bool GameStarting = false;
     
     public Home() {
@@ -30,6 +33,9 @@ public partial class Home : Page {
         
         SetGameInfo = setGameInfo;
         SetPlayer = setPlayerFunc;
+        HideLaunching = hideLaunching;
+        ErrorLaunch = errorLaunch;
+        
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
     }
@@ -157,12 +163,40 @@ public partial class Home : Page {
         ((Storyboard)FindResource("Starting")).Begin();
         HomeTips.Show();
         Console.WriteLine("开始游戏");
+        MinecraftUtil.StartMinecraft(viewModel.CurrentGame,viewModel.CurrentPlayer);
     }
 
     private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
-        GameStarting = false;
-        StartingBorder.Visibility = Visibility.Collapsed;
-        HomeTips.Hide();
-        ((Storyboard)FindResource("Started")).Begin();
+        hideLaunching(true);
+    }
+
+    private void hideLaunching(bool isStop = false) {
+        this.Dispatcher.Invoke(() => {
+            GameStarting = false;
+            StartingBorder.Visibility = Visibility.Collapsed;
+            HomeTips.Hide();
+            ((Storyboard)FindResource("Started")).Begin();
+            if (isStop) {
+                MinecraftUtil.StopMinecraft();
+            }
+        });
+    }
+
+    private void errorLaunch(MinecraftItem item) {
+        this.Dispatcher.Invoke(() => {
+            MessageBox.Show(
+                content:
+                $"当前版本：{item.Name} 出现游戏崩溃！无法正常运行，崩溃可能由多种原因引起，以下为常见解决方案：\n    1.检查Minecraft内存分配是否合理\n    2.检查Java版本是否能够当前Minecraft的启动\n    3.检查Minecraft模组中是否存在模组冲突\n    4.查看崩溃日志文件，若有需要，建议保存",
+                title: "Minecraft 运行失败",
+                btnType: MessageBox.BtnType.ConfirmAndCustom,
+                customBtnText: "查看日志",
+                callback: r => {
+                    if (r == MessageBox.Result.Custom) {
+                        DirFileUtil.openDirByExplorer(DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(item.Path)));
+                    }
+                });
+        });
+    }
+
     }
 }

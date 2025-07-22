@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -731,5 +732,89 @@ public class MinecraftUtil {
         string batPath = $"{DirFileUtil.CurrentDirPosition}/{minecraft.Name}.bat";
         File.WriteAllText(batPath,sb.ToString());
         return batPath;
+    }
+    
+    public static Process MinecraftProcess;
+    private static Timer processTimer;
+
+    private static Timer startTimer;
+    private static bool isShowWindow = false;
+    
+    public static async Task<bool> StartMinecraft(MinecraftItem minecraft,Player player,bool isLaunch = true) {
+        string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
+        string json = File.ReadAllText($"{minecraft.Path}/{minecraft.Name}.json");
+        List<Lib> libs = GetLibs(json);
+        //检查文件是否完整
+        var files = GetNeedLibrariesFile(libs,currentDir);
+        var needDownloadFiles = GetNeedDownloadFile(files);
+        //不完整，下载至文件完整
+        if (needDownloadFiles.Count != 0) {
+            Console.WriteLine("文件不完整，开始下载...");
+            //执行下载
+        }
+        if (isLaunch && player.IsOnline) {
+            var result = await LoginUtil.RefreshMicrosoftToken(player).ConfigureAwait(true);
+            if (result != null) {
+                player = result;
+            }
+            else {
+                MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。\n    2.前往Minecraft官网使用Microsoft重新登录一下。\n    3.请检查网络后再试！","认证失败");
+                return false;
+            }
+        }
+        var (java, memory) = JavaArgs(json);
+        string jvmArgs = JvmArgs(json, new JvmArg (
+            currentDir:currentDir,
+            versionName:minecraft.Name,
+            launcherName:"StarFallMC",
+            launcherVersion:"1.0.0",
+            classpath: GetClassPaths(libs,currentDir,minecraft.Name)
+        ));
+        string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
+            username: player.Name,
+            version: minecraft.Name,
+            gameDir: currentDir + "/games/" + minecraft.Name,
+            assetsDir: currentDir + "/assets",
+            uuid: player.UUID,
+            accessToken: player.AccessToken
+        ));
+        string cmd = memory + " " + jvmArgs + " " + minecraftArgs;
+        // Console.WriteLine(cmd);
+        if (isLaunch) {
+            MinecraftProcess = ProcessUtil.RunMinecraft(java,cmd);
+            startTimer = new Timer(o => {
+                Console.WriteLine("检测窗口中...");
+                if (ProcessUtil.HasProcessWindow(MinecraftProcess.Id)) {
+                    startTimer.Dispose();
+                    Console.WriteLine("窗口出现");
+                    GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
+                    ProcessUtil.SetWindowTitle(MinecraftProcess.Id,gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
+                    Home.HideLaunching?.Invoke(false);
+                }
+            }, null, 500, 500);
+            processTimer = new Timer(o => {
+                Console.WriteLine("检测Minecraft进程中...");
+                if (MinecraftProcess.HasExited) {
+                    Home.HideLaunching?.Invoke(false);
+                    if (MinecraftProcess.ExitCode != 0) {
+                        Home.ErrorLaunch?.Invoke(o as MinecraftItem ?? new MinecraftItem());
+                        Console.WriteLine("Minecraft出现失败，错误代码：" + MinecraftProcess.ExitCode);
+                    }
+                    processTimer?.Dispose();
+                }
+            }, minecraft, 1000, 1500);
+        }
+        
+        return true;
+    }
+    
+    public static void StopMinecraft() {
+        ProcessUtil.StopProcess(MinecraftProcess);
+        if (processTimer != null) {
+            processTimer.Dispose();
+        }
+        if (startTimer != null) {
+            startTimer.Dispose();
+        }
     }
 }
