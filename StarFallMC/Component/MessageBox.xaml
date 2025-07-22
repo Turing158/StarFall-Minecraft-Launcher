@@ -34,7 +34,7 @@
                     <RowDefinition Height="50"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Grid>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text}" FontSize="22" Margin="15 10 40 0" VerticalAlignment="Center"></TextBlock>
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text}" FontSize="20" Margin="15 8 40 0" VerticalAlignment="Center"></TextBlock>
                     <Button Width="25" Height="25" Style="{StaticResource PlainBtn}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 6 0" Visibility="{Binding CloseBtnVisibility}">
                         <TextBlock Text="&#xe90b;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
                     </Button>
