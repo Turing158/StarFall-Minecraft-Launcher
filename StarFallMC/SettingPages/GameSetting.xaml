@@ -81,7 +81,7 @@
                                           Margin="50 10" 
                                           Width="80" Height="30" 
                                           Style="{StaticResource TbStyle}" Click="MemoryMode_OnClick"
-                                           IsChecked="{Binding AutoMemoryDisable}">
+                                          IsChecked="{Binding AutoMemoryDisable}">
                                 <ToggleButton.Content>
                                     <Grid>
                                         <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Left" Text="自动"></TextBlock>

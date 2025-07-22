@@ -64,9 +64,12 @@ public partial class GameSetting : Page {
         Dictionary<MinecraftUtil.MemoryName,double> memoryAllInfo = MinecraftUtil.GetMemoryAllInfo();
         var freeMemory = memoryAllInfo[MinecraftUtil.MemoryName.FreeMemory];
         MemorySlider.Maximum = freeMemory;
-        MemorySlider.Minimum = freeMemory*2/3 < 656 ? 656 : freeMemory*2/3;
+        MemorySlider.Minimum = freeMemory*1/9 < 656 ? 656 : freeMemory*1/9;
         MinMemory.Text = (MemorySlider.Minimum/1024).ToString("F1")+"G";
         MaxMemory.Text = (MemorySlider.Maximum/1024).ToString("F1")+"G";
+        if (!viewModel.AutoMemoryDisable || MemorySlider.Value > freeMemory) {
+            MemorySlider.Value = freeMemory * 2 / 3;
+        }
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -242,7 +245,7 @@ public partial class GameSetting : Page {
     }
 
     private void Memory_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
-        CurrentMemory.Text = (viewModel.MemoryValue / 1024).ToString("F1") + "G";
+        CurrentMemory.Text = ((double)viewModel.MemoryValue / 1024).ToString("F1")+"G";
         MemorySlider.Interval = 100;
     }
 
@@ -254,6 +257,7 @@ public partial class GameSetting : Page {
         else {
             MemorySlider.IsEnabled = false;
         }
+        RefleshMemory();
     }
 
     private void IsIsolation_OnMouseDown(object sender, MouseButtonEventArgs e) {
