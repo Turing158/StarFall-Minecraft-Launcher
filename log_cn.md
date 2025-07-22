@@ -159,3 +159,18 @@
 
 ---
 
+## 启动吧！Minecraft!-2025-7-22
+
+1. 创建MessageBox时可以删掉指定的对象，修改MessageBox的标题样式
+2. 更新Player实体类
+3. 添加刷新正版Player的方法,添加刷新正版用户方法和按钮，以及修改了一些布局
+4. 将类中包含需要输出的路径给格式化
+5. 将工具类中的JavaArgs方法、MinecraftArgs方法和JvmArgs方法修改了一些错误逻辑
+6. 禁止启动中的操作
+7. 添加OutputBat方法将启动参数导出，以便启动
+8. 修复了MinecraftUtil类里一些代码的问题
+9. 修改设置中内存的改变逻辑
+10. 添加Nuget组件
+11. 让设置中的自定义信息选项可用
+12. 添加ProcessUtil类来进行Process的操作
+13. 可以启动**资源文件不缺省**的Minecraft *[主要解决问题]*
