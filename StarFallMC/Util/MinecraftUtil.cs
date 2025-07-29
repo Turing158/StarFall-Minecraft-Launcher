@@ -700,7 +700,7 @@ public class MinecraftUtil {
     }
 
     public static (string,string) JavaArgs(string json) {
-        string java = "";
+        string java = "java";
         //内存自动分配2/3内存
         var gsvm = GameSetting.GetViewModel?.Invoke();
         JObject root = PropertiesUtil.loadJson;
@@ -708,15 +708,20 @@ public class MinecraftUtil {
         var javaList = gsvm == null ? root["gameArgs"]["java"]["list"].ToObject<List<JavaItem>>() : gsvm.JavaVersions.ToList();
         if (index > 0) {
             var path = Path.GetFullPath((gsvm == null ? javaList[index - 1].Path : javaList[index].Path) + "/bin/java.exe");
-            java += path.Contains(" ") ? $"\"{path}\"" : path;
-            
+            java = path.Contains(" ") ? $"\"{path}\"" : path;
         }
         else {
             JObject jsonRoot = JObject.Parse(json);
             var suitJavaVersionNum = jsonRoot["javaVersion"]["majorVersion"].ToObject<int>();
             string suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
-            var suitJavaPath = Path.GetFullPath(javaList.First(i => i.Version.Contains(suitJavaVersion)).Path + "/bin/java.exe");
-            java += suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath;
+            if ((gsvm == null && javaList.Count == 0) || (gsvm != null && javaList.Count == 1)) {
+                javaList = GetJavaVersions();
+            }
+            var suitJava = javaList.First(i => i.Version.Contains(suitJavaVersion));
+            if (suitJava != null) {
+                var suitJavaPath = Path.GetFullPath(suitJava.Path + "/bin/java.exe");
+                java = suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath;
+            }
         }
         bool isAuto = gsvm == null ? root["gameArgs"]["memory"]["auto"].ToObject<bool>() : !gsvm.AutoMemoryDisable;
         string xms = "-Xms";
@@ -794,6 +799,25 @@ public class MinecraftUtil {
             uuid: player.UUID,
             accessToken: player.AccessToken
         ));
+        if (!java.Contains(".exe")) {
+            MessageBox.Show($"未获取到合适的java版本，是否还要坚持启动！\n继续启动可能会出现不可描述的错误！\n当前版本 {minecraft.Name} 最适合的Java版本为 Java{java} ，建议前往下载！","未获取到合适的Java版本",
+                MessageBox.BtnType.ConfirmAndCancelAndCustom, r => {
+                if (r == MessageBox.Result.Confirm) {
+                    RunMinecraft(minecraft,java,memory,jvmArgs,minecraftArgs,isLaunch);
+                }
+                else {
+                    if (r == MessageBox.Result.Custom) {
+                        NetworkUtil.OpenUrl("https://www.oracle.com/java/technologies/downloads/");
+                    }
+                    Home.HideLaunching?.Invoke(false);
+                }
+            },"前往下载");
+            return false;
+        }
+        return true;
+    }
+
+    public static bool RunMinecraft(MinecraftItem minecraft, string java, string memory, string jvmArgs, string minecraftArgs, bool isLaunch) {
         string cmd = memory + " " + jvmArgs + " " + minecraftArgs;
         // Console.WriteLine(cmd);
         if (isLaunch) {
@@ -816,21 +840,17 @@ public class MinecraftUtil {
                         Home.ErrorLaunch?.Invoke(o as MinecraftItem ?? new MinecraftItem());
                         Console.WriteLine("Minecraft出现失败，错误代码：" + MinecraftProcess.ExitCode);
                     }
+                    startTimer?.Dispose();
                     processTimer?.Dispose();
                 }
-            }, minecraft, 1000, 1500);
+            }, minecraft, 1000, 3000);
         }
-        
         return true;
     }
     
     public static void StopMinecraft() {
         ProcessUtil.StopProcess(MinecraftProcess);
-        if (processTimer != null) {
-            processTimer.Dispose();
-        }
-        if (startTimer != null) {
-            startTimer.Dispose();
-        }
+        processTimer?.Dispose();
+        startTimer?.Dispose();
     }
 }
