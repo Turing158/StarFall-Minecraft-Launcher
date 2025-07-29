@@ -6,7 +6,6 @@
         <Setter Property="RadiusY" Value="20"></Setter>
     </Style>
     <Style x:Key="TabBtn" TargetType="Button">
-        <!-- <Setter Property="Foreground" Value="#D7C6C5"></Setter> -->
         <Setter Property="Foreground" Value="#001D1F"></Setter>
         <Setter Property="FontWeight" Value="Normal"></Setter>
         <Setter Property="FontSize" Value="14"></Setter>
@@ -108,7 +107,9 @@
         <DoubleAnimation Storyboard.TargetName="ActiveTF" Storyboard.TargetProperty="X" 
                          Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="Opacity" 
-                         To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                         To="0" Duration="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         Duration="0:0:0.2" From="0" To="50" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
     </Storyboard>
     <Storyboard x:Key="SettingBtnEnter">
         <ColorAnimation Storyboard.TargetName="SettingBtn" Storyboard.TargetProperty="Foreground.Color" 
@@ -118,34 +119,27 @@
         <DoubleAnimation Storyboard.TargetName="ActiveTF" Storyboard.TargetProperty="X" 
                          Duration="0:0:0.5" To="90" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="Opacity" 
-                         To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                         To="1" Duration="0:0:0.3" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="SettingFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         Duration="0:0:0.2" From="50" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
     </Storyboard>
-    
-    <Storyboard x:Key="SubFrameShow">
-        <ParallelTimeline>
-            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" 
-                             Duration="0:0:0.2" To="1"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="MainFrame" Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" 
-                             Duration="0:0:0.2" To="10"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Title" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
-                             Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="OperateGrid" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
-                             Duration="0:0:0.5" To="-55" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Icon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             Duration="0:0:0.5" To="-50" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="LauncherName" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
-                             Duration="0:0:0.2" To="50" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="LauncherName" Storyboard.TargetProperty="Opacity" 
-                             Duration="0:0:0.2" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-        </ParallelTimeline>
-    </Storyboard>
-    <Storyboard x:Key="SubFrameHide">
-        <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" 
-                         Duration="0:0:0.2" To="0"></DoubleAnimation>
+    <Storyboard x:Key="TopShow">
+        <DoubleAnimation Storyboard.TargetName="Title" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                         Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="OperateGrid" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                         Duration="0:0:0.5" To="-55" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="BackBtn" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         Duration="0:0:0.5" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="Icon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         Duration="0:0:0.5" To="-50" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="LauncherName" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
+                         Duration="0:0:0.2" To="50" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="LauncherName" Storyboard.TargetProperty="Opacity" 
+                         Duration="0:0:0.2" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="MainFrame" Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" 
-                         Duration="0:0:0.2" To="0"></DoubleAnimation>
+                         Duration="0:0:0.2" To="10"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="TopHide">
         <DoubleAnimation Storyboard.TargetName="Title" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
                          Duration="0:0:0.5" To="-55" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="OperateGrid" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
@@ -158,5 +152,26 @@
                          Duration="0:0:0.2" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="LauncherName" Storyboard.TargetProperty="Opacity" 
                          Duration="0:0:0.2" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="MainFrame" Storyboard.TargetProperty="(UIElement.Effect).(BlurEffect.Radius)" 
+                         Duration="0:0:0.2" To="0"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="SubFrameShow">
+        <ParallelTimeline>
+            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" 
+                             Duration="0:0:0.2" To="1"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                             Duration="0:0:0.3" From="-50" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <StaticResource ResourceKey="TopShow"/>
+        </ParallelTimeline>
+    </Storyboard>
+    <Storyboard x:Key="SubFrameHide">
+        <ParallelTimeline>
+            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="Opacity" 
+                             Duration="0:0:0.1" To="0"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SubFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                             Duration="0:0:0.2" From="0" To="-50" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <StaticResource ResourceKey="TopHide"/>
+        </ParallelTimeline>
+    </Storyboard>
     </Storyboard>
 </ResourceDictionary>

@@ -1,15 +1,7 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
+﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using StarFallMC.Entity;
 using StarFallMC.Util;
 
 namespace StarFallMC;
@@ -26,6 +18,7 @@ public partial class MainWindow : Window {
     
     private Storyboard SubFrameShow;
     private Storyboard SubFrameHide;
+    private Timer SubFrameTimer;
     
     public static Action<string,string> SubFrameNavigate;
     public static Action<string,Action> ReloadSubFrame;
@@ -68,7 +61,6 @@ public partial class MainWindow : Window {
             if (SettingFrameTimer != null) {
                 SettingFrameTimer.Dispose();
             }
-            SettingFrame.RenderTransform = new TranslateTransform(0, 0);
         }
     }
     
@@ -92,6 +84,13 @@ public partial class MainWindow : Window {
     private void BackBtn_OnClick(object sender, RoutedEventArgs e) {
         SubFrameHide.Begin();
         SubFrame.RenderTransform = new TranslateTransform(0, SubFrame.ActualHeight+10);
+            SubFrameHide.Begin();
+            SubFrameTimer = new Timer(o => {
+                this.Dispatcher.BeginInvoke(() => {
+                    SubFrame.RenderTransform = new TranslateTransform(0, SubFrame.ActualHeight+10);
+                    SubFrameTimer.Dispose();
+                });
+            }, null, 200, 0);
     }
 
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
@@ -107,7 +106,9 @@ public partial class MainWindow : Window {
         SubFrame.Navigate(new Uri("Blank.xaml", UriKind.Relative));
         Dispatcher.BeginInvoke(() => {
             SubFrame.Navigate(new Uri($"{pageName}.xaml", UriKind.Relative));
-            action();
+            if (action != null) {
+                action();
+            }
         });
     }
 }

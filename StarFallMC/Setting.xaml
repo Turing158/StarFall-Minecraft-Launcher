@@ -14,8 +14,8 @@
         <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>
     <Grid Background="#00ffffff">
-        <Border Background="#fff" CornerRadius="10"></Border>
-        <Border Background="#88D7C6C5" CornerRadius="10"></Border>
+        <Border Background="#f1f1f1" CornerRadius="0 0 10 10"></Border>
+        <Border Background="#88D7C6C5" CornerRadius="0 0 10 10"></Border>
         <Border Width="120" Background="#f1f1f1" HorizontalAlignment="Left" Margin="40 20" CornerRadius="10" ClipToBounds="True">
             <Grid Margin="0 10">
                 <Border Background="#513938" Height="50" VerticalAlignment="Top">

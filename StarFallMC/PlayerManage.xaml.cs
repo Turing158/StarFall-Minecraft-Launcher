@@ -44,6 +44,7 @@ public partial class PlayerManage : Page {
     
     private string tmpDeviceCode ="";
     private Timer Logintimer;
+    private int retryCount = 0;
     
      
     public PlayerManage() {
@@ -124,6 +125,7 @@ public partial class PlayerManage : Page {
         OnlinePageShow.Begin();
         GetMicrosoftDeviceCodeAsync();
         viewModel.VerifyCode = "加载中...";
+        retryCount = 0;
         loginTimerStart();
 
     }
@@ -147,6 +149,7 @@ public partial class PlayerManage : Page {
         Logintimer = new Timer(new TimerCallback( (state) => {
             Dispatcher.BeginInvoke( async () => {
                 if (tmpDeviceCode != "") {
+                    retryCount++;
                     var result = await LoginUtil.GetMicrosoftToken(tmpDeviceCode).ConfigureAwait(true);
                     if (result.IsSuccess) {
                         JObject jo = JObject.Parse(result.Content);
@@ -185,13 +188,13 @@ public partial class PlayerManage : Page {
                                 updatePlayerSkinFunc(player);
                             }
                             else {
-                                MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","认证失败");
+                                MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","登录失败");
                                 Console.WriteLine("出现问题，请重新认证");
                             }
                         }
                         else {
                             //提示重新认证
-                            MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","认证失败");
+                            MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","登录失败");
                             Console.WriteLine("出现问题，请重新认证");
                         }
                         OnlinePageHide.Begin();
@@ -199,6 +202,11 @@ public partial class PlayerManage : Page {
                     }
                     else {
                         Console.WriteLine(result.ErrorMessage);
+                    }
+                    if (retryCount >= 300) {
+                        Logintimer.Dispose();
+                        MainWindow.ReloadSubFrame.Invoke("PlayerManage",null);
+                        MessageBox.Show("认证超时，建议在五分钟之内完成严重，请重新认证！","登录失败");
                     }
                 }
             });
@@ -330,6 +338,9 @@ public partial class PlayerManage : Page {
     }
     
     private void PlayerManage_OnUnloaded(object sender, RoutedEventArgs e) {
+        if (Logintimer != null) {
+            Logintimer.Dispose();
+        }
         PropertiesUtil.SavePlayerManageArgs();
     }
 

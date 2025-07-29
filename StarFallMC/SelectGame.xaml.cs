@@ -205,7 +205,7 @@ public partial class SelectGame : Page {
     }
 
     public void GameInfo_OnClick(object sender, RoutedEventArgs e) {
-        if (viewModel.CurrentGame != null && viewModel.CurrentGame.Name != "") {
+        if (viewModel.CurrentGame != null && viewModel.CurrentGame.Name != "" && viewModel.Games.Count != 0) {
             GameInfoMaskControl.Show();
         }
     }

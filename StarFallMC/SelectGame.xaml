@@ -28,7 +28,6 @@
     </Page.Triggers>
     <Grid Background="Transparent">
         <Border Style="{StaticResource FrameBg}"></Border>
-        
         <Border Name="DirSelectBorder" 
                 Width="305" 
                 HorizontalAlignment="Left" 
