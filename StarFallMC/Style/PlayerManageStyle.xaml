@@ -21,15 +21,16 @@
                             Name="Border"
                             Width="{TemplateBinding Width}" 
                             Height="{TemplateBinding Height}" 
-                            Background="#f1f1f1"
+                            Background="#C4ABAA"
                             CornerRadius="5"
                             BorderThickness="1"
+                            Opacity="0"
                             BorderBrush="#001D1F">
-                            <Grid>
-                                <Border Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"></Border>
-                                <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
-                            </Grid>
                         </Border>
+                        <Grid>
+                            <Border Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"></Border>
+                            <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
+                        </Grid>
                         <Border
                             Name="Active"
                             Width="{TemplateBinding Width}" 
@@ -44,13 +45,13 @@
                                 <TextBlock Foreground="#d1d1d1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
                             </Grid>
                         </Border>
-                        <Border Width="50" Height="22" CornerRadius="3" Background="#D7C6C5" HorizontalAlignment="Right" Margin="20 0">
+                        <Border Width="50" Height="22" CornerRadius="5" Background="#B2908F" HorizontalAlignment="Right" Margin="10 0">
                             <TextBlock Foreground="#001D1F" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13">
                                 <Run Text="&#xe61e;" FontFamily="{StaticResource IconFontFamily}"></Run>
                                 <Run Text="离线"></Run>
                             </TextBlock>
                         </Border>
-                        <Border Width="50" Height="22" CornerRadius="2" Background="#113032" HorizontalAlignment="Right" Margin="20 0" Visibility="{Binding OnlineLable}">
+                        <Border Width="50" Height="22" CornerRadius="3" Background="#264446" HorizontalAlignment="Right" Margin="10 0" Visibility="{Binding OnlineLable}">
                             <TextBlock Foreground="#D7C6C5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 2 0 0">
                                 <Run Text="&#xe98b;" FontFamily="{StaticResource IconFontFamily}"></Run>
                                 <Run Text="正版"></Run>
@@ -89,16 +90,14 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#264446" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>

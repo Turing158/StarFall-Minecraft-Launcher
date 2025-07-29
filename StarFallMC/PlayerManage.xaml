@@ -142,7 +142,6 @@
                 Margin="40 30" 
                 HorizontalAlignment="Right" 
                 Style="{StaticResource Rect}"
-                Background="#aaD7C6C5"
                 ClipToBounds="True">
             <Grid>
                 <Grid>

@@ -5,19 +5,20 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
                     <Grid Margin="5">
-                        <Border
-                            Name="Border"
-                            Width="{TemplateBinding Width}" 
-                            Height="{TemplateBinding Height}" 
-                            Background="#f1f1f1"
-                            CornerRadius="5"
-                            BorderThickness="1"
-                            BorderBrush="#001D1F">
-                            <Grid>
-                                <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
-                                <TextBlock Name="GameLoader" Foreground="#001D1F" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
-                            </Grid>
-                        </Border>
+                        <Grid>
+                            <Border
+                                Name="Border"
+                                Width="{TemplateBinding Width}" 
+                                Height="{TemplateBinding Height}" 
+                                Background="#aaf1f1f1"
+                                CornerRadius="5"
+                                BorderThickness="1"
+                                Opacity="0"
+                                BorderBrush="#001D1F">
+                            </Border>
+                            <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
+                            <TextBlock Name="GameLoader" Foreground="#001D1F" HorizontalAlignment="Right" VerticalAlignment="Bottom" FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
+                        </Grid>
                         <Border
                             Name="Active"
                             Width="{TemplateBinding Width}" 
@@ -44,18 +45,14 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#264446" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameLoader" Storyboard.TargetProperty="Foreground.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#f1f1f1" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameName" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
-                                        <ColorAnimation Storyboard.TargetName="GameLoader" Storyboard.TargetProperty="Foreground.Color" To="#001D1F" Duration="0:0:0.15"></ColorAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -87,18 +84,18 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
                     <Grid Height="50" Margin="5" MaxWidth="285">
-                        <Border 
-                            Name="bg" 
-                            Width="{TemplateBinding Width}" 
-                            Height="{TemplateBinding Height}" 
-                            Background="#f1f1f1" 
-                            Opacity="0" 
+                        <Border
+                            Name="bg"
+                            Width="{TemplateBinding Width}"
+                            Height="{TemplateBinding Height}"
+                            Background="#f1f1f1"
+                            Opacity="0"
                             CornerRadius="10"></Border>
                         <Border 
                             Name="Border" 
                             Width="{TemplateBinding Width}" 
                             Height="{TemplateBinding Height}"  
-                            Background="#55f1f1f1" 
+                            Background="Transparent" 
                             CornerRadius="10">
                             <Grid>
                                 <TextBlock Text="{Binding Name}" 
@@ -131,7 +128,7 @@
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="#55f1f1f1" Duration="0:0:0.15"></ColorAnimation>
+                                        <ColorAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Background.Color" To="Transparent" Duration="0:0:0.15"></ColorAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
