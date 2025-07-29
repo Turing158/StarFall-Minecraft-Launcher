@@ -635,35 +635,51 @@ public class MinecraftUtil {
         return true;
     }
     
+    private static readonly string bmclapiMaven = "https://bmclapi2.bangbang93.com/maven/";
     public static List<DownloadFile> GetNeedLibrariesFile(List<Lib> libs,string currentDir) {
         List<DownloadFile> downloadFiles = new();
+        HashSet<string> set = new HashSet<string>();
         foreach (var i in libs) {
             if (!(i.isNativeLinux || i.isNativeMacos || i.isNativeWindows)) {
                 string name = i.name;
-                string path = currentDir + "/libraries/" + i.path;
-                string urlPath = i.path;
+                string path = currentDir + "/.minecraft/libraries/" + i.path;
+                string urlPath = bmclapiMaven + i.path;
+                string url = i.artifact?.url ?? "";
                 if (i.artifact != null && i.artifact.path != "") {
-                    path = currentDir + "/libraries/" + i.artifact.path;
-                    urlPath = i.artifact.path;
+                    path = currentDir + "/.minecraft/libraries/" + i.artifact.path;
+                    urlPath = bmclapiMaven + i.artifact.path;
                 }
-                downloadFiles.Add(new (name,path,urlPath));
+
+                if (!set.Contains(path)) {
+                    set.Add(path);
+                    downloadFiles.Add(new (name, path, urlPath, url));
+                }
             }
             if (i.isNativeWindows) {
                 if (i.path != "") {
                     string name = i.name;
-                    string path = currentDir + "/libraries/" + i.path;
-                    string urlPath = i.path;
+                    string path = currentDir + "/.minecraft/libraries/" + i.path;
+                    string urlPath = bmclapiMaven + i.path;
+                    string url = i.artifact?.url ?? "";
                     if (i.artifact != null && i.artifact.path != "") {
-                        path = currentDir + "/libraries/" + i.artifact.path;
-                        urlPath = i.artifact.path;
+                        path = currentDir + "/.minecraft/libraries/" + i.artifact.path;
+                        urlPath = bmclapiMaven + i.artifact.path;
                     }
-                    downloadFiles.Add(new (name,path,urlPath));
+                    if (!set.Contains(path)) {
+                        set.Add(path);
+                        downloadFiles.Add(new (name, path, urlPath, url));
+                    }
+                    
                 }
                 if (i.classifiers != null && i.classifiers.Count > 0) {
                     foreach (var (key, value) in i.classifiers) {
                         if (key.Contains("windows")) {
-                            string classifiersPath = currentDir + "/libraries/" + value.path;
-                            downloadFiles.Add(new DownloadFile(Path.GetFileName(value.path), classifiersPath, value.path));
+                            string classifiersPath = currentDir + "/.minecraft/libraries/" + value.path;
+                            if (!set.Contains(classifiersPath)) {
+                                set.Add(classifiersPath);
+                                downloadFiles.Add(new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path, value.url));
+                            }
+                            
                             break;
                         }
                     }
