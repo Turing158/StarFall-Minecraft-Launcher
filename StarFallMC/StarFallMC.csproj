@@ -72,6 +72,14 @@
       <Resource Include="assets\DefaultGameIcon\LiteLoader.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="assets\element\bedrock.png" />
+      <Resource Include="assets\element\bedrock.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\element\diamond_pickaxe.png" />
+      <Resource Include="assets\element\diamond_pickaxe.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
     <ItemGroup>
