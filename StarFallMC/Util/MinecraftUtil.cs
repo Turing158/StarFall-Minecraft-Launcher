@@ -814,7 +814,7 @@ public class MinecraftUtil {
             },"前往下载");
             return false;
         }
-        return true;
+        return RunMinecraft(minecraft,java,memory,jvmArgs,minecraftArgs,isLaunch);
     }
 
     public static bool RunMinecraft(MinecraftItem minecraft, string java, string memory, string jvmArgs, string minecraftArgs, bool isLaunch) {
