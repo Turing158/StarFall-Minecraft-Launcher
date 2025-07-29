@@ -127,7 +127,8 @@ public partial class MessageBox : UserControl {
         box.viewModel.CustomBtnVisibility =
             btnType == BtnType.CustomAndCancel ||
             btnType == BtnType.ConfirmAndCustom ||
-            btnType == BtnType.Custom 
+            btnType == BtnType.Custom ||
+            btnType == BtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
         box.viewModel.CloseBtnVisibility = showCloseBtn ? Visibility.Visible : Visibility.Collapsed;
         box.viewModel.ConfirmBtnText = confirmBtnText;
