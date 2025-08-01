@@ -20,6 +20,7 @@ public partial class Home : Page {
     public static Action<Player> SetPlayer;
     public static Action<bool> HideLaunching;
     public static Action<MinecraftItem> ErrorLaunch;
+    public static Action<string> StartingState;
     public static bool GameStarting = false;
     
     public Home() {
@@ -35,6 +36,7 @@ public partial class Home : Page {
         SetPlayer = setPlayerFunc;
         HideLaunching = hideLaunching;
         ErrorLaunch = errorLaunch;
+        StartingState = startingState;
         
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
@@ -198,5 +200,8 @@ public partial class Home : Page {
         });
     }
 
+    private void startingState(string state) {
+        StatusText.Text = state;
+    }
     }
 }

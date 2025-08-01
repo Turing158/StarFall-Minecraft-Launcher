@@ -166,6 +166,7 @@ public class MinecraftUtil {
         return root["mainClass"]?.ToString() ?? "net.minecraft.client.main.Main";
     }
 
+    // 获取Minecraft版本信息
     public static MinecraftItem GetMinecraftItem(string versionPath,string jsonPath) {
         MinecraftItem item = new MinecraftItem();
         JObject root = JObject.Parse(File.ReadAllText(jsonPath));
@@ -570,6 +571,7 @@ public class MinecraftUtil {
         }
     }
     
+    //  重命名版本名称
     public static MinecraftItem RenameVersion(MinecraftItem item,string newVersionName) {
         string path = item.Path;
         string newPath = DirFileUtil.GetParentPath(path) + "/" + newVersionName;
@@ -600,6 +602,7 @@ public class MinecraftUtil {
         return item;
     }
     
+    // 检查Minecraft版本是否存在
     public static bool GetMinecraftVersionExists(MinecraftItem item) {
         if (Directory.Exists(item.Path) && File.Exists(item.Path + "/" + item.Name + ".json")){
             return true;
@@ -607,6 +610,7 @@ public class MinecraftUtil {
         return false;
     }
     
+    // 解压Native
     public static bool CompressNative(List<Lib> libs,string currentDir,string versionName){
         string orderPath = $"{currentDir}/versions/{versionName}/{versionName}-natives";
         foreach(var i in libs){
@@ -635,18 +639,23 @@ public class MinecraftUtil {
         return true;
     }
     
+    //  API
     private static readonly string bmclapiMaven = "https://bmclapi2.bangbang93.com/maven/";
+    // 获取需要的Libraries文件
     public static List<DownloadFile> GetNeedLibrariesFile(List<Lib> libs,string currentDir) {
+        if (!currentDir.EndsWith(".minecraft")) {
+            currentDir += "/.minecraft";
+        }
         List<DownloadFile> downloadFiles = new();
         HashSet<string> set = new HashSet<string>();
         foreach (var i in libs) {
             if (!(i.isNativeLinux || i.isNativeMacos || i.isNativeWindows)) {
                 string name = i.name;
-                string path = currentDir + "/.minecraft/libraries/" + i.path;
+                string path = currentDir + "/libraries/" + i.path;
                 string urlPath = bmclapiMaven + i.path;
                 string url = i.artifact?.url ?? "";
                 if (i.artifact != null && i.artifact.path != "") {
-                    path = currentDir + "/.minecraft/libraries/" + i.artifact.path;
+                    path = currentDir + "/libraries/" + i.artifact.path;
                     urlPath = bmclapiMaven + i.artifact.path;
                 }
 
@@ -658,11 +667,11 @@ public class MinecraftUtil {
             if (i.isNativeWindows) {
                 if (i.path != "") {
                     string name = i.name;
-                    string path = currentDir + "/.minecraft/libraries/" + i.path;
+                    string path = currentDir + "/libraries/" + i.path;
                     string urlPath = bmclapiMaven + i.path;
                     string url = i.artifact?.url ?? "";
                     if (i.artifact != null && i.artifact.path != "") {
-                        path = currentDir + "/.minecraft/libraries/" + i.artifact.path;
+                        path = currentDir + "/libraries/" + i.artifact.path;
                         urlPath = bmclapiMaven + i.artifact.path;
                     }
                     if (!set.Contains(path)) {
@@ -674,7 +683,7 @@ public class MinecraftUtil {
                 if (i.classifiers != null && i.classifiers.Count > 0) {
                     foreach (var (key, value) in i.classifiers) {
                         if (key.Contains("windows")) {
-                            string classifiersPath = currentDir + "/.minecraft/libraries/" + value.path;
+                            string classifiersPath = currentDir + "/libraries/" + value.path;
                             if (!set.Contains(classifiersPath)) {
                                 set.Add(classifiersPath);
                                 downloadFiles.Add(new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path, value.url));
@@ -689,6 +698,7 @@ public class MinecraftUtil {
         return downloadFiles;
     }
     
+    // 获取需要下载的Libraries文件
     public static List<DownloadFile> GetNeedDownloadFile(List<DownloadFile> files) {
         List<DownloadFile> downloadFiles = new List<DownloadFile>();
         foreach (var file in files) {
@@ -699,6 +709,7 @@ public class MinecraftUtil {
         return downloadFiles;
     }
 
+    // 获取Java路径和内存参数
     public static (string,string) JavaArgs(string json) {
         string java = "java";
         //内存自动分配2/3内存
@@ -736,7 +747,8 @@ public class MinecraftUtil {
         }
         return (java, xms);
     }
-
+    
+    //  输出启动命令的.bat文件
     public static string OutputBat(string currentDir,MinecraftItem minecraft,string java,string cmd) {
         StringBuilder sb = new StringBuilder();
         sb.Append("@echo off\n");
@@ -761,19 +773,23 @@ public class MinecraftUtil {
     private static Timer startTimer;
     private static bool isShowWindow = false;
     
+    //  启动MC的前置工作
     public static async Task<bool> StartMinecraft(MinecraftItem minecraft,Player player,bool isLaunch = true) {
         string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
         string json = File.ReadAllText($"{minecraft.Path}/{minecraft.Name}.json");
         List<Lib> libs = GetLibs(json);
         //检查文件是否完整
+        Home.StartingState.Invoke("检查文件完整性...");
         var files = GetNeedLibrariesFile(libs,currentDir);
         var needDownloadFiles = GetNeedDownloadFile(files);
         //不完整，下载至文件完整
         if (needDownloadFiles.Count != 0) {
             Console.WriteLine("文件不完整，开始下载...");
             //执行下载
+            Home.StartingState.Invoke("补全文件中...");
         }
         if (isLaunch && player.IsOnline) {
+            Home.StartingState.Invoke("正版登录...");
             var result = await LoginUtil.RefreshMicrosoftToken(player).ConfigureAwait(true);
             if (result != null) {
                 player = result;
@@ -817,6 +833,7 @@ public class MinecraftUtil {
         return RunMinecraft(minecraft,java,memory,jvmArgs,minecraftArgs,isLaunch);
     }
 
+    //  启动MC
     public static bool RunMinecraft(MinecraftItem minecraft, string java, string memory, string jvmArgs, string minecraftArgs, bool isLaunch) {
         string cmd = memory + " " + jvmArgs + " " + minecraftArgs;
         // Console.WriteLine(cmd);
@@ -848,6 +865,7 @@ public class MinecraftUtil {
         return true;
     }
     
+    //  停止启动，或停止该MC进程
     public static void StopMinecraft() {
         ProcessUtil.StopProcess(MinecraftProcess);
         processTimer?.Dispose();
