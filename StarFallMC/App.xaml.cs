@@ -11,6 +11,7 @@ public partial class App : Application {
     protected override void OnStartup(StartupEventArgs e) {
         base.OnStartup(e);
         PropertiesUtil.LoadPropertiesJson();
+        DownloadUtil.init(8,3);
     }
 
 }

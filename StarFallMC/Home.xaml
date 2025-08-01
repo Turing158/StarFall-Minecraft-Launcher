@@ -28,219 +28,21 @@
                 <ImageBrush ImageSource="/assets/bg.png"></ImageBrush>
             </Border.Background>
         </Border>
-        <Grid Name="BottomFrame" VerticalAlignment="Bottom" Height="80">
-            <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 15 10" Opacity="0.65"></Border>
-            <Grid Width="200" HorizontalAlignment="Left" Margin="10">
-                <component:LittleTips x:Name="HomeTips" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
-            <Border Name="CurrentPlayer" 
-                    Width="0" Height="0" 
-                    Style="{StaticResource Rect}" 
-                    HorizontalAlignment="Left" 
-                    RenderTransformOrigin="0.5,0.5"
-                    MouseLeftButtonDown="CurrentPlayer_OnMouseLeftButtonDown"
-                    ToolTip="点击查看玩家信息"
-            >
-                <Border.RenderTransform>
-                    <TranslateTransform X="30"></TranslateTransform>
-                </Border.RenderTransform>
-                <StackPanel Orientation="Horizontal">
-                    <Border Width="45" Height="45" 
-                           HorizontalAlignment="Left" 
-                           Margin="7.5"
-                           Background="Transparent"
-                    ></Border>
-                    <TextBlock Name="PlayerName" 
-                               Width="100" 
-                               Margin="5" 
-                               TextAlignment="Center" 
-                               VerticalAlignment="Center" 
-                               Text="{Binding PlayerName}" 
-                               Foreground="#113032" 
-                               TextWrapping="Wrap" 
-                               FontWeight="Bold" 
-                               FontSize="15"></TextBlock>
-                </StackPanel>
-                <Border.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource AvatarEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource AvatarLeave}"></BeginStoryboard>
-                    </EventTrigger>
-                </Border.Triggers>
-            </Border>
-            <Viewbox Name="PlayerAvatar"
-                     Width="50" Height="50" 
-                     Stretch="UniformToFill" 
-                     MouseDown="CurrentPlayer_OnMouseLeftButtonDown" 
-                     HorizontalAlignment="Left" 
-                     VerticalAlignment="Center"
-                     >
-                <Grid ToolTip="点击查看玩家信息">
-                    <Canvas Width="45" Height="45" ClipToBounds="True">
-                        <Image Width="360"
-                               Canvas.Left="-45" Canvas.Top="-45"
-                               Source="{DynamicResource PlayerSkin}"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor">
-                        </Image>
-                    </Canvas>
-                    <Canvas Width="50" Height="50" ClipToBounds="True">
-                        <Image Width="400"
-                               Canvas.Left="-250" Canvas.Top="-50"
-                               Source="{DynamicResource PlayerSkin}"
-                               RenderOptions.BitmapScalingMode="NearestNeighbor">
-                        </Image>
-                    </Canvas>
-                </Grid>
-                
-                <Viewbox.Effect>
-                    <DropShadowEffect Color="Black" ShadowDepth="2" BlurRadius="20" Opacity="0.4"></DropShadowEffect>
-                </Viewbox.Effect>
-                <Viewbox.RenderTransform>
-                    <TranslateTransform X="30"></TranslateTransform>
-                </Viewbox.RenderTransform>
-                <Viewbox.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource AvatarEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource AvatarLeave}"></BeginStoryboard>
-                    </EventTrigger>
-                </Viewbox.Triggers>
-            </Viewbox>
-            
-            <Border Name="CurrentGame" 
-                    Width="0" Height="0" 
-                    Style="{StaticResource Rect}" 
-                    RenderTransformOrigin="0.5,0.5"
-                    MouseLeftButtonDown="CurrentGame_OnMouseLeftButtonDown"
-                    ToolTip="点击切换Minecraft版本">
-                <Border.RenderTransform>
-                    <TranslateTransform></TranslateTransform>
-                </Border.RenderTransform>
-                <StackPanel Orientation="Horizontal">
-                    <Border Background="Transparent" Width="45" Height="45" Margin="5"></Border>
-                    <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" Margin="2" TextWrapping="Wrap" Text="未选择版本" Foreground="#113032" FontSize="13"></TextBlock>
-                </StackPanel>
-                <Border.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource GameEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource GameLeave}"></BeginStoryboard>
-                    </EventTrigger>
-                </Border.Triggers>
-            </Border>
-            <Image Name="GameIcon" 
-                   Source="{DynamicResource CurrentGameIcon}" 
-                   RenderOptions.BitmapScalingMode="NearestNeighbor" 
-                   VerticalAlignment="Center"
-                   HorizontalAlignment="Center"
-                   Stretch="UniformToFill" 
-                   Width="50" 
-                   Height="50" 
-                   MouseDown="CurrentGame_OnMouseLeftButtonDown"
-                   ToolTip="点击切换Minecraft版本"
-                   >
-                <Image.Effect>
-                    <DropShadowEffect Color="Black" ShadowDepth="2" BlurRadius="20" Opacity="0.4"></DropShadowEffect>
-                </Image.Effect>
-                <Image.RenderTransform>
-                    <TranslateTransform X="0"></TranslateTransform>
-                </Image.RenderTransform>
-                <Image.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource GameEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource GameLeave}"></BeginStoryboard>
-                    </EventTrigger>
-                </Image.Triggers>
-            </Image>
-            <!-- Width="150" Height="60" -->
-            <Button Name="StartGameBtn" 
-                    Width="50" Height="50" 
-                    Style="{StaticResource Btn}" 
-                    HorizontalAlignment="Right" 
-                    Margin="0 0 30 0" 
-                    RenderTransformOrigin="0.5,0.5"
-                    Click="StartGameBtn_OnClick">
-                <Button.RenderTransform>
-                    <TranslateTransform X="0"></TranslateTransform>
-                </Button.RenderTransform>
-                <Grid>
-                    <TextBlock Name="StartGameBtnTextBlock" Text="开 始 游 戏" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                    <TextBlock Name="StartGameBtnIcon" Text="&#xea17;" 
-                               FontFamily="{StaticResource IconFontFamily}" 
-                               FontSize="30" TextAlignment="Center"
-                               RenderTransformOrigin="0.5,0.5">
-                        <TextBlock.RenderTransform>
-                            <RotateTransform Angle="-45"></RotateTransform>
-                        </TextBlock.RenderTransform>
-                    </TextBlock>
-                </Grid>
-                <Button.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource LaunchEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource LaunchLeave}"></BeginStoryboard>
-                    </EventTrigger>
-                </Button.Triggers>
-            </Button>
-            <Border Name="StartingBorder" 
-                    Width="400" Height="70" 
-                    HorizontalAlignment="Right" 
-                    Margin="0 0 200 0" 
-                    Opacity="0" 
-                    Background="Black"
-                    Visibility="Collapsed"></Border>
-            <!-- Width="180" Height="60" -->
-            <Button Name="StartingBtn"
-                    Width="0"
-                    Height="60"
-                    Style="{StaticResource Btn}"
-                    HorizontalAlignment="Right"
-                    Margin="0 0 15 0"
-                    FontSize="15"
-                    RenderTransformOrigin="0,0"
-                    Click="StartingBtn_OnClick">
-                <Grid>
-                    <TextBlock Name="StatusText" Text="正在状态中..." FontSize="18" Opacity="1" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                    <TextBlock Name="cancelText" Text="取  消  启  动" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                </Grid>
-                <Button.Triggers>
-                    <EventTrigger RoutedEvent="MouseEnter">
-                        <BeginStoryboard Storyboard="{StaticResource StartingBtnEnter}"></BeginStoryboard>
-                    </EventTrigger>
-                    <EventTrigger RoutedEvent="MouseLeave">
-                        <BeginStoryboard Storyboard="{StaticResource StartingBtnExit}"></BeginStoryboard>
-                    </EventTrigger>
-                </Button.Triggers>
-            </Button>
-            <Grid.Triggers>
-                <EventTrigger RoutedEvent="MouseEnter">
-                    <BeginStoryboard>
-                        <Storyboard TargetName="BottomFrameBg" TargetProperty="Opacity">
-                            <DoubleAnimation Duration="0:0:0.3" To="0.85" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-                <EventTrigger RoutedEvent="MouseLeave">
-                    <BeginStoryboard>
-                        <Storyboard TargetName="BottomFrameBg" TargetProperty="Opacity">
-                            <DoubleAnimation Duration="0:0:0.2" To="0.65"></DoubleAnimation>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Grid.Triggers>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
                 <RowDefinition Height="80"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Name="TopFrame">
+                <Grid  Width="50" Height="50" 
+                       HorizontalAlignment="Right" 
+                       VerticalAlignment="Bottom" 
+                       Margin="10" >
+                    <Button Name="DownloadBtn"
+                            Style="{StaticResource DownloadBtn}" 
+                            Tag="None" Click="DownloadBtn_OnClick"></Button>
+                    <Border Name="DownloadBorder" BorderBrush="#D7C6C5" BorderThickness="2" CornerRadius="60" Opacity="0"></Border>
+                </Grid>
             </Grid>
             <Grid Row="1" Name="BottomFrame" VerticalAlignment="Bottom" Height="80">
                 <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 15 10" Opacity="0.65"></Border>
@@ -421,7 +223,7 @@
                         RenderTransformOrigin="0,0"
                         Click="StartingBtn_OnClick">
                     <Grid>
-                        <TextBlock Name="StatusText" Text="正在状态中..." FontSize="18" Opacity="1" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Name="StatusText" Text="" FontSize="18" Opacity="1" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                         <TextBlock Name="cancelText" Text="取  消  启  动" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                     </Grid>
                     <Button.Triggers>

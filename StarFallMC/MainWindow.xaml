@@ -50,7 +50,11 @@
                 <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
             </Frame.RenderTransform>
         </Frame>
-        
+        <Frame Name="DownloadFrame" VerticalAlignment="Bottom" Source="DownloadPage.xaml" Opacity="0" IsHitTestVisible="False">
+            <Frame.RenderTransform>
+                <TranslateTransform Y="-50"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
         <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" Background="#957A78" VerticalAlignment="Top" MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
             <Grid>
                 <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">

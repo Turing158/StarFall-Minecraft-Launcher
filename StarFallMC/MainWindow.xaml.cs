@@ -19,21 +19,33 @@ public partial class MainWindow : Window {
     private Storyboard SubFrameShow;
     private Storyboard SubFrameHide;
     private Timer SubFrameTimer;
+
+    private Storyboard DownloadShow;
+    private Storyboard DownloadOnlyHide;
+    private Storyboard DownloadHide;
+    private Timer DownloadFrameTimer;
+    
     
     public static Action<string,string> SubFrameNavigate;
     public static Action<string,Action> ReloadSubFrame;
+    public static Action DownloadPageShow;
     public MainWindow() {
         
         InitializeComponent();
         
         HomeBtnEnter = (Storyboard)FindResource("HomeBtnEnter");
         SettingBtnEnter = (Storyboard)FindResource("SettingBtnEnter");
-
         
         SubFrameShow = (Storyboard)FindResource("SubFrameShow");
         SubFrameHide = (Storyboard)FindResource("SubFrameHide");
+
+        DownloadShow = (Storyboard)FindResource("DownloadShow");
+        DownloadOnlyHide = (Storyboard)FindResource("DownloadOnlyHide");
+        DownloadHide = (Storyboard)FindResource("DownloadHide");
+        
         SubFrameNavigate = SubFrameNavigateFunc;
         ReloadSubFrame = reloadSubFrame;
+        DownloadPageShow = downloadPageShow;
 
     }
 
@@ -82,8 +94,7 @@ public partial class MainWindow : Window {
     ~MainWindow() => SubFrameNavigate -= SubFrameNavigateFunc;
 
     private void BackBtn_OnClick(object sender, RoutedEventArgs e) {
-        SubFrameHide.Begin();
-        SubFrame.RenderTransform = new TranslateTransform(0, SubFrame.ActualHeight+10);
+        if (DownloadFrame.Opacity == 0) {
             SubFrameHide.Begin();
             SubFrameTimer = new Timer(o => {
                 this.Dispatcher.BeginInvoke(() => {
@@ -91,6 +102,28 @@ public partial class MainWindow : Window {
                     SubFrameTimer.Dispose();
                 });
             }, null, 200, 0);
+            
+        }
+        else {
+            if (SubFrame.Opacity == 0) {
+                DownloadHide.Begin();
+            }
+            else {
+                DownloadOnlyHide.Begin();
+            }
+            DownloadFrameTimer = new Timer(o => {
+                this.Dispatcher.BeginInvoke(() => {
+                    DownloadFrame.IsHitTestVisible = false;
+                    DownloadFrameTimer.Dispose();
+                });
+            }, null, 300, 0);
+        }
+    }
+
+    private void downloadPageShow() {
+        DownloadShow.Begin();
+        DownloadFrame.IsHitTestVisible = true;
+        Title.Text = "下载 - Download";
     }
 
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {

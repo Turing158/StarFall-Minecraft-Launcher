@@ -15,11 +15,14 @@ namespace StarFallMC;
 public partial class Home : Page {
 
     private ViewModel viewModel = new ViewModel();
+
+    private Storyboard Downloading;
     
     public static Action<MinecraftItem> SetGameInfo;
     public static Action<Player> SetPlayer;
     public static Action<bool> HideLaunching;
     public static Action<MinecraftItem> ErrorLaunch;
+    public static Action<bool> DownloadState;
     public static Action<string> StartingState;
     public static bool GameStarting = false;
     
@@ -30,13 +33,15 @@ public partial class Home : Page {
         DataContext = viewModel;
 
         viewModel.PlayerName = "";
-        //这里之后要获取配置文件中的
         
         SetGameInfo = setGameInfo;
         SetPlayer = setPlayerFunc;
         HideLaunching = hideLaunching;
         ErrorLaunch = errorLaunch;
+        DownloadState = downloadState;
         StartingState = startingState;
+        
+        Downloading = (Storyboard)FindResource("Downloading");
         
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
@@ -48,6 +53,7 @@ public partial class Home : Page {
         private string _playerName;
         private MinecraftItem _currentGame;
         private Player _currentPlayer;
+        private bool _isDownloading;
 
         public string PlayerName {
             get => _playerName;
@@ -69,6 +75,15 @@ public partial class Home : Page {
                 SetField(ref _currentPlayer, value);
             }
         }
+
+        public bool IsDownloading {
+            get => _isDownloading;
+            set {
+                SetField(ref _isDownloading, value);
+            }
+        }
+        
+        
         
         
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
@@ -85,11 +100,11 @@ public partial class Home : Page {
     
 
     private void CurrentGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        MainWindow.SubFrameNavigate?.Invoke("SelectGame", "Minecraft");
+        MainWindow.SubFrameNavigate?.Invoke("SelectGame", "Minecraft - 我的世界");
     }
 
     private void CurrentPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        MainWindow.SubFrameNavigate?.Invoke("PlayerManage", "Players");
+        MainWindow.SubFrameNavigate?.Invoke("PlayerManage", "Players - 玩家");
     }
     
 
@@ -198,6 +213,20 @@ public partial class Home : Page {
                     }
                 });
         });
+    }
+
+    private void DownloadBtn_OnClick(object sender, RoutedEventArgs e) {
+        MainWindow.DownloadPageShow?.Invoke();
+    }
+
+    private void downloadState(bool isDownloading) {
+        if (isDownloading) {
+            Downloading.RepeatBehavior = RepeatBehavior.Forever;
+        }
+        else {
+            Downloading.RepeatBehavior = new RepeatBehavior(1);
+        }
+        Downloading.Begin();
     }
 
     private void startingState(string state) {

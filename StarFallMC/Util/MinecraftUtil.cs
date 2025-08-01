@@ -782,11 +782,10 @@ public class MinecraftUtil {
         Home.StartingState.Invoke("检查文件完整性...");
         var files = GetNeedLibrariesFile(libs,currentDir);
         var needDownloadFiles = GetNeedDownloadFile(files);
-        //不完整，下载至文件完整
         if (needDownloadFiles.Count != 0) {
             Console.WriteLine("文件不完整，开始下载...");
-            //执行下载
             Home.StartingState.Invoke("补全文件中...");
+            await DownloadUtil.StartDownload(needDownloadFiles);
         }
         if (isLaunch && player.IsOnline) {
             Home.StartingState.Invoke("正版登录...");
@@ -839,11 +838,13 @@ public class MinecraftUtil {
         // Console.WriteLine(cmd);
         if (isLaunch) {
             MinecraftProcess = ProcessUtil.RunMinecraft(java,cmd);
+            Home.StartingState.Invoke("等待窗口中...");
             startTimer = new Timer(o => {
                 Console.WriteLine("检测窗口中...");
                 if (ProcessUtil.HasProcessWindow(MinecraftProcess.Id)) {
                     startTimer.Dispose();
                     Console.WriteLine("窗口出现");
+                    Home.StartingState.Invoke("");
                     GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
                     ProcessUtil.SetWindowTitle(MinecraftProcess.Id,gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
                     Home.HideLaunching?.Invoke(false);

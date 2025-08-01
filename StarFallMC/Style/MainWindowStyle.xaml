@@ -173,5 +173,24 @@
             <StaticResource ResourceKey="TopHide"/>
         </ParallelTimeline>
     </Storyboard>
+    
+    <Storyboard x:Key="DownloadShow">
+        <ParallelTimeline>
+            <DoubleAnimation Storyboard.TargetName="DownloadFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                             Duration="0:0:0.3" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="DownloadFrame" Storyboard.TargetProperty="Opacity" 
+                             Duration="0:0:0.2" To="1"></DoubleAnimation>
+            <StaticResource ResourceKey="TopShow"/>
+        </ParallelTimeline>
+    </Storyboard>
+    <Storyboard x:Key="DownloadOnlyHide">
+        <DoubleAnimation Storyboard.TargetName="DownloadFrame" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" 
+                         Duration="0:0:0.3" To="-50" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="DownloadFrame" Storyboard.TargetProperty="Opacity" 
+                         Duration="0:0:0.2" To="0" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+    </Storyboard>
+    <Storyboard x:Key="DownloadHide">
+        <StaticResource ResourceKey="DownloadOnlyHide"/>
+        <StaticResource ResourceKey="TopHide"/>
     </Storyboard>
 </ResourceDictionary>
