@@ -9,7 +9,7 @@ public class DownloadUtil {
     
     private static List<ThreadDownloader> downloaders = new ();
     private static ConcurrentQueue<DownloadFile> waitDownloadFiles;
-    private static ConcurrentBag<DownloadFile> errorDownloadFiles = new ();
+    public static ConcurrentBag<DownloadFile> errorDownloadFiles = new ();
     private static int TotalCount, RetryCount;
     private static int FinishCount => finishCount;
     private static int finishCount;
@@ -22,6 +22,7 @@ public class DownloadUtil {
     public static async Task StartDownload(List<DownloadFile> downloadFiles) {
         isCancelld = false;
         waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
+        errorDownloadFiles.Clear();
         globalCts = new CancellationTokenSource();
         downloadCompletionSource = new TaskCompletionSource<bool>();
         TotalCount = downloadFiles.Count;
@@ -41,7 +42,7 @@ public class DownloadUtil {
             return;
         }
         lock (downloadLock) {
-            if (downloaders.Any(i=>i.isRunning)) {
+            if (downloaders.All(i => i.isRunning)) {
                 return;
             }
             for (int i = 0; i < downloaders.Count; i++) {
@@ -54,9 +55,7 @@ public class DownloadUtil {
                 }
                 downloaders[i].isRunning = true;
                 waitDownloadFiles.TryDequeue(out DownloadFile item);
-                // Console.WriteLine("开始下载 ：" + item);
-                _ = downloaders[i].DownloadFileFunc(item,globalCts.Token);
-                return;
+                _ = downloaders[i].DownloadFileFunc(item,globalCts.Token).ConfigureAwait(false);;
             }
         }
     }
@@ -85,6 +84,36 @@ public class DownloadUtil {
             }
         }
     }
+    private static readonly HttpClient httpClient = new HttpClient();
+    public static async Task SingalDownload(DownloadFile downloadFile) {
+        var dir = Path.GetDirectoryName(downloadFile.FilePath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
+            Directory.CreateDirectory(dir);
+        }
+        if (string.IsNullOrEmpty(downloadFile.Url) && string.IsNullOrEmpty(downloadFile.UrlPath)) {
+            return;
+        }
+        for (int i = 0; i < RetryCount * 2; i++) {
+            try {
+                using var download =
+                    await httpClient.GetAsync(downloadFile.UrlPath, HttpCompletionOption.ResponseHeadersRead);
+                download.EnsureSuccessStatusCode();
+                using var fileStream = new FileStream(downloadFile.FilePath, FileMode.Create);
+                await download.Content.CopyToAsync(fileStream);
+                return;
+            }
+            catch (Exception e){
+                if (i == RetryCount) {
+                    if (!string.IsNullOrEmpty(downloadFile.Url)) {
+                        downloadFile.UrlPath = downloadFile.Url;
+                        downloadFile.Url = "";
+                        continue;
+                    }
+                    return;
+                }
+            }
+        }
+    }
     
     public class ThreadDownloader {
         private HttpClient httpClient = new ();
@@ -109,11 +138,13 @@ public class DownloadUtil {
 
             try {
                 ct.ThrowIfCancellationRequested();
-                using var getSizeReq = new HttpRequestMessage(HttpMethod.Head, item.UrlPath);
-                using var getSize = await httpClient.SendAsync(getSizeReq, ct);
-                getSize.EnsureSuccessStatusCode();
-                long size = getSize.Content.Headers.ContentLength.Value / 1024;
-                // Console.WriteLine(size);
+                // if (item.Size == 0) {
+                //     using var getSizeReq = new HttpRequestMessage(HttpMethod.Head, item.UrlPath);
+                //     using var getSize = await httpClient.SendAsync(getSizeReq, ct);
+                //     getSize.EnsureSuccessStatusCode();
+                //     long size = getSize.Content.Headers.ContentLength.Value / 1024;
+                //     // Console.WriteLine(size);
+                // }
                 using var download =
                     await httpClient.GetAsync(item.UrlPath, HttpCompletionOption.ResponseHeadersRead, ct);
                 download.EnsureSuccessStatusCode();
@@ -162,9 +193,9 @@ public class DownloadUtil {
                 downloadCompletionSource?.TrySetResult(true);
                 return;
             }
-            Task.Delay(100);
             if (!isCancelld && waitDownloadFiles.Count > 0) {
-                DownloadFilesFunc();
+                _ = Task.Delay(100);
+                _ = DownloadFilesFunc().ConfigureAwait(false);
             }
         }
     }
