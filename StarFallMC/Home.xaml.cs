@@ -230,6 +230,8 @@ public partial class Home : Page {
     }
 
     private void startingState(string state) {
-        StatusText.Text = state;
+        this.Dispatcher.BeginInvoke(() => {
+            StatusText.Text = state;
+        });
     }
 }
