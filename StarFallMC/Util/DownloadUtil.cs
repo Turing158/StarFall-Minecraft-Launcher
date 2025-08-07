@@ -152,18 +152,18 @@ public class DownloadUtil {
                 using var fileStream = new FileStream(item.FilePath, FileMode.Create);
                 await download.Content.CopyToAsync(fileStream);
                 Interlocked.Increment(ref finishCount);
-                Console.WriteLine("下载完成 ：" + item.FilePath);
+                // Console.WriteLine("下载完成 ：" + item.FilePath);
                 item.State = DownloadFile.StateType.Finished;
                 DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
             }
             catch (OperationCanceledException) {
-                Console.WriteLine($"下载取消：{item.UrlPath}");
+                // Console.WriteLine($"下载取消：{item.UrlPath}");
                 if (File.Exists(item.FilePath)) {
                     File.Delete(item.FilePath);
                 }
             }
             catch (Exception e) {
-                Console.WriteLine("下载失败 ：" + item.FilePath);
+                // Console.WriteLine("下载失败 ：" + item.UrlPath);
                 item.ErrorMessage = e.Message;
                 if (item.RetryCount > RetryCount) {
                     item.RetryCount++;
