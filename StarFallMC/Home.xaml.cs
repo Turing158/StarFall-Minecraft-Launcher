@@ -156,7 +156,8 @@ public partial class Home : Page {
         newImage.EndInit();
         Application.Current.Resources[resourceKey] = newImage;
     }
-
+    
+    private CancellationTokenSource minecraftStartCts;
     private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
         bool flag = true;
         if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
@@ -175,12 +176,13 @@ public partial class Home : Page {
         if (!flag) {
             return;
         }
+        minecraftStartCts = new CancellationTokenSource();
         GameStarting = true;
         StartingBorder.Visibility = Visibility.Visible;
         ((Storyboard)FindResource("Starting")).Begin();
         HomeTips.Show();
         Console.WriteLine("开始游戏");
-        MinecraftUtil.StartMinecraft(viewModel.CurrentGame,viewModel.CurrentPlayer);
+        MinecraftUtil.StartMinecraft(viewModel.CurrentGame, viewModel.CurrentPlayer,cancellationToken:minecraftStartCts.Token);
     }
 
     private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -189,12 +191,18 @@ public partial class Home : Page {
 
     private void hideLaunching(bool isStop = false) {
         this.Dispatcher.Invoke(() => {
-            GameStarting = false;
-            StartingBorder.Visibility = Visibility.Collapsed;
-            HomeTips.Hide();
-            ((Storyboard)FindResource("Started")).Begin();
-            if (isStop) {
-                MinecraftUtil.StopMinecraft();
+            try {
+                GameStarting = false;
+                StartingBorder.Visibility = Visibility.Collapsed;
+                HomeTips.Hide();
+                ((Storyboard)FindResource("Started")).Begin();
+                if (isStop) {
+                    minecraftStartCts?.Cancel();
+                    MinecraftUtil.StopMinecraft();
+                }
+            }
+            catch (Exception e){
+                Console.WriteLine(e);
             }
         });
     }

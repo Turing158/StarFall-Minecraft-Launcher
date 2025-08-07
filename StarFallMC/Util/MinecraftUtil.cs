@@ -13,6 +13,12 @@ namespace StarFallMC.Util;
 
 public class MinecraftUtil {
     
+    //  API
+    private static readonly string bmclApi = "https://bmclapi2.bangbang93.com";
+    private static string bmclAssetsAPI = $"{bmclApi}/assets"; 
+    private static readonly string bmclapiMaven = $"{bmclApi}/maven/";
+    private static readonly string bmclapiOptifine = $"{bmclApi}/optifine";
+    
     //获取内存信息转换成的单位，默认MB
     public enum MemoryType {
         GB,
@@ -466,7 +472,7 @@ public class MinecraftUtil {
     public static string JvmArgs(string json,JvmArg jvmArg,string os = "windows",string arch = "x64") {
         StringBuilder sb = new StringBuilder();
         JObject args = JObject.Parse(json);
-        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile= -Dminecraft.client.jar=\"{Path.GetFullPath($"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}")}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32m -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
+        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile=\"{Path.GetFullPath($"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.versionName}.xml")}\" -Dminecraft.client.jar=\"{Path.GetFullPath($".minecraft/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}")}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32m -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
         JArray jvm = args["arguments"]?["jvm"] as JArray;
         if (jvm != null) {
             foreach (var i in jvm) {
@@ -543,6 +549,9 @@ public class MinecraftUtil {
         ArgReplace(ref argsSb,"auth_access_token",string.IsNullOrEmpty(arg.accessToken) ? Guid.NewGuid().ToString().Replace("-", "") : arg.accessToken);
         ArgReplace(ref argsSb,"user_type","msa");
         ArgReplace(ref argsSb,"version_type",CustomTitle == "" ? $"{PropertiesUtil.LauncherName} {PropertiesUtil.LauncherVersion}" : CustomTitle);
+        ArgReplace(ref argsSb,"user_properties","{}");
+        ArgReplace(ref argsSb,"clientid","{}");
+        ArgReplace(ref argsSb,"auth_xuid","{}");
         string width;
         string height;
         bool fullscreen;
@@ -639,8 +648,110 @@ public class MinecraftUtil {
         return true;
     }
     
-    //  API
-    private static readonly string bmclapiMaven = "https://bmclapi2.bangbang93.com/maven/";
+    // 获取Optifine参数
+    private static (string, string, string) FormatOptifineName(string OptifineLibName) {
+        var OptifineNameSplit = OptifineLibName.Split(':');
+        var OptifineTrueNameSplit = OptifineNameSplit[^1].Split("_"); //使用结尾表达式，获取数组最后一个元素
+        var mcVersion = "";
+        var mcVersionSplit = OptifineTrueNameSplit[0].Split(".");
+        if (mcVersionSplit.Length <= 2 && int.Parse(mcVersionSplit[1]) < 10) {
+            mcVersion = $"{OptifineTrueNameSplit[0]}.0";
+        }
+        else {
+            mcVersion = OptifineTrueNameSplit[0];
+        }
+        var patch = OptifineTrueNameSplit[^1];
+        var type = string.Join("_",OptifineTrueNameSplit.Skip(1).Take(OptifineTrueNameSplit.Length - 2));
+        return (mcVersion, type, patch);
+    }
+
+    // 安装Optifine,并解压出Launchwrapper
+    private static async Task InstallOptifine(Lib OptiFineLib, Lib LaunchwrapperLib, MinecraftItem minecraft, bool isForce = false) {
+        string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
+        string installerPath = Path.GetFullPath($"{DirFileUtil.GetParentPath($"{currentDir}/libraries/{OptiFineLib.path}")}/{Path.GetFileNameWithoutExtension(OptiFineLib.path)}-installer.jar");
+        var (mcVersion, type, patch) = FormatOptifineName(OptiFineLib.name);
+        if (!File.Exists(installerPath) || isForce) {
+            DownloadUtil.SingalDownload(new DownloadFile(OptiFineLib.name,installerPath,$"{bmclapiOptifine}/{mcVersion}/{type}/{patch}",""));
+        }
+        string optifineJarPath = Path.GetFullPath($"{currentDir}/libraries/{OptiFineLib.path}");
+        if (!File.Exists(optifineJarPath) || isForce) {
+            string versionJarPath = Path.GetFullPath($"{minecraft.Path}/{minecraft.Name}.jar");
+            string args = $"-cp \"{installerPath}\" optifine.Patcher \"{versionJarPath}\" \"{installerPath}\" \"{optifineJarPath}\"";
+            await ProcessUtil.RunCmd("java",args);
+        }
+        var launchwrapperJarPath = Path.GetFullPath($"{currentDir}/libraries/{LaunchwrapperLib.path}");
+        if (!Directory.Exists(Path.GetDirectoryName(launchwrapperJarPath))) {
+        Directory.CreateDirectory(Path.GetDirectoryName(launchwrapperJarPath));
+        }
+        //寻找
+        if (!File.Exists(launchwrapperJarPath) || isForce) {
+            DirFileUtil.GetZipFileToOrder(optifineJarPath, Path.GetFileName(launchwrapperJarPath), launchwrapperJarPath);
+        }
+    }
+
+    // 安装Forge
+    private static async Task InstallForge(DownloadFile forgeInstaller,string currentDir,bool delExtraArgsFile = true) {
+        string args = $"-jar \"{forgeInstaller.FilePath}\" net.minecraftforge.installer.SimpleInstaller --installClient \"{currentDir}\"";
+        await ProcessUtil.RunCmd("java",args);
+        
+        var fileNameSplit = forgeInstaller.Name.Split('-').ToList();
+        string ForgeArgsDir = $"{currentDir}/versions/{fileNameSplit[1]}-{fileNameSplit[0]}-{fileNameSplit[2]}";
+        if (Directory.Exists(ForgeArgsDir) && delExtraArgsFile) {
+            Directory.Delete(ForgeArgsDir, true);
+        }
+    }
+    
+    private static (string, string, string) GetForgeFmlArgs(string json) {
+        JObject root = JObject.Parse(json);
+        string forgeVersion = "";
+        string mcVersion = "";
+        string mcpVersion = "";
+        try {
+            JArray args = root["arguments"]["game"] as JArray;
+            for (int i = 0; i < args.Count; i++) {
+                if (args[i].Type == JTokenType.String) {
+                    if (args[i].ToString().Contains("--fml.forgeVersion")) {
+                        forgeVersion = args[i + 1].ToString();
+                    }
+                    else if (args[i].ToString().Contains("--fml.mcVersion")) {
+                        mcVersion = args[i + 1].ToString();
+                    }
+                    else if (args[i].ToString().Contains("--fml.mcpVersion")) {
+                        mcpVersion = args[i + 1].ToString();
+                    }
+                }
+            }
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+        }
+        return (forgeVersion, mcVersion, mcpVersion);
+    }
+
+    private static DownloadFile GetForgeFmlDownloadFile(string json,string currentDir) {
+        var (forgeVersion, mcVersion, mcpVersion) = GetForgeFmlArgs(json);
+        if (string.IsNullOrEmpty(forgeVersion) || string.IsNullOrEmpty(mcVersion) || string.IsNullOrEmpty(mcpVersion)) {
+            return null;
+        }
+        List<string> forgeNeedFilePath = new();
+        forgeNeedFilePath.Add($"net/minecraftforge/forge/{mcVersion}-{forgeVersion}/forge-{mcVersion}-{forgeVersion}-client.jar");
+        forgeNeedFilePath.Add($"net/minecraftforge/forge/{mcVersion}-{forgeVersion}/forge-{mcVersion}-{forgeVersion}-universal.jar");
+        forgeNeedFilePath.Add($"net/minecraft/client/{mcVersion}-{mcpVersion}/client-{mcVersion}-{mcpVersion}-srg.jar");
+        forgeNeedFilePath.Add($"net/minecraft/client/{mcVersion}-{mcpVersion}/client-{mcVersion}-{mcpVersion}-extra.jar");
+        string[] forgeNeedDirectoryPrefix = ["fmlcore", "javafmllanguage", "mclanguage"];
+        foreach (var i in forgeNeedDirectoryPrefix) {
+            forgeNeedFilePath.Add($"net/minecraftforge/{i}/{mcVersion}-{forgeVersion}/{i}-{mcVersion}-{forgeVersion}.jar");
+        }
+        if (forgeNeedFilePath.Any(i => !File.Exists($"{currentDir}/libraries/{i}"))) {
+            string name = $"forge-{mcVersion}-{forgeVersion}-installer.jar";
+            string path = $"net/minecraftforge/forge/{mcVersion}-{forgeVersion}/{name}";
+            string filePath = $"{currentDir}/libraries/{path}";
+            string urlPath = $"{bmclapiMaven}/{path}";
+            return new DownloadFile(name,filePath,urlPath,"");
+        }
+        return null;
+    }
+    
     // 获取需要的Libraries文件
     public static List<DownloadFile> GetNeedLibrariesFile(List<Lib> libs,string currentDir) {
         if (!currentDir.EndsWith(".minecraft")) {
@@ -651,14 +762,27 @@ public class MinecraftUtil {
         foreach (var i in libs) {
             if (!(i.isNativeLinux || i.isNativeMacos || i.isNativeWindows)) {
                 string name = i.name;
-                string path = currentDir + "/libraries/" + i.path;
-                string urlPath = bmclapiMaven + i.path;
+                string urlPath;
+                string path;
+                if (name.Contains("optifine")) {
+                    if (!name.Contains("launchwrapper-of")) {
+                        var (mcVersion, type, patch) = FormatOptifineName(name);
+                        urlPath = $"{bmclapiOptifine}/{mcVersion}/{type}/{patch}";
+                        path = $"{DirFileUtil.GetParentPath($"{currentDir}/libraries/{i.path}")}/{Path.GetFileNameWithoutExtension(i.path)}-installer.jar";
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    urlPath = bmclapiMaven + i.path;
+                    path = currentDir + "/libraries/" + i.path;
+                }
                 string url = i.artifact?.url ?? "";
-                if (i.artifact != null && i.artifact.path != "") {
+                if (i.artifact != null && !string.IsNullOrEmpty(i.artifact.path)) {
                     path = currentDir + "/libraries/" + i.artifact.path;
                     urlPath = bmclapiMaven + i.artifact.path;
                 }
-
                 if (!set.Contains(path)) {
                     set.Add(path);
                     downloadFiles.Add(new (name, path, urlPath, url));
@@ -696,6 +820,52 @@ public class MinecraftUtil {
             }
         }
         return downloadFiles;
+    }
+    
+    // 获取AssetsIndex中所需要文件
+    public static async Task<List<DownloadFile>> GetAssetsFile(string json,string currentDir,bool isForceDownload = false) {
+        JObject root = JObject.Parse(json);
+        var asset = root["assetIndex"];
+        var assetIndexUrl = asset["url"].ToString();
+        var assetIndexUrls = assetIndexUrl.Split("/");
+        var assetIndexUrlPath = "";
+        for (int i = 0; i < assetIndexUrls.Length; i++) {
+            if (i > 2) {
+                assetIndexUrlPath += "/" + assetIndexUrls[i];
+            }
+        }
+        assetIndexUrlPath = bmclApi + assetIndexUrlPath;
+        string assetJsonPath =$"{currentDir}/assets/indexes/{asset["id"]}.json";
+        var size = asset["size"].ToObject<long>();
+        var downloadFile = new DownloadFile($"assets/indexes/{asset["id"]}.json",assetJsonPath,assetIndexUrlPath,assetIndexUrl);
+        if (isForceDownload) {
+            await DownloadUtil.SingalDownload(downloadFile);
+        }
+        bool needDownload = !File.Exists(assetJsonPath);
+        List<DownloadFile> assets = new();
+        if (!needDownload) {
+            try {
+                JObject assetRoot = JObject.Parse(File.ReadAllText(assetJsonPath));
+                var objs = ((JObject)assetRoot["objects"]).Properties();
+                foreach (var i in objs) {
+                    string prefix = i.Value["hash"].ToString().Substring(0, 2);
+                    string objFilePath = $"{currentDir}/assets/objects/{prefix}/{i.Value["hash"]}";
+                    string objUrl = $"{bmclAssetsAPI}/{prefix}/{i.Value["hash"]}";
+                    var item = new DownloadFile(i.Name, objFilePath, objUrl, "");
+                    item.Size = i.Value["size"]?.ToObject<long>() ?? 0;
+                    assets.Add(item);
+                }
+            }
+            catch (Exception e) {
+                needDownload = true;
+                Console.WriteLine(e);
+            }
+        }
+        if (needDownload) {
+            await DownloadUtil.SingalDownload(downloadFile);
+            return GetAssetsFile(json,currentDir).Result;
+        }
+        return assets;
     }
     
     // 获取需要下载的Libraries文件
@@ -774,84 +944,136 @@ public class MinecraftUtil {
     private static bool isShowWindow = false;
     
     //  启动MC的前置工作
-    public static async Task<bool> StartMinecraft(MinecraftItem minecraft,Player player,bool isLaunch = true) {
-        string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
-        string json = File.ReadAllText($"{minecraft.Path}/{minecraft.Name}.json");
-        List<Lib> libs = GetLibs(json);
-        //检查文件是否完整
-        Home.StartingState.Invoke("检查文件完整性...");
-        var files = GetNeedLibrariesFile(libs,currentDir);
-        var needDownloadFiles = GetNeedDownloadFile(files);
-        if (needDownloadFiles.Count != 0) {
-            Console.WriteLine("文件不完整，开始下载...");
-            Home.StartingState.Invoke("补全文件中...");
-            await DownloadUtil.StartDownload(needDownloadFiles);
-        }
-        if (isLaunch && player.IsOnline) {
-            Home.StartingState.Invoke("正版登录...");
-            var result = await LoginUtil.RefreshMicrosoftToken(player).ConfigureAwait(true);
-            if (result != null) {
-                player = result;
+    public static async Task<bool> StartMinecraft(MinecraftItem minecraft,Player player,bool isLaunch = true,CancellationToken cancellationToken = default) {
+        try {
+            cancellationToken.ThrowIfCancellationRequested();
+            string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
+            string json = File.ReadAllText($"{minecraft.Path}/{minecraft.Name}.json");
+            List<Lib> libs = GetLibs(json);
+            Home.StartingState?.Invoke("检查文件完整性...");
+            var libFiles = GetNeedLibrariesFile(libs, currentDir);
+            var forgeFmlFile = GetForgeFmlDownloadFile(json, currentDir);
+            if (forgeFmlFile != null && minecraft.Loader == "Forge") {
+                libFiles.Add(forgeFmlFile);
             }
-            else {
-                MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。\n    2.前往Minecraft官网使用Microsoft重新登录一下。\n    3.请检查网络后再试！","认证失败");
-                return false;
+            var assetFiles = await GetAssetsFile(json, currentDir);
+            var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
+            cancellationToken.ThrowIfCancellationRequested();
+            if (needDownloadFiles.Count != 0) {
+                Console.WriteLine("文件不完整，开始下载...");
+                Home.StartingState?.Invoke("补全文件中...");
+                await DownloadUtil.StartDownload(needDownloadFiles);
+                if (DownloadUtil.errorDownloadFiles.Count != 0) {
+                    MessageBox.Show(
+                        $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可尝试重新启动 或 前往 “版本属性” 处重新补全下载。",
+                        "下载失败");
+                }
             }
-        }
-        var (java, memory) = JavaArgs(json);
-        string jvmArgs = JvmArgs(json, new JvmArg (
-            currentDir:currentDir,
-            versionName:minecraft.Name,
-            launcherName:"StarFallMC",
-            launcherVersion:"1.0.0",
-            classpath: GetClassPaths(libs,currentDir,minecraft.Name)
-        ));
-        string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
-            username: player.Name,
-            version: minecraft.Name,
-            gameDir: currentDir + "/games/" + minecraft.Name,
-            assetsDir: currentDir + "/assets",
-            uuid: player.UUID,
-            accessToken: player.AccessToken
-        ));
-        if (!java.Contains(".exe")) {
-            MessageBox.Show($"未获取到合适的java版本，是否还要坚持启动！\n继续启动可能会出现不可描述的错误！\n当前版本 {minecraft.Name} 最适合的Java版本为 Java{java} ，建议前往下载！","未获取到合适的Java版本",
-                MessageBox.BtnType.ConfirmAndCancelAndCustom, r => {
-                if (r == MessageBox.Result.Confirm) {
-                    RunMinecraft(minecraft,java,memory,jvmArgs,minecraftArgs,isLaunch);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (minecraft.Loader == "OptiFine") {
+                var OptiFineLib = libs.FirstOrDefault(i => i.name.Contains("OptiFine"));
+                var launchwrapperLib = libs.FirstOrDefault(i => i.name.Contains("launchwrapper"));
+                if ((launchwrapperLib != null && OptiFineLib != null) &&
+                    (!File.Exists($"{currentDir}/libraries/{OptiFineLib.path}") ||
+                     !File.Exists($"{currentDir}/libraries/{launchwrapperLib.path}"))) {
+                    await InstallOptifine(OptiFineLib, launchwrapperLib, minecraft);
+                }
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (forgeFmlFile != null && minecraft.Loader == "Forge") {
+                await InstallForge(forgeFmlFile, currentDir);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            player.AccessToken = "00000FFFFFFFFFFFFFFFFFFFFFF1414F";
+            if (isLaunch && player.IsOnline) {
+                Home.StartingState?.Invoke("正版登录...");
+                var result = await LoginUtil.RefreshMicrosoftToken(player).ConfigureAwait(true);
+                if (result != null) {
+                    player = result;
                 }
                 else {
-                    if (r == MessageBox.Result.Custom) {
-                        NetworkUtil.OpenUrl("https://www.oracle.com/java/technologies/downloads/");
-                    }
                     Home.HideLaunching?.Invoke(false);
+                    MessageBox.Show(
+                        "出现问题，请重新认证\n    1.您未拥有Minecraft正版。\n    2.前往Minecraft官网使用Microsoft重新登录一下。\n    3.请检查网络后再试！",
+                        "认证失败");
+                    return false;
                 }
-            },"前往下载");
-            return false;
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            Home.StartingState?.Invoke("解压动态链接库...");
+            CompressNative(libs, currentDir, minecraft.Name);
+            cancellationToken.ThrowIfCancellationRequested();
+            Home.StartingState?.Invoke("MC准备启动...");
+            var (java, memory) = JavaArgs(json);
+            string jvmArgs = JvmArgs(json, new JvmArg(
+                currentDir: currentDir,
+                versionName: minecraft.Name,
+                launcherName: "StarFallMC",
+                launcherVersion: "1.0.0",
+                classpath: GetClassPaths(libs, currentDir, minecraft.Name)
+            ));
+            string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
+                username: player.Name,
+                version: minecraft.Name,
+                gameDir: currentDir + "/versions/" + minecraft.Name,
+                assetsDir: currentDir + "/assets",
+                uuid: player.UUID,
+                accessToken: player.AccessToken
+            ));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!java.Contains(".exe")) {
+                MessageBox.Show(
+                    $"未获取到合适的java版本，是否还要坚持启动！\n继续启动可能会出现不可描述的错误！\n当前版本 {minecraft.Name} 最适合的Java版本为 Java{java} ，建议前往下载！",
+                    "未获取到合适的Java版本",
+                    MessageBox.BtnType.ConfirmAndCancelAndCustom, r => {
+                        if (r == MessageBox.Result.Confirm) {
+                            RunMinecraft(minecraft, java, memory, jvmArgs, minecraftArgs, isLaunch);
+                        }
+                        else {
+                            if (r == MessageBox.Result.Custom) {
+                                NetworkUtil.OpenUrl("https://www.oracle.com/java/technologies/downloads/");
+                            }
+
+                            Home.HideLaunching?.Invoke(false);
+                        }
+                    }, "前往下载");
+                return false;
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            return RunMinecraft(minecraft, java, memory, jvmArgs, minecraftArgs, isLaunch);
         }
-        return RunMinecraft(minecraft,java,memory,jvmArgs,minecraftArgs,isLaunch);
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("启动被取消");
+        }
+        catch (Exception e){
+            Console.WriteLine("启动出现问题："+e);
+            
+        }
+        Home.StartingState?.Invoke("启动已取消");
+        Home.HideLaunching?.Invoke(false);
+        return false;
     }
 
     //  启动MC
     public static bool RunMinecraft(MinecraftItem minecraft, string java, string memory, string jvmArgs, string minecraftArgs, bool isLaunch) {
         string cmd = memory + " " + jvmArgs + " " + minecraftArgs;
-        // Console.WriteLine(cmd);
+        // Console.WriteLine(java+" "+cmd);
         if (isLaunch) {
             MinecraftProcess = ProcessUtil.RunMinecraft(java,cmd);
-            Home.StartingState.Invoke("等待窗口中...");
+            Home.StartingState?.Invoke("等待窗口中...");
             startTimer = new Timer(o => {
-                Console.WriteLine("检测窗口中...");
+                // Console.WriteLine("检测窗口中...");
                 if (ProcessUtil.HasProcessWindow(MinecraftProcess.Id)) {
                     startTimer.Dispose();
-                    Console.WriteLine("窗口出现");
-                    Home.StartingState.Invoke("");
+                    // Console.WriteLine("窗口出现");
                     GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
                     ProcessUtil.SetWindowTitle(MinecraftProcess.Id,gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
                     Home.HideLaunching?.Invoke(false);
                 }
             }, null, 500, 500);
             processTimer = new Timer(o => {
-                Console.WriteLine("检测Minecraft进程中...");
+                // Console.WriteLine("检测Minecraft进程中...");
                 if (MinecraftProcess.HasExited) {
                     Home.HideLaunching?.Invoke(false);
                     if (MinecraftProcess.ExitCode != 0) {
