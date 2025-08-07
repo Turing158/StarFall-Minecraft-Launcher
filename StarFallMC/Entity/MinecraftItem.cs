@@ -16,7 +16,7 @@ public class MinecraftItem {
     }
 
     public override string ToString() {
-        return "Name:" +Name + "\tVersion:" + Loader + "\tPath:" + Path + "\tIcon:" + Icon;
+        return "Name:" +Name + "\tLoader:" + Loader + "\tPath:" + Path + "\tIcon:" + Icon;
     }
     
     public override bool Equals(object? obj) {
