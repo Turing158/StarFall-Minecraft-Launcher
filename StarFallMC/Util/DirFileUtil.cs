@@ -70,4 +70,20 @@ public class DirFileUtil {
         }
         ZipFile.ExtractToDirectory(path,orderPath,true);
     }
+
+    public static bool GetZipFileToOrder(string zipPath, string orderFilePathInZip, string orderPath) {
+        using FileStream zipStream = new FileStream(zipPath, FileMode.Open);
+        using (ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+            ZipArchiveEntry entry = archive.GetEntry(orderFilePathInZip);
+            if (entry == null) {
+                Console.WriteLine($"未找到压缩包中的文件：{orderFilePathInZip}");
+                return false;
+            }
+            using (Stream entryStream = entry.Open()) {
+                using FileStream fileStream = new FileStream(orderPath, FileMode.Create, FileAccess.Write);
+                entryStream.CopyTo(fileStream);
+            }
+        }
+        return true;
+    }
 }
