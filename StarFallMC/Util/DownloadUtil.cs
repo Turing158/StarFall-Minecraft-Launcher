@@ -48,6 +48,10 @@ public class DownloadUtil {
             for (int i = 0; i < downloaders.Count; i++) {
                 if (waitDownloadFiles.Count == 0) {
                     Console.WriteLine("下载队列已空");
+                    if (FinishCount + errorDownloadFiles.Count == TotalCount) {
+                        Home.DownloadState?.Invoke(false);
+                        downloadCompletionSource?.TrySetResult(true);
+                    }
                     return;
                 }
                 if (downloaders[i].isRunning) {
@@ -191,6 +195,7 @@ public class DownloadUtil {
             if (FinishCount + errorDownloadFiles.Count == TotalCount) {
                 Home.DownloadState?.Invoke(false);
                 downloadCompletionSource?.TrySetResult(true);
+                Console.WriteLine($"下载任务完成    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
                 return;
             }
             if (!isCancelld && waitDownloadFiles.Count > 0) {
