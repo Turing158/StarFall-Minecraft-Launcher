@@ -423,11 +423,13 @@ public class MinecraftUtil {
         if (root != null) {
             JArray libs = root["libraries"] as JArray;
             libList = JsonToLib(libs);
-            JArray patchesLib = root["patches"] as JArray;
-            for (int i = 0; i < patchesLib.Count; i++) {
-                JArray ele = patchesLib[i]["libraries"] as JArray;
-                foreach (var j in JsonToLib(ele)) {
-                    libList.Add(j);
+            if (root["patches"] != null) {
+                JArray patchesLib = root["patches"] as JArray;
+                for (int i = 0; i < patchesLib.Count; i++) {
+                    JArray ele = patchesLib[i]["libraries"] as JArray;
+                    foreach (var j in JsonToLib(ele)) {
+                        libList.Add(j);
+                    }
                 }
             }
         }
@@ -480,18 +482,38 @@ public class MinecraftUtil {
                     JObject jObj = i as JObject;
                     bool isAllow = false;
                     foreach (var j in jObj["rules"]) {
-                        if ((j["action"].ToString() == "allow" && j["os"]["name"].ToString() == os) || 
-                            (j["action"].ToString() != "allow" && j["os"]["name"].ToString() != os)||
+                        if (
+                            (j["os"]["name"] != null && 
+                             ((j["action"].ToString() == "allow" && j["os"]["name"].ToString() == os) ||
+                              (j["action"].ToString() != "allow" && j["os"]["name"].ToString() != os)))
+                            ||
                             (j["os"]["arch"] != null && 
                              ((j["action"].ToString() == "allow" && j["os"]["arch"].ToString() == arch) ||
-                              (j["action"].ToString() != "allow" && j["os"]["arch"].ToString() != arch)))) {
+                              (j["action"].ToString() != "allow" && j["os"]["arch"].ToString() != arch)))
+                            ) {
                             isAllow = true;
                             break;
                         }
                     }
                     if (isAllow) {
-                        foreach (var j in jObj["value"] as JArray) {
-                            sb.Append(j);
+                        try {
+                            foreach (var j in jObj["value"] as JArray) {
+                                string arg = j.ToString();
+                                var argSplit = arg.Split("=");
+                                if (argSplit.Length == 2) {
+                                    arg = $"{argSplit[0]}=\"{argSplit[1]}\"";
+                                }
+                                sb.Append(arg);
+                                sb.Append(" ");
+                            }
+                        }
+                        catch (Exception e){
+                            string arg = jObj["value"].ToString();
+                            var argSplit = arg.Split("=");
+                            if (argSplit.Length == 2) {
+                                arg = $"{argSplit[0]}=\"{argSplit[1]}\"";
+                            }
+                            sb.Append(arg);
                             sb.Append(" ");
                         }
                     }
