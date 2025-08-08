@@ -6,7 +6,8 @@
       xmlns:local="clr-namespace:StarFallMC"
       xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Home" Height="395" Width="800" Background="Transparent">
+      Title="Home" Height="395" Width="800" Background="Transparent"
+      Loaded="Home_OnLoaded">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -23,11 +24,11 @@
     </Page.Triggers>
     
     <Grid Background="Transparent">
-        <Border CornerRadius="0 0 15 11">
-            <Border.Background>
-                <ImageBrush ImageSource="/assets/bg.png"></ImageBrush>
-            </Border.Background>
+        <Border Background="#fff">
+            <Border Background="#D7C6C5" Opacity="0.9"></Border>
         </Border>
+        <Border Name="Bg" CornerRadius="0 0 15 11"></Border>
+        
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>

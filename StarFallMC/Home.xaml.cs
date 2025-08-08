@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using StarFallMC.Entity;
@@ -241,5 +242,29 @@ public partial class Home : Page {
         this.Dispatcher.BeginInvoke(() => {
             StatusText.Text = state;
         });
+    }
+
+    private void Home_OnLoaded(object sender, RoutedEventArgs e) {
+        var bg = PropertiesUtil.launcherArgs.Bg;
+        bool defaultBgPath = true;
+        BitmapImage bgImage = new BitmapImage();
+        bgImage.BeginInit();
+        if (!string.IsNullOrEmpty(bg)) {
+            if (File.Exists(bg)) {
+                bgImage.UriSource = new Uri(bg, UriKind.RelativeOrAbsolute);
+                defaultBgPath = false;
+            }
+        }
+        string defaultPath = $"{DirFileUtil.CurrentDirPosition}/bg.png";
+        if (defaultBgPath && File.Exists(defaultPath)) {
+            bgImage.UriSource = new Uri(defaultPath, UriKind.RelativeOrAbsolute);
+        }
+
+        if (bgImage.UriSource != null) {
+            bgImage.CacheOption = BitmapCacheOption.OnLoad;
+            bgImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+            bgImage.EndInit();
+            Bg.Background = new ImageBrush(bgImage);
+        }
     }
 }

@@ -6,15 +6,18 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
+        <Version>0.0.1</Version>
+        <Title>StarFallMC</Title>
+        <Authors>StarFall</Authors>
+        <Description>A Minecraft launcher</Description>
+        <Copyright>StarFall</Copyright>
+        <ApplicationIcon>assets\ico.ico</ApplicationIcon>
+        <PackageIcon>assets\ico.ico</PackageIcon>
     </PropertyGroup>
 
     <ItemGroup>
-      <None Remove="assets\ico.png" />
-      <Resource Include="assets\ico.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Resource>
-      <None Remove="assets\bg.png" />
-      <Resource Include="assets\bg.png">
+      <None Remove="assets\ico.ico" />
+      <Resource Include="assets\ico.ico">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
       <None Remove="assets\DefaultGameIcon\Minecraft.png" />
@@ -53,17 +56,6 @@
       <Resource Include="assets\DefaultGameIcon\Optifine.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
-      <None Remove="assets\DefaultGameIcon\pre-classic.png" />
-      <None Remove="assets\DefaultGameIcon\1.RV-Pre1.png" />
-      <None Remove="assets\DefaultGameIcon\3D Shareware v1.34.png" />
-      <None Remove="assets\DefaultGameIcon\15w14a.png" />
-      <None Remove="assets\DefaultGameIcon\20w14infinite.png" />
-      <None Remove="assets\DefaultGameIcon\22w13oneBlockAtATime.png" />
-      <None Remove="assets\DefaultGameIcon\23w13a_or_b.png" />
-      <None Remove="assets\DefaultGameIcon\24w14potato.png" />
-      <None Remove="assets\DefaultGameIcon\alpha.png" />
-      <None Remove="assets\DefaultGameIcon\classic.png" />
-      <None Remove="assets\DefaultGameIcon\indev.png" />
       <None Remove="assets\DefaultGameIcon\snapshot.png" />
       <Resource Include="assets\DefaultGameIcon\snapshot.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

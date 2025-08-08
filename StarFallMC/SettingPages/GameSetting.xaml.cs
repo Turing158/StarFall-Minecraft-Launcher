@@ -33,6 +33,8 @@ public partial class GameSetting : Page {
     }
     
     private void initInfo() {
+        var freeMemory = MinecraftUtil.GetMemoryAllInfo()[MinecraftUtil.MemoryName.FreeMemory];
+        viewModel.MemoryValue = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
         PropertiesUtil.LoadGameSettingArgs(ref viewModel);
         RefleshMemory();
         JvmExtraArea.ToolTip = "JVM参数\n\n"+
@@ -109,7 +111,7 @@ public partial class GameSetting : Page {
             }
         }
         
-        private bool _isIsolation;
+        private bool _isIsolation = true;
         public bool IsIsolation {
             get { return _isIsolation; }
             set {
@@ -127,7 +129,7 @@ public partial class GameSetting : Page {
             }
         }
         
-        private string _gameWidth;
+        private string _gameWidth = "854";
         public string GameWidth {
             get { return _gameWidth; }
             set {
@@ -136,7 +138,7 @@ public partial class GameSetting : Page {
             }
         }
         
-        private string _gameHeight;
+        private string _gameHeight = "480";
         public string GameHeight {
             get { return _gameHeight; }
             set {
@@ -145,7 +147,7 @@ public partial class GameSetting : Page {
             }
         }
 
-        private string _windowTitle = "StarFallMC";
+        private string _windowTitle;
 
         public string WindowTitle {
             get { return _windowTitle; }
@@ -155,7 +157,7 @@ public partial class GameSetting : Page {
             }
         }
 
-        private string _customInfo;
+        private string _customInfo = "StarFallMC";
         public string CustomInfo {
             get { return _customInfo; }
             set {

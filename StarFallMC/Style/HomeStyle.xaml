@@ -194,7 +194,7 @@
         <StaticResource ResourceKey="AvatarEnter"/>
         <StaticResource ResourceKey="GameEnter"/>
         <DoubleAnimation Storyboard.TargetName="StartingBtn" Storyboard.TargetProperty="Width"
-                         To="180" Duration="0:0:0.5"
+                         To="180" Duration="0:0:0.1"
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="GameIcon" Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                          To="30" Duration="0:0:0.5"

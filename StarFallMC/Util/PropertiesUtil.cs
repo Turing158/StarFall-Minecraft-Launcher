@@ -22,6 +22,7 @@ public class PropertiesUtil {
         catch (Exception e) {
             loadJson = new JObject();
         }
+        LoadLauncherArgs();
     }
     
     public static void Save() {
@@ -144,13 +145,21 @@ public class PropertiesUtil {
                     vm.AutoMemoryDisable = false;
                     memory["auto"] = true;
                 }
-                try {
-                    vm.MemoryValue = memory["value"].Value<int>();
+                if (memory["auto"].Value<bool>()) {
+
                 }
-                catch (Exception e){
-                    vm.MemoryValue = 0;
-                    memory["value"] = 654;
+                else{
+                    try {
+                        vm.MemoryValue = memory["value"].Value<int>();
+                    }
+                    catch (Exception e){
+                        var freeMemory = MinecraftUtil.GetMemoryAllInfo()[MinecraftUtil.MemoryName.FreeMemory];
+                        int suitMemory = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
+                        vm.MemoryValue = suitMemory;
+                        memory["value"] = suitMemory;
+                    }
                 }
+                
             }
 
             try {
@@ -313,6 +322,30 @@ public class PropertiesUtil {
             loadJson["game"] = selectArgs;
             vm.CurrentDir = defaultDir;
             vm.Dirs = new ObservableCollection<DirItem>(dirItems);
+        }
+    }
+    
+    public class LauncherArgs {
+        public string Bg { get; set; } = "";
+    }
+    
+    public static LauncherArgs launcherArgs = new ();
+
+    public static void LoadLauncherArgs() {
+        var launcher = loadJson["launcher"];
+        if (launcher != null) {
+            try {
+                launcherArgs.Bg = launcher["bg"].Value<string>();
+            }
+            catch (Exception e) {
+                launcherArgs.Bg = "";
+                launcher["bg"] = "";
+            }
+        }
+        else {
+            launcher = new JObject();
+            launcher["bg"] = "";
+            loadJson["launcher"] = launcher;
         }
     }
 }

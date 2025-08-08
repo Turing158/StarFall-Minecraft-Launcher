@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StarFallMC"
         mc:Ignorable="d"
-        Title="" Height="450" Width="800"
+        Title="StarFall Minecraft Launcher" Height="450" Width="800"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -63,7 +63,7 @@
                         <TranslateTransform X="-50"></TranslateTransform>
                     </Button.RenderTransform>
                 </Button>
-                <Image Name="Icon" Width="35" Height="35" Source="assets/ico.png" HorizontalAlignment="Left" Margin="10">
+                <Image Name="Icon" Width="35" Height="35" Source="assets/ico.ico" HorizontalAlignment="Left" Margin="10">
                     <Image.RenderTransform>
                         <TranslateTransform X="0"></TranslateTransform>
                     </Image.RenderTransform>
