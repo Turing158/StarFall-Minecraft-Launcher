@@ -14,7 +14,7 @@
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
-        Icon="assets/ico.png"
+        Icon="assets/ico.ico"
         >
     <Window.Resources>
         <ResourceDictionary Source="/Style/MainWindowStyle.xaml"></ResourceDictionary>
