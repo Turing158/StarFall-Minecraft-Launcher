@@ -130,6 +130,12 @@ public partial class DownloadPage : Page {
 
     private void CancelDownload_OnClick(object sender, RoutedEventArgs e) {
         Console.WriteLine("取消下载");
-        DownloadUtil.CancelDownload();
+        try {
+            DownloadUtil.CancelDownload();
+        }
+        catch (Exception exception){
+            Console.WriteLine(exception);
+            throw;
+        }
     }
 }

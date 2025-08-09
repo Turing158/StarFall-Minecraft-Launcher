@@ -80,7 +80,7 @@ public class DownloadUtil {
             // Console.WriteLine($"下载任务取消    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
             Home.DownloadState?.Invoke(false);
             isCancelld = false;
-            globalCts.Cancel();
+            globalCts?.Cancel();
             waitDownloadFiles?.Clear();
             errorDownloadFiles?.Clear();
             for (int i = 0; i < downloaders.Count; i++) {
