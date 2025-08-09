@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:StarFallMC"
       mc:Ignorable="d"
       KeepAlive="True"
-      Title="PlayerManage" Height="395" Width="800"
+      Title="PlayerManage" Height="400" Width="800"
       Unloaded="PlayerManage_OnUnloaded">
     <Page.Resources>
         <ResourceDictionary Source="Style/PlayerManageStyle.xaml"></ResourceDictionary>

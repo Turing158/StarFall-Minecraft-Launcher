@@ -9,7 +9,7 @@
       TextOptions.TextFormattingMode="Display"
       TextOptions.TextRenderingMode="ClearType"
       mc:Ignorable="d"
-      Title="Setting" Height="395" Width="800">
+      Title="Setting" Height="400" Width="800">
     <Page.Resources>
         <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>

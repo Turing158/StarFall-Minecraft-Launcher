@@ -7,7 +7,7 @@
       xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       KeepAlive="True"
-      Title="SelectGame" Height="395" Width="800"
+      Title="SelectGame" Height="400" Width="800"
       Unloaded="SelectGame_OnUnloaded">
     <Page.Resources>
         <ResourceDictionary Source="Style/SelectGameStyle.xaml"></ResourceDictionary>
