@@ -138,7 +138,7 @@ public partial class MessageBox : UserControl {
         
         var mainWindow = Application.Current.MainWindow;
         if (mainWindow != null && mainWindow.Content is Grid gird) {
-            gird.Children.Add(box);
+            gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Add(box);
         }
         box.ShowFunc();
         return box; 
@@ -184,7 +184,7 @@ public partial class MessageBox : UserControl {
         }
         var mainWindow = Application.Current.MainWindow;
         if (mainWindow != null && mainWindow.Content is Grid gird) {
-            gird.Children.Remove(box);
+            gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Remove(box);
         }
     }
 }

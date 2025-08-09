@@ -107,5 +107,6 @@
                 
             </Grid>
         </Border>
+        <Grid Name="MessageBoxContainer"></Grid>
     </Grid>
 </Window>
