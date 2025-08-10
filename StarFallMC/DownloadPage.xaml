@@ -28,18 +28,13 @@
                                    Source="assets/element/bedrock.png" 
                                    RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                    Margin="0 10 20 0"></Image>
-                            <Image Width="32" Height="32" Source="assets/element/diamond_pickaxe.png" 
+                            <Image Name="DiamondPickaxe" Width="32" Height="32" Source="assets/element/diamond_pickaxe.png" 
                                    RenderOptions.BitmapScalingMode="NearestNeighbor" 
                                    Margin="60 0 0 20"
                                    RenderTransformOrigin="0.1875,0.9375">
                                 <Image.RenderTransform>
                                     <RotateTransform Angle="-50"></RotateTransform>
                                 </Image.RenderTransform>
-                                <Image.Triggers>
-                                    <EventTrigger RoutedEvent="Loaded">
-                                        <BeginStoryboard Storyboard="{StaticResource DownloadAnim}"/>
-                                    </EventTrigger>
-                                </Image.Triggers>
                             </Image>
                         </Grid>
                         <StackPanel VerticalAlignment="Center">

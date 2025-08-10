@@ -48,7 +48,7 @@
         </Setter>
     </Style>
     
-    <Storyboard x:Key="Downloading" TargetName="DownloadBorder" TargetProperty="Opacity">
+    <Storyboard x:Key="Downloading" TargetName="DownloadBorder" TargetProperty="Opacity" FillBehavior="HoldEnd">
         <DoubleAnimation To="1" Duration="0:0:0.3"></DoubleAnimation>
         <DoubleAnimation To="0" Duration="0:0:1.5" BeginTime="0:0:0.3" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
     </Storyboard>

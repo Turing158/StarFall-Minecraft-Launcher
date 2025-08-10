@@ -16,13 +16,18 @@ public partial class DownloadPage : Page {
 
     public static Action<List<DownloadFile>> ProgressInit;
     public static Action<DownloadFile,int,int> ProgressUpdate;
+    public static Action<bool> DownloadingAnimState;
+    
+    private Storyboard DownloadingAnim;
     public DownloadPage() {
         InitializeComponent();
         DataContext = viewModel;
+        DownloadingAnim = (Storyboard)FindResource("DownloadingAnim");
         
         ProgressInit = progressInit;
         ProgressUpdate = progressUpdate;
-        
+        DownloadingAnimState = downloadingAnimState;
+
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -137,5 +142,15 @@ public partial class DownloadPage : Page {
             Console.WriteLine(exception);
             throw;
         }
+    }
+
+    private void downloadingAnimState(bool isStart) {
+        if (isStart) {
+            DownloadingAnim.RepeatBehavior = RepeatBehavior.Forever;
+        }
+        else {
+            DownloadingAnim.RepeatBehavior = new RepeatBehavior(1);
+        }
+        DownloadingAnim.Begin();
     }
 }

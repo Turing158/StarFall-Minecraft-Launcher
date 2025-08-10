@@ -21,6 +21,7 @@ public class DownloadUtil {
     
     public static async Task StartDownload(List<DownloadFile> downloadFiles) {
         isCancelld = false;
+        DownloadPage.DownloadingAnimState?.Invoke(true);
         waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
         errorDownloadFiles.Clear();
         globalCts = new CancellationTokenSource();
@@ -49,6 +50,7 @@ public class DownloadUtil {
                 if (waitDownloadFiles.Count == 0) {
                     Console.WriteLine("下载队列已空");
                     if (FinishCount + errorDownloadFiles.Count == TotalCount) {
+                        DownloadPage.DownloadingAnimState?.Invoke(false);
                         Home.DownloadState?.Invoke(false);
                         downloadCompletionSource?.TrySetResult(true);
                     }
@@ -78,6 +80,7 @@ public class DownloadUtil {
     public static void CancelDownload() {
         if (!isCancelld) {
             // Console.WriteLine($"下载任务取消    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
+            DownloadPage.DownloadingAnimState?.Invoke(false);
             Home.DownloadState?.Invoke(false);
             isCancelld = false;
             globalCts?.Cancel();
@@ -194,6 +197,7 @@ public class DownloadUtil {
             isRunning = false;
             if (FinishCount + errorDownloadFiles.Count == TotalCount) {
                 Home.DownloadState?.Invoke(false);
+                DownloadPage.DownloadingAnimState?.Invoke(false);
                 downloadCompletionSource?.TrySetResult(true);
                 Console.WriteLine($"下载任务完成    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
                 return;
