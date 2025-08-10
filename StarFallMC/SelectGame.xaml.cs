@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
@@ -109,6 +110,7 @@ public partial class SelectGame : Page {
     
     private void DirSelect_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         Console.WriteLine("当前文件夹:"+DirSelect.SelectedIndex);
+        var item = (DirItem)DirSelect.SelectedItem;
         viewModel.CurrentDir = (DirItem)DirSelect.SelectedItem;
         loadGameByDir();
     }
@@ -136,6 +138,7 @@ public partial class SelectGame : Page {
                 dirItem.Path = Path.GetFullPath(ofd.FolderName+"/.minecraft");
             }
             viewModel.Dirs.Add(dirItem);
+            MessageTips.Show($"成功添加文件夹 {dirItem.Name}");
             // DirList.Add(dirItem);
             DirSelect.SelectedIndex = viewModel.Dirs.Count - 1;
         }
@@ -144,10 +147,12 @@ public partial class SelectGame : Page {
 
     private void DelDir_OnClick(object sender, RoutedEventArgs e) {
         if (DirSelect.SelectedIndex != 0) {
-            MessageBox.Show($"是否要删除当前选中文件夹[{(DirSelect.SelectedItem as DirItem).Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
+            var dirItem = DirSelect.SelectedItem as DirItem;
+            MessageBox.Show($"是否要删除当前选中文件夹[{dirItem.Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
                 if (result == MessageBox.Result.Confirm) {
                     var index = DirSelect.SelectedIndex;
                     DirSelect.SelectedIndex = 0;
+                    MessageTips.Show($"成功移除列表中文件夹 {dirItem.Name}");
                     viewModel.Dirs.RemoveAt(index);
                 }
             },"","删除");
@@ -157,11 +162,13 @@ public partial class SelectGame : Page {
     private void OpenDir_OnClick(object sender, RoutedEventArgs e) {
         //打开文件夹
         var dir = (DirItem)DirSelect.SelectedItem;
+        MessageTips.Show($"已打开文件夹 {dir.Name}");
         DirFileUtil.openDirByExplorer(dir.Path);
     }
 
     private void RefreshDir_OnClick(object sender, RoutedEventArgs e) {
         //刷新文件夹
+        MessageTips.Show($"已刷新文件夹 {viewModel.CurrentDir.Name}");
         loadGameByDir();
     }
     
@@ -216,6 +223,7 @@ public partial class SelectGame : Page {
                 if (result == MessageBox.Result.Confirm) {
                     DirFileUtil.DeleteDirAllContent(viewModel.CurrentGame.Path);
                     var index = GameSelect.SelectedIndex;
+                    MessageTips.Show($"成功删除Minecraft版本 {viewModel.CurrentGame.Name}");
                     viewModel.Games.RemoveAt(index);
                     GameInfoMaskControl.Hide();
                     if (viewModel.Games.Count != 0) {
@@ -235,6 +243,7 @@ public partial class SelectGame : Page {
     }
 
     private void OpenVersionDir_OnClick(object sender, RoutedEventArgs e) {
+        MessageTips.Show($"已打开 {viewModel.CurrentGame.Name} 版本文件夹");
         DirFileUtil.openDirByExplorer(viewModel.CurrentGame.Path);
     }
 
@@ -252,6 +261,7 @@ public partial class SelectGame : Page {
         if (ofd.ShowDialog() == true) {
             DefaultVersionIcon_OnClick(sender, e);
             File.Copy(ofd.FileName, viewModel.CurrentGame.Path + "/ico.png",true);
+            MessageTips.Show($"已修改 {viewModel.CurrentGame.Name} 的版本图标");
             reloadGameByDir(viewModel.CurrentDir.Path);
         }
     }
@@ -260,13 +270,16 @@ public partial class SelectGame : Page {
         string path = viewModel.CurrentGame.Path + "/ico.png";
         if (File.Exists(path)) {
             File.Delete(path);
+            MessageTips.Show($"已重置 {viewModel.CurrentGame.Name} 的版本图标");
             reloadGameByDir(viewModel.CurrentDir.Path);
         }
     }
 
     private void OpenModDir_OnClick(object sender, RoutedEventArgs e) {
+        //  这里得重写，要判断是否版本隔离
         string path = viewModel.CurrentGame.Path + "/mods";
         if (Directory.Exists(path)) {
+
             DirFileUtil.openDirByExplorer(path);
             return;
         }
@@ -275,10 +288,11 @@ public partial class SelectGame : Page {
             DirFileUtil.openDirByExplorer(path);
             return;
         }
-        //提示不存在文件夹
+        MessageTips.Show($"不存在 mods 文件夹");
     }
 
     private void OpenResourcesDir_OnClick(object sender, RoutedEventArgs e) {
+        //  这里得重写，要判断是否版本隔离
         string path = viewModel.CurrentGame.Path + "/resources";
         if (Directory.Exists(path)) {
             DirFileUtil.openDirByExplorer(path);
@@ -289,7 +303,7 @@ public partial class SelectGame : Page {
             DirFileUtil.openDirByExplorer(path);
             return;
         }
-        //提示不存在文件夹
+        MessageTips.Show($"不存在 resources 文件夹");
     }
 
     private void RenameVersion_OnKeyDown(object sender, KeyEventArgs e) {
@@ -310,11 +324,13 @@ public partial class SelectGame : Page {
         else {
             viewModel.RenameVersionTips = "";
             if (e.Key == Key.Enter) {
+                var currentGame = viewModel.CurrentGame;
                 var item = MinecraftUtil.RenameVersion(viewModel.CurrentGame, tb.Text);
                 if (item == null) {
                     viewModel.RenameVersionTips = "已存在该名称文件夹或版本，请删除后重试";
                     return;
                 }
+                MessageTips.Show($"版本名称已修改为\n{item.Name}");
                 viewModel.CurrentGame = item;
                 reloadGameByDir(viewModel.CurrentDir.Path);
                 RenameVersion.Hide();

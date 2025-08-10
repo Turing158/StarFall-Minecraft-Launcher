@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Newtonsoft.Json.Linq;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
@@ -186,6 +187,7 @@ public partial class PlayerManage : Page {
                                     
                                 }
                                 updatePlayerSkinFunc(player);
+                                MessageTips.Show("正版登录认证成功！");
                             }
                             else {
                                 MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","登录失败");
@@ -259,6 +261,7 @@ public partial class PlayerManage : Page {
                 r => {
                     if (r == MessageBox.Result.Confirm) {
                         var index = PlayerListView.SelectedIndex;
+                        MessageTips.Show($"成功删除该角色\n[{item.Name}]");
                         viewModel.Players.RemoveAt(index);
                         if (viewModel.Players.Count() != 0) {
                             PlayerListView.SelectedIndex = 0;
@@ -301,6 +304,7 @@ public partial class PlayerManage : Page {
             return;
         }
         var player = new Player(OutlineInput.Text,DefaultSKin,false,Guid.NewGuid().ToString().Replace("-", ""));
+        MessageTips.Show($"成功添加Player\n{player.Name}");
         viewModel.Players.Add(player);
         PlayerListView.SelectedIndex = viewModel.Players.Count-1;
         NoUser.Opacity = 0;
@@ -380,6 +384,7 @@ public partial class PlayerManage : Page {
         var result = await LoginUtil.RefreshMicrosoftToken(viewModel.CurrentPlayer).ConfigureAwait(true);
         if (result != null) {
             Console.WriteLine(result);
+            MessageTips.Show($"刷新 {result.Name} 玩家信息成功！");
             MessageBox.Show(
                 content:$"刷新完成！ {result.Name} 在启动器中的档案已更新",
                 title:"刷新玩家信息",

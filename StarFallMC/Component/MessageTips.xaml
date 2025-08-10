@@ -1,0 +1,71 @@
+﻿<UserControl x:Class="StarFallMC.Component.MessageTips"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:StarFallMC.Component"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Storyboard x:Key="ShowAnim">
+            <DoubleAnimation Storyboard.TargetName="Main" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)" 
+                             From="80" To="100" Duration="0:0:0.3" 
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Main" Storyboard.TargetProperty="Opacity" 
+                             From="0" To="1" Duration="0:0:0.3" 
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="HideAnim">
+            <DoubleAnimation Storyboard.TargetName="Main"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(TranslateTransform.Y)" 
+                             From="100" To="80" Duration="0:0:0.3" 
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Main" Storyboard.TargetProperty="Opacity" 
+                             From="1" To="0" Duration="0:0:0.3"
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="MouseDownAnim">
+            <DoubleAnimation Storyboard.TargetName="Main" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleX)"
+                             To="0.94" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Main" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleY)"
+                             To="0.94" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="MouseUpAnim">
+            <DoubleAnimation Storyboard.TargetName="Main" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleX)"
+                             To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Main" 
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(ScaleTransform.ScaleY)"
+                             To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="ChangeTextAnim">
+            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity"
+                             To="0" Duration="0:0:0.12"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity"
+                             To="1" BeginTime="0:0:0.12" Duration="0:0:0.12"></DoubleAnimation>
+        </Storyboard>
+    </UserControl.Resources>
+    <Grid>
+        <Border Name="Main" Style="{StaticResource Rect}" 
+                HorizontalAlignment="Center" VerticalAlignment="Top" 
+                Opacity="0" 
+                RenderTransformOrigin="0.5,1"
+                MouseEnter="Main_OnMouseEnter"
+                MouseLeave="Main_OnMouseLeave"
+                MouseLeftButtonDown="Main_OnMouseLeftButtonDown"
+                MouseLeftButtonUp="Main_OnMouseLeftButtonUp">
+            <Border.RenderTransform>
+                <TransformGroup>
+                    <TranslateTransform Y="100"></TranslateTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" CenterY="80"></ScaleTransform>
+                </TransformGroup>
+            </Border.RenderTransform>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Name="Content" Text="{Binding Message}" Foreground="{Binding MessageColor}" FontSize="16" MaxWidth="400" TextWrapping="Wrap" TextAlignment="Center"></TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

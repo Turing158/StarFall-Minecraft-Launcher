@@ -1008,6 +1008,7 @@ public class MinecraftUtil {
             cancellationToken.ThrowIfCancellationRequested();
             player.AccessToken = "00000FFFFFFFFFFFFFFFFFFFFFF1414F";
             if (isLaunch && player.IsOnline) {
+                MessageTips.Show("正在正版登录认证中...");
                 Home.StartingState?.Invoke("正版登录...");
                 var result = await LoginUtil.RefreshMicrosoftToken(player).ConfigureAwait(true);
                 if (result != null) {
@@ -1064,8 +1065,8 @@ public class MinecraftUtil {
             cancellationToken.ThrowIfCancellationRequested();
             return RunMinecraft(minecraft, java, memory, jvmArgs, minecraftArgs, isLaunch);
         }
-        catch (OperationCanceledException)
-        {
+        catch (OperationCanceledException) {
+            MessageTips.Show("Minecraft启动取消");
             Console.WriteLine("启动被取消");
         }
         catch (Exception e){
@@ -1097,8 +1098,8 @@ public class MinecraftUtil {
             processTimer = new Timer(o => {
                 // Console.WriteLine("检测Minecraft进程中...");
                 if (MinecraftProcess.HasExited) {
-                    Home.HideLaunching?.Invoke(false);
                     if (MinecraftProcess.ExitCode != 0) {
+                        Home.HideLaunching?.Invoke(false);
                         Home.ErrorLaunch?.Invoke(o as MinecraftItem ?? new MinecraftItem());
                         Console.WriteLine("Minecraft出现失败，错误代码：" + MinecraftProcess.ExitCode);
                     }

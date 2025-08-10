@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 
 namespace StarFallMC.Util;
@@ -50,6 +51,7 @@ public class DownloadUtil {
                 if (waitDownloadFiles.Count == 0) {
                     Console.WriteLine("下载队列已空");
                     if (FinishCount + errorDownloadFiles.Count == TotalCount) {
+                        MessageTips.Show("下载任务完成");
                         DownloadPage.DownloadingAnimState?.Invoke(false);
                         Home.DownloadState?.Invoke(false);
                         downloadCompletionSource?.TrySetResult(true);
@@ -79,6 +81,7 @@ public class DownloadUtil {
 
     public static void CancelDownload() {
         if (!isCancelld) {
+            MessageTips.Show("下载取消", MessageTips.MessageType.Warning);
             // Console.WriteLine($"下载任务取消    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
             DownloadPage.DownloadingAnimState?.Invoke(false);
             Home.DownloadState?.Invoke(false);
@@ -196,6 +199,7 @@ public class DownloadUtil {
             }
             isRunning = false;
             if (FinishCount + errorDownloadFiles.Count == TotalCount) {
+                MessageTips.Show("下载任务完成");
                 Home.DownloadState?.Invoke(false);
                 DownloadPage.DownloadingAnimState?.Invoke(false);
                 downloadCompletionSource?.TrySetResult(true);

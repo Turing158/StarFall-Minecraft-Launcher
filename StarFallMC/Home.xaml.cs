@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
@@ -160,30 +161,34 @@ public partial class Home : Page {
     
     private CancellationTokenSource minecraftStartCts;
     private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
-        bool flag = true;
-        if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
-            ((Storyboard)FindResource("GameEnter")).Begin();
-            flag = false;
-        }
-        if (string.IsNullOrEmpty(viewModel.PlayerName) || viewModel.PlayerName == "未登录") {
-            ((Storyboard)FindResource("AvatarEnter")).Begin();
-            flag = false;
-        }
+        if (!GameStarting) {
+            bool flag = true;
+            if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
+                MessageTips.Show("未选择Minecraft版本", MessageTips.MessageType.Warning);
+                ((Storyboard)FindResource("GameEnter")).Begin();
+                flag = false;
+            }
+            if (string.IsNullOrEmpty(viewModel.PlayerName) || viewModel.PlayerName == "未登录") {
+                MessageTips.Show("未选择Player角色", MessageTips.MessageType.Warning);
+                ((Storyboard)FindResource("AvatarEnter")).Begin();
+                flag = false;
+            }
 
-        if (MinecraftUtil.GetJavaVersions().Count == 0) {
-            MessageBox.Show("未检测到系统安装的Java版本。\n    1.请前往设置或Oracle官网下载！\n    2.前往设置自行添加Java版本", "未检测到Java版本");
-            flag = false;
+            if (MinecraftUtil.GetJavaVersions().Count == 0) {
+                MessageBox.Show("未检测到系统安装的Java版本。\n    1.请前往设置或Oracle官网下载！\n    2.前往设置自行添加Java版本", "未检测到Java版本");
+                flag = false;
+            }
+            if (!flag) {
+                return;
+            }
+            minecraftStartCts = new CancellationTokenSource();
+            GameStarting = true;
+            StartingBorder.Visibility = Visibility.Visible;
+            ((Storyboard)FindResource("Starting")).Begin();
+            HomeTips.Show();
+            Console.WriteLine("开始游戏");
+            MinecraftUtil.StartMinecraft(viewModel.CurrentGame, viewModel.CurrentPlayer,cancellationToken:minecraftStartCts.Token);
         }
-        if (!flag) {
-            return;
-        }
-        minecraftStartCts = new CancellationTokenSource();
-        GameStarting = true;
-        StartingBorder.Visibility = Visibility.Visible;
-        ((Storyboard)FindResource("Starting")).Begin();
-        HomeTips.Show();
-        Console.WriteLine("开始游戏");
-        MinecraftUtil.StartMinecraft(viewModel.CurrentGame, viewModel.CurrentPlayer,cancellationToken:minecraftStartCts.Token);
     }
 
     private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
