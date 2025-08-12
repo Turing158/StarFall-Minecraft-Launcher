@@ -1,0 +1,80 @@
+﻿<UserControl x:Class="StarFallMC.Component.CollapsePanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:StarFallMC.Component"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType"
+             Loaded="CollapsePanel_OnLoaded">
+    <UserControl.Resources>
+        <Style TargetType="local:CollapsePanel">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="local:CollapsePanel">
+                        <Border x:Name="Main" 
+                                Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneTime}" 
+                                Style="{StaticResource Rect}" CornerRadius="10" RenderTransformOrigin="0.5,0.5"
+                                Margin="0 10">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
+                            </Border.RenderTransform>
+                            <StackPanel x:Name="EntirePanel">
+                                <Grid Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                    <Grid Margin="0 0 40 0">
+                                        <ContentPresenter Content="{TemplateBinding TitleContent}"></ContentPresenter>
+                                    </Grid>
+                                    <TextBlock Name="StateIcon" Text="&#xe903;" FontFamily="{StaticResource IconFontFamily}" 
+                                               HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                               FontSize="{Binding ToggleBtnSize, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10 0"
+                                               RenderTransformOrigin="0.5,0.5">
+                                        <TextBlock.RenderTransform>
+                                            <RotateTransform Angle="180"></RotateTransform>
+                                        </TextBlock.RenderTransform>
+                                    </TextBlock>
+                                    <Border MouseLeave="Top_OnMouseLeave"
+                                            MouseLeftButtonDown="Top_OnMouseLeftButtonDown"
+                                            MouseLeftButtonUp="Top_OnMouseLeftButtonUp"
+                                            CornerRadius="10" IsHitTestVisible="True"
+                                            Opacity="0" Background="#f1f1f1"></Border>
+                                </Grid>
+                                <Border Margin="10 0 10 5" Height="1" Background="Black" Visibility="{Binding NeedDivider, RelativeSource={RelativeSource AncestorType=UserControl}}"></Border>
+                                <Grid Margin="10 0 10 10">
+                                    <ContentPresenter></ContentPresenter>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Resources>
+                            <Storyboard x:Key="OpenAnim">
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
+                                                 To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                            </Storyboard>
+                            <Storyboard x:Key="CloseAnim">
+                                <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                 To="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneTime}" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
+                                                 To="180" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                            </Storyboard>
+                            <Storyboard x:Key="MouseDownAnim">
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                                 To="0.99" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                                 To="0.99" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                            </Storyboard>
+                            <Storyboard x:Key="MouseUpAnim">
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                                 To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                                 To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                            </Storyboard>
+                        </ControlTemplate.Resources>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+</UserControl>
