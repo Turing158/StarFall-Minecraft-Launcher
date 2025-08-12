@@ -57,7 +57,6 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
             this.Dispatcher.Invoke(() => {
                 Main.Width = Content.ActualWidth + 30;
                 Main.Height = Content.ActualHeight + 20;
-                Console.WriteLine($"MessageTips Size: {Main.Width}x{Main.Height}");
                 SizeTimer?.Dispose();
             });
         }, null, 50, 0);
