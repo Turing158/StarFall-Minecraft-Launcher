@@ -27,6 +27,8 @@ public partial class MessageBox : UserControl {
     private ViewModel viewModel = new ViewModel();
     private Timer HideTimer;
     private Storyboard HighlightBox;
+    private TaskCompletionSource<MessageBox> _tcs;
+    
     public MessageBox() {
         InitializeComponent();
         DataContext = viewModel;
@@ -104,6 +106,7 @@ public partial class MessageBox : UserControl {
         }
     }
 
+    // 同步显示消息框,但是不等待用户操作完成
     public static MessageBox Show(string content,string title = "提示",
         BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
         string customBtnText = "",string confirmBtnText = "确定",string cancelBtnText = "取消",
@@ -143,6 +146,16 @@ public partial class MessageBox : UserControl {
         box.ShowFunc();
         return box; 
     }
+    
+    // 异步显示消息框，可选择等待用户操作完成
+    public static async Task<MessageBox> ShowAsync(string content, string title = "提示",
+        BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
+        string customBtnText = "", string confirmBtnText = "确定", string cancelBtnText = "取消",
+        bool showCloseBtn = false) {
+        var box = Show(content, title, btnType, callback, customBtnText, confirmBtnText, cancelBtnText, showCloseBtn);
+        box._tcs = new TaskCompletionSource<MessageBox>();
+        return await box._tcs.Task;
+    }
 
     private void ShowFunc() {
         Mask.Show();
@@ -172,6 +185,7 @@ public partial class MessageBox : UserControl {
             });
         },null, 300, 0);
         _callback?.Invoke(result);
+        _tcs?.TrySetResult(this);
     }
 
     private void Mask_OnClickMask(object sender, RoutedEventArgs e) {
