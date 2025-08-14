@@ -10,7 +10,7 @@ namespace StarFallMC.Util;
 public class DirFileUtil {
     
     public static string CurrentDirPosition = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-    
+    public static string LauncherSettingsDir = Path.Combine(CurrentDirPosition, "SFMCL");
     
     
     
@@ -85,5 +85,17 @@ public class DirFileUtil {
             }
         }
         return true;
+    }
+    
+    public static bool IsValidFileName(string fileName) {
+        return !string.IsNullOrEmpty(fileName) &&
+               fileName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
+    }
+    
+    public static bool IsValidFilePath(string filePath) {
+        return !string.IsNullOrEmpty(filePath) &&
+               (filePath.Split(":\\").Length == 2 || filePath.Split(":/").Length == 2) &&
+               IsValidFileName(Path.GetFileNameWithoutExtension(filePath));
+
     }
 }

@@ -267,7 +267,7 @@ public partial class Home : Page {
                 defaultBgPath = false;
             }
         }
-        string defaultPath = $"{DirFileUtil.CurrentDirPosition}/bg.png";
+        string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg.png";
         if (defaultBgPath && File.Exists(defaultPath)) {
             bgImage.UriSource = new Uri(defaultPath, UriKind.RelativeOrAbsolute);
         }

@@ -7,7 +7,7 @@ using StarFallMC.SettingPages;
 namespace StarFallMC.Util;
 
 public class PropertiesUtil {
-    public static string jsonPath = DirFileUtil.CurrentDirPosition + "/SFMCL.json";
+    public static string jsonPath = DirFileUtil.LauncherSettingsDir + "/SFMCL.json";
     public static string LauncherName = "StarFallMC";
     public static string LauncherVersion = "1.0.0";
     public static JObject loadJson;
@@ -29,6 +29,9 @@ public class PropertiesUtil {
         PlayerManage.unloadedAction?.Invoke(null,null);
         SelectGame.unloadedAction?.Invoke(null,null);
         GameSetting.unloadedAction?.Invoke(null,null);
+        if (!Directory.Exists(Path.GetDirectoryName(jsonPath))) {
+            Directory.CreateDirectory(Path.GetDirectoryName(jsonPath));
+        }
         File.WriteAllText(jsonPath,loadJson.ToString());
     }
 
