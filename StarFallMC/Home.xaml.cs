@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -163,17 +164,23 @@ public partial class Home : Page {
     private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
         if (!GameStarting) {
             bool flag = true;
+            StringBuilder tips = new StringBuilder();
             if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
-                MessageTips.Show("未选择Minecraft版本", MessageTips.MessageType.Warning);
+                tips.Append("未选择Minecraft版本");
                 ((Storyboard)FindResource("GameEnter")).Begin();
                 flag = false;
             }
             if (string.IsNullOrEmpty(viewModel.PlayerName) || viewModel.PlayerName == "未登录") {
-                MessageTips.Show("未选择Player角色", MessageTips.MessageType.Warning);
+                if (!string.IsNullOrEmpty(tips.ToString())) {
+                    tips.Append("\n");
+                }
+                tips.Append("未选择Player角色");
                 ((Storyboard)FindResource("AvatarEnter")).Begin();
                 flag = false;
             }
-
+            if (!string.IsNullOrEmpty(tips.ToString())) {
+                MessageTips.Show(tips.ToString(), MessageTips.MessageType.Warning);
+            }
             if (MinecraftUtil.GetJavaVersions().Count == 0) {
                 MessageBox.Show("未检测到系统安装的Java版本。\n    1.请前往设置或Oracle官网下载！\n    2.前往设置自行添加Java版本", "未检测到Java版本");
                 flag = false;
