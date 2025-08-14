@@ -7,29 +7,89 @@ using StarFallMC.Entity;
 namespace StarFallMC.Util;
 
 public class DownloadUtil {
+    public enum DownloadMode{
+        Single,
+        Append
+    }
     
     private static List<ThreadDownloader> downloaders = new ();
-    private static ConcurrentQueue<DownloadFile> waitDownloadFiles;
-    public static ConcurrentBag<DownloadFile> errorDownloadFiles = new ();
-    private static int TotalCount, RetryCount;
-    private static int FinishCount => finishCount;
+    public static ConcurrentQueue<DownloadFile> waitDownloadFiles { get; private set; }
+    public static ConcurrentBag<DownloadFile> errorDownloadFiles { get; private set; } = new ();
+    public static int TotalCount { get; private set; }
+    public static int RetryCount { get;private set; }
+    public static int FinishCount {
+        get => finishCount;
+    }
     private static int finishCount;
+    public static bool IsFinished {
+        get => FinishCount + errorDownloadFiles.Count == TotalCount;
+    }
 
     private static TaskCompletionSource<bool> downloadCompletionSource;
     private static readonly object downloadLock = new object();
     private static CancellationTokenSource globalCts;
-    private static bool isCancelld;
-    
+    public static bool IsCancel { get; private set; }
+
     public static async Task StartDownload(List<DownloadFile> downloadFiles) {
-        isCancelld = false;
+        DownloadMode mode = DownloadMode.Single;
+        bool isDownload = true;
+        if (waitDownloadFiles != null && waitDownloadFiles.Count != 0) {
+            Console.WriteLine(waitDownloadFiles.Count);
+            await MessageBox.ShowAsync("下载队列不为空，请选择你想要的操作。\n    1.单独下载：将当前的下载队列取消，只下载当前任务。\n    2.下载：将下载任务追加到正在下载的队列中。\n    3.取消：暂时不下载",
+                "提示",MessageBox.BtnType.ConfirmAndCancelAndCustom,
+                callback:r => {
+                    if (r == MessageBox.Result.Confirm) {
+                        mode = DownloadMode.Single;
+                    }
+                    else if (r == MessageBox.Result.Custom) {
+                        mode = DownloadMode.Append;
+                    }
+                    else {
+                        isDownload = false;
+                    }
+                },confirmBtnText:"单独下载",customBtnText:"下载");
+        }
+        if (isDownload) {
+            await StartDownloadFunc(downloadFiles, mode);
+        }
+    }
+
+    private static async Task StartDownloadFunc(List<DownloadFile> downloadFiles, DownloadMode mode = DownloadMode.Single) {
+        Console.WriteLine("开始下载任务");
+        IsCancel = false;
         DownloadPage.DownloadingAnimState?.Invoke(true);
-        waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
-        errorDownloadFiles.Clear();
-        globalCts = new CancellationTokenSource();
+        if (mode == DownloadMode.Single) {
+            waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
+            errorDownloadFiles.Clear();
+            globalCts?.Cancel();
+            globalCts = new CancellationTokenSource();
+            finishCount = 0;
+        }
+        else if (mode == DownloadMode.Append) {
+            if (globalCts == null) {
+                globalCts = new CancellationTokenSource();
+            }
+            else {
+                globalCts.TryReset();
+            }
+            if (waitDownloadFiles == null) {
+                waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
+            }
+            else {
+                foreach (var i in downloadFiles) {
+                    if (waitDownloadFiles.Any(j => j.FilePath == i.FilePath)) {
+                        continue;
+                    }
+                    waitDownloadFiles.Enqueue(i);
+                }
+            }
+            
+        }
+        
+        Console.WriteLine(waitDownloadFiles.Count);
+        TotalCount = waitDownloadFiles.Count;
+        DownloadPage.ProgressInit?.Invoke(mode == DownloadMode.Single ? downloadFiles : waitDownloadFiles.ToList(), mode == DownloadMode.Single);
         downloadCompletionSource = new TaskCompletionSource<bool>();
-        TotalCount = downloadFiles.Count;
-        finishCount = 0;
-        DownloadPage.ProgressInit?.Invoke(downloadFiles);
         Home.DownloadState?.Invoke(true);
         DownloadFilesFunc();
         await downloadCompletionSource.Task;
@@ -40,7 +100,7 @@ public class DownloadUtil {
             Console.WriteLine("下载线程未初始化，请先调用 DownloadUtil.init()");
             return;
         }
-        if (isCancelld) {
+        if (IsCancel) {
             return;
         }
         lock (downloadLock) {
@@ -62,8 +122,9 @@ public class DownloadUtil {
                     continue;
                 }
                 downloaders[i].isRunning = true;
-                waitDownloadFiles.TryDequeue(out DownloadFile item);
-                _ = downloaders[i].DownloadFileFunc(item,globalCts.Token).ConfigureAwait(false);;
+                if (waitDownloadFiles.TryDequeue(out DownloadFile item)) {
+                    _ = downloaders[i].DownloadFileFunc(item, globalCts.Token);
+                }
             }
         }
     }
@@ -80,27 +141,60 @@ public class DownloadUtil {
     }
 
     public static void CancelDownload() {
-        if (!isCancelld) {
+        if (!IsCancel) {
+            IsCancel = true;
             MessageTips.Show("下载取消", MessageTips.MessageType.Warning);
             // Console.WriteLine($"下载任务取消    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
             DownloadPage.DownloadingAnimState?.Invoke(false);
             Home.DownloadState?.Invoke(false);
-            isCancelld = false;
             globalCts?.Cancel();
-            waitDownloadFiles?.Clear();
-            errorDownloadFiles?.Clear();
             for (int i = 0; i < downloaders.Count; i++) {
                 downloaders[i].isRunning = false;
             }
         }
     }
+    
+    public static void RetryDownload() {
+        foreach (var i in errorDownloadFiles) {
+            i.UrlPath = i.UrlPaths[0];
+            i.State = DownloadFile.StateType.Downloading;
+            waitDownloadFiles.Enqueue(i);
+            DownloadPage.ProgressUpdate?.Invoke(i, finishCount, errorDownloadFiles.Count);
+        }
+        errorDownloadFiles.Clear();
+        _ = DownloadFilesFunc();
+    }
+
+    public static void ContinueDownload() {
+        if (IsCancel) {
+            IsCancel = false;
+            globalCts?.Dispose();
+            globalCts = new CancellationTokenSource();
+            Home.DownloadState?.Invoke(true);
+            _ = DownloadFilesFunc();
+        }
+    }
+
+    public static void ClearDownload() {
+        IsCancel = false;
+        downloadCompletionSource?.TrySetResult(false);
+        downloadCompletionSource = null;
+        globalCts?.Cancel();
+        waitDownloadFiles?.Clear();
+        errorDownloadFiles?.Clear();
+        foreach (var downloader in downloaders) {
+            downloader.isRunning = false;
+        }
+    }
+    
+    
     private static readonly HttpClient httpClient = new HttpClient();
     public static async Task SingalDownload(DownloadFile downloadFile) {
         var dir = Path.GetDirectoryName(downloadFile.FilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
             Directory.CreateDirectory(dir);
         }
-        if (string.IsNullOrEmpty(downloadFile.Url) && string.IsNullOrEmpty(downloadFile.UrlPath)) {
+        if (downloadFile.UrlPaths.Count != 0 && string.IsNullOrEmpty(downloadFile.UrlPath)) {
             return;
         }
         for (int i = 0; i < RetryCount * 2; i++) {
@@ -114,9 +208,8 @@ public class DownloadUtil {
             }
             catch (Exception e){
                 if (i == RetryCount) {
-                    if (!string.IsNullOrEmpty(downloadFile.Url)) {
-                        downloadFile.UrlPath = downloadFile.Url;
-                        downloadFile.Url = "";
+                    if (downloadFile.UrlPaths != null && downloadFile.UrlPaths.Count != 0 && downloadFile.UrlPaths[^1].Equals(downloadFile.UrlPath)) {
+                        downloadFile.UrlPath = downloadFile.UrlPaths[downloadFile.UrlPaths.IndexOf(downloadFile.UrlPath)];
                         continue;
                     }
                     return;
@@ -132,21 +225,24 @@ public class DownloadUtil {
         public ThreadDownloader() {
         }
         public async Task DownloadFileFunc(DownloadFile item, CancellationToken ct) {
-            if (isCancelld) {
+            if (IsCancel) {
                 return;
             }
-            item.State = DownloadFile.StateType.Downloading;
-            DownloadPage.ProgressUpdate?.Invoke(item,finishCount,errorDownloadFiles.Count);
-            // Console.WriteLine($"当前进度    还剩：{TotalCount-FinishCount} | 成功：{FinishCount} | 失败：{errorDownloadFiles.Count}");
-            var dir = Path.GetDirectoryName(item.FilePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
-                Directory.CreateDirectory(dir);
-            }
-            if (string.IsNullOrEmpty(item.Url) && string.IsNullOrEmpty(item.UrlPath)) {
-                return;
-            }
-
             try {
+                ct.ThrowIfCancellationRequested();
+                item.State = DownloadFile.StateType.Downloading;
+                DownloadPage.ProgressUpdate?.Invoke(item,finishCount,errorDownloadFiles.Count);
+                // Console.WriteLine($"当前进度    还剩：{TotalCount-FinishCount} | 成功：{FinishCount} | 失败：{errorDownloadFiles.Count}");
+                if (!DirFileUtil.IsValidFilePath(item.FilePath)) {
+                    throw new Exception("路径不合法");
+                }
+                var dir = Path.GetDirectoryName(item.FilePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
+                    Directory.CreateDirectory(dir);
+                }
+                if (string.IsNullOrEmpty(item.UrlPath)) {
+                    throw new Exception("下载地址为空");
+                }
                 ct.ThrowIfCancellationRequested();
                 // if (item.Size == 0) {
                 //     using var getSizeReq = new HttpRequestMessage(HttpMethod.Head, item.UrlPath);
@@ -157,8 +253,9 @@ public class DownloadUtil {
                 // }
                 using var download =
                     await httpClient.GetAsync(item.UrlPath, HttpCompletionOption.ResponseHeadersRead, ct);
+                ct.ThrowIfCancellationRequested();
                 download.EnsureSuccessStatusCode();
-
+                ct.ThrowIfCancellationRequested();
                 using var fileStream = new FileStream(item.FilePath, FileMode.Create);
                 await download.Content.CopyToAsync(fileStream);
                 Interlocked.Increment(ref finishCount);
@@ -168,32 +265,42 @@ public class DownloadUtil {
             }
             catch (OperationCanceledException) {
                 // Console.WriteLine($"下载取消：{item.UrlPath}");
+                // 下载取消，删除未完成的文件【以免文件不完整】
                 if (File.Exists(item.FilePath)) {
                     File.Delete(item.FilePath);
                 }
+                item.State = DownloadFile.StateType.Waiting;
+                waitDownloadFiles.Enqueue(item);
+                DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
             }
             catch (Exception e) {
                 // Console.WriteLine("下载失败 ：" + item.UrlPath);
                 item.ErrorMessage = e.Message;
-                if (item.RetryCount > RetryCount) {
-                    item.RetryCount++;
-                    item.State = DownloadFile.StateType.Waiting;
+                if (e.Message == "路径不合法" || e.Message == "下载地址为空") {
+                    item.State = DownloadFile.StateType.Error;
                     DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
-                    waitDownloadFiles.Enqueue(item);
+                    errorDownloadFiles.Add(item);
                 }
                 else {
-                    if (string.IsNullOrEmpty(item.Url)) {
-                        item.State = DownloadFile.StateType.Error;
-                        DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
-                        errorDownloadFiles.Add(item);
-                    }
-                    else {
-                        item.UrlPath = item.Url;
-                        item.Url = "";
-                        item.RetryCount = 1;
+                    if (item.RetryCount > RetryCount) {
+                        item.RetryCount++;
                         item.State = DownloadFile.StateType.Waiting;
                         DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
                         waitDownloadFiles.Enqueue(item);
+                    }
+                    else {
+                        if (item.UrlPaths.Count == 0 || item.UrlPaths[^1].Equals(item.UrlPath)) {
+                            item.State = DownloadFile.StateType.Error;
+                            DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
+                            errorDownloadFiles.Add(item);
+                        }
+                        else {
+                            item.UrlPath = item.UrlPaths[item.UrlPaths.IndexOf(item.UrlPath)+1];
+                            item.RetryCount = 1;
+                            item.State = DownloadFile.StateType.Waiting;
+                            DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
+                            waitDownloadFiles.Enqueue(item);
+                        }
                     }
                 }
             }
@@ -206,7 +313,7 @@ public class DownloadUtil {
                 Console.WriteLine($"下载任务完成    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
                 return;
             }
-            if (!isCancelld && waitDownloadFiles.Count > 0) {
+            if (!IsCancel && waitDownloadFiles.Count > 0) {
                 _ = Task.Delay(100);
                 _ = DownloadFilesFunc().ConfigureAwait(false);
             }

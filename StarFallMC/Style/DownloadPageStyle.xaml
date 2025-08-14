@@ -69,4 +69,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Storyboard x:Key="ListScrollViewerChange" TargetName="DownloadList" TargetProperty="Opacity">
+        <DoubleAnimation To="0" Duration="0:0:0.2"></DoubleAnimation>
+        <DoubleAnimation To="1" Duration="0:0:0.2" BeginTime="0:0:0.2"></DoubleAnimation>
+    </Storyboard>
 </ResourceDictionary>

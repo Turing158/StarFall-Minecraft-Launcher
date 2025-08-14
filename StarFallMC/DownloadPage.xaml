@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC"
+      xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="Download" Height="395" Width="800" Background="Transparent">
     <Page.Resources>
@@ -72,20 +73,45 @@
                                 </Grid>
                             </Grid>
                         </StackPanel>
-                        <Button Name="CancelDownload" Width="140" Height="40" 
-                                Style="{StaticResource Btn}" 
-                                Content="取 消 下 载" FontSize="16" 
-                                HorizontalAlignment="Center" 
-                                VerticalAlignment="Bottom" 
-                                Margin="0 10"
-                                Click="CancelDownload_OnClick"></Button>
+                        <StackPanel Name="OperateBtn"
+                                    Height="35" 
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Bottom"
+                                    Margin="0 10"
+                                    Orientation="Horizontal">
+                            <Button Name="CancelAndCleanDownload" Width="65"
+                                    Style="{StaticResource Btn}" 
+                                    Content="取 消" FontSize="15" 
+                                    Click="CancelAndCleanDownload_OnClick"
+                                    Margin="5 0"></Button>
+                            <Button Name="RetryAndContinueDownload" Width="65"
+                                    Style="{StaticResource Btn}" 
+                                    Content="重 试" FontSize="15" 
+                                    Click="RetryAndContinueDownload_OnClick"
+                                    Margin="5 0"></Button>
+                        </StackPanel>
                     </Grid>
                 </Border>
             </Grid>
             <Border Grid.Column="1" Style="{StaticResource Rect}" Margin="20 20 40 20">
-                <ScrollViewer>
-                    <ListView Margin="0 5" ItemsSource="{Binding Downloads}"></ListView>
-                </ScrollViewer>
+                <Grid>
+                    <Grid Height="40" VerticalAlignment="Top">
+                        <component:NavigationBar x:Name="DownloadNavigationBar" 
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding DownloadStates}" 
+                                                 SelectedIndex="0"
+                                                 SelectionChanged="Selector_OnSelectionChanged"></component:NavigationBar>
+                    </Grid>
+                    <Grid Name="DownloadList" Margin="0 40 0 0">
+                        <TextBlock Name="EmptyList" FontSize="18" Foreground="#001D1F" Text="没有任何下载项" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <ListView Name="ListScrollViewer" Margin="0 5" ItemsSource="{Binding Downloads}">
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel></VirtualizingStackPanel>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
+                        </ListView>
+                    </Grid>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

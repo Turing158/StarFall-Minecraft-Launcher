@@ -693,7 +693,7 @@ public class MinecraftUtil {
         string installerPath = Path.GetFullPath($"{DirFileUtil.GetParentPath($"{currentDir}/libraries/{OptiFineLib.path}")}/{Path.GetFileNameWithoutExtension(OptiFineLib.path)}-installer.jar");
         var (mcVersion, type, patch) = FormatOptifineName(OptiFineLib.name);
         if (!File.Exists(installerPath) || isForce) {
-            DownloadUtil.SingalDownload(new DownloadFile(OptiFineLib.name,installerPath,$"{bmclapiOptifine}/{mcVersion}/{type}/{patch}",""));
+            DownloadUtil.SingalDownload(new DownloadFile(OptiFineLib.name,installerPath,$"{bmclapiOptifine}/{mcVersion}/{type}/{patch}"));
         }
         string optifineJarPath = Path.GetFullPath($"{currentDir}/libraries/{OptiFineLib.path}");
         if (!File.Exists(optifineJarPath) || isForce) {
@@ -769,7 +769,7 @@ public class MinecraftUtil {
             string path = $"net/minecraftforge/forge/{mcVersion}-{forgeVersion}/{name}";
             string filePath = $"{currentDir}/libraries/{path}";
             string urlPath = $"{bmclapiMaven}/{path}";
-            return new DownloadFile(name,filePath,urlPath,"");
+            return new DownloadFile(name,filePath,urlPath);
         }
         return null;
     }
@@ -807,7 +807,11 @@ public class MinecraftUtil {
                 }
                 if (!set.Contains(path)) {
                     set.Add(path);
-                    downloadFiles.Add(new (name, path, urlPath, url));
+                    var item =  new DownloadFile(name, path, urlPath);
+                    if (!string.IsNullOrEmpty(url)) {
+                        item.UrlPaths.Add(url);
+                    }
+                    downloadFiles.Add(item);
                 }
             }
             if (i.isNativeWindows) {
@@ -822,7 +826,11 @@ public class MinecraftUtil {
                     }
                     if (!set.Contains(path)) {
                         set.Add(path);
-                        downloadFiles.Add(new (name, path, urlPath, url));
+                        var item =  new DownloadFile(name, path, urlPath);
+                        if (!string.IsNullOrEmpty(url)) {
+                            item.UrlPaths.Add(url);
+                        }
+                        downloadFiles.Add(item);
                     }
                     
                 }
@@ -832,9 +840,12 @@ public class MinecraftUtil {
                             string classifiersPath = currentDir + "/libraries/" + value.path;
                             if (!set.Contains(classifiersPath)) {
                                 set.Add(classifiersPath);
-                                downloadFiles.Add(new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path, value.url));
+                                var item =  new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path);
+                                if (!string.IsNullOrEmpty(value.url)) {
+                                    item.UrlPaths.Add(value.url);
+                                }
+                                downloadFiles.Add(item);
                             }
-                            
                             break;
                         }
                     }
@@ -859,7 +870,8 @@ public class MinecraftUtil {
         assetIndexUrlPath = bmclApi + assetIndexUrlPath;
         string assetJsonPath =$"{currentDir}/assets/indexes/{asset["id"]}.json";
         var size = asset["size"].ToObject<long>();
-        var downloadFile = new DownloadFile($"assets/indexes/{asset["id"]}.json",assetJsonPath,assetIndexUrlPath,assetIndexUrl);
+        var downloadFile = new DownloadFile($"assets/indexes/{asset["id"]}.json",assetJsonPath,assetIndexUrlPath);
+        downloadFile.UrlPaths.Add(assetIndexUrl);
         if (isForceDownload) {
             await DownloadUtil.SingalDownload(downloadFile);
         }
@@ -873,7 +885,7 @@ public class MinecraftUtil {
                     string prefix = i.Value["hash"].ToString().Substring(0, 2);
                     string objFilePath = $"{currentDir}/assets/objects/{prefix}/{i.Value["hash"]}";
                     string objUrl = $"{bmclAssetsAPI}/{prefix}/{i.Value["hash"]}";
-                    var item = new DownloadFile(i.Name, objFilePath, objUrl, "");
+                    var item = new DownloadFile(i.Name, objFilePath, objUrl);
                     item.Size = i.Value["size"]?.ToObject<long>() ?? 0;
                     assets.Add(item);
                 }
@@ -982,13 +994,19 @@ public class MinecraftUtil {
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
             cancellationToken.ThrowIfCancellationRequested();
             if (needDownloadFiles.Count != 0) {
-                Console.WriteLine("文件不完整，开始下载...");
                 Home.StartingState?.Invoke("补全文件中...");
+                Console.WriteLine("文件不完整，开始下载...");
                 await DownloadUtil.StartDownload(needDownloadFiles);
-                if (DownloadUtil.errorDownloadFiles.Count != 0) {
-                    MessageBox.Show(
-                        $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可尝试重新启动 或 前往 “版本属性” 处重新补全下载。",
-                        "下载失败");
+                while (DownloadUtil.errorDownloadFiles.Count != 0) {
+                    bool retry = false;
+                    await MessageBox.ShowAsync(
+                        $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
+                        "下载失败", MessageBox.BtnType.ConfirmAndCancel, r => {
+                            retry = r == MessageBox.Result.Confirm;
+                        },confirmBtnText:"重新下载",cancelBtnText:"跳过");
+                    if (retry) {
+                        await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
+                    }
                 }
             }
             cancellationToken.ThrowIfCancellationRequested();

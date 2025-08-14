@@ -15,7 +15,7 @@ public class DownloadFile : INotifyPropertyChanged {
     public string Name { get; set; }
     public string FilePath { get; set; }
     public string UrlPath { get; set; }
-    public string Url { get; set; }
+    public List<string> UrlPaths { get; set; }
     public int RetryCount { get; set; } = 0;
     public string ErrorMessage { get; set; } = string.Empty;
     public long Size { get; set; } = 1;
@@ -58,27 +58,26 @@ public class DownloadFile : INotifyPropertyChanged {
     public DownloadFile() {
     }
 
-    public DownloadFile(string name, string filePath, string urlPath, string url) {
+    public DownloadFile(string name, string filePath, string urlPath) {
         Name = name;
         FilePath = filePath;
         UrlPath = urlPath;
-        Url = url;
+        UrlPaths = new List<string> { urlPath };
     }
 
     public override bool Equals(object? obj) {
         return obj is DownloadFile file &&
                Name == file.Name &&
                FilePath == file.FilePath &&
-               UrlPath == file.UrlPath &&
-               Url == file.Url;
+               UrlPath == file.UrlPath;
     }
 
     public override int GetHashCode() {
-        return HashCode.Combine(Name, FilePath, UrlPath, Url);
+        return HashCode.Combine(Name, FilePath, UrlPath);
     }
 
     public override string ToString() {
-        return $"DownloadFile(Name: {Name}, FilePath: {FilePath}, UrlPath: {UrlPath}, Url: {Url})";
+        return $"DownloadFile(Name: {Name}, FilePath: {FilePath}, UrlPath:( {string.Join(", ", UrlPath)}))";
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
