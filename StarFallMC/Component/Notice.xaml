@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:StarFallMC.Component"
+             xmlns:wpf="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -11,7 +12,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="local:Notice">
-                        <local:CollapsePanel>
+                        <local:CollapsePanel Name="NoticeContainer">
                             <local:CollapsePanel.TitleContent>
                                 <Grid>
                                     <Image Width="{Binding IconSize, RelativeSource={RelativeSource AncestorType=local:Notice}}"
@@ -30,8 +31,16 @@
                                                TextTrimming="WordEllipsis"></TextBlock>
                                 </Grid>
                             </local:CollapsePanel.TitleContent>
-                            <TextBlock Text="{Binding ContentText, RelativeSource={RelativeSource AncestorType=local:Notice}}"
-                                       TextWrapping="Wrap"></TextBlock>
+                            <wpf:MarkdownViewer Markdown="{Binding ContentText, RelativeSource={RelativeSource AncestorType=local:Notice}}"
+                                                Foreground="{Binding ContentForeground, RelativeSource={RelativeSource AncestorType=local:Notice}}"
+                                                Pipeline="{Binding MarkdownPipeline}">
+                                <wpf:MarkdownViewer.Resources>
+                                    <Style TargetType="FlowDocumentScrollViewer">
+                                        <Setter Property="IsSelectionEnabled" Value="False" />
+                                        <Setter Property="IsInactiveSelectionHighlightEnabled" Value="False" />
+                                    </Style>
+                                </wpf:MarkdownViewer.Resources>
+                            </wpf:MarkdownViewer>
                         </local:CollapsePanel>
                     </ControlTemplate>
                 </Setter.Value>

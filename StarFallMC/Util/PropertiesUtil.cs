@@ -330,6 +330,7 @@ public class PropertiesUtil {
     
     public class LauncherArgs {
         public string Bg { get; set; } = "";
+        public bool EnableNotice { get; set; } = true;
     }
     
     public static LauncherArgs launcherArgs = new ();
@@ -344,10 +345,19 @@ public class PropertiesUtil {
                 launcherArgs.Bg = "";
                 launcher["bg"] = "";
             }
+
+            try {
+                launcherArgs.EnableNotice = launcher["EnableNotice"].Value<bool>();
+            }
+            catch (Exception e){
+                launcherArgs.EnableNotice = true;
+                launcher["EnableNotice"] = true;
+            }
         }
         else {
             launcher = new JObject();
             launcher["bg"] = "";
+            launcher["EnableNotice"] = true;
             loadJson["launcher"] = launcher;
         }
     }

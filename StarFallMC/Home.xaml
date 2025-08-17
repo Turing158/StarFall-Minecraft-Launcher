@@ -35,6 +35,7 @@
                 <RowDefinition Height="80"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Name="TopFrame">
+                <component:Notices HorizontalAlignment="Left" Width="310" ></component:Notices>
                 <Grid  Width="50" Height="50" 
                        HorizontalAlignment="Right" 
                        VerticalAlignment="Bottom" 
