@@ -267,9 +267,16 @@ public partial class Home : Page {
                 defaultBgPath = false;
             }
         }
-        string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg.png";
-        if (defaultBgPath && File.Exists(defaultPath)) {
-            bgImage.UriSource = new Uri(defaultPath, UriKind.RelativeOrAbsolute);
+        string[] bgSuffix = { ".jpg", ".jpeg", ".png" };
+        string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg";
+        if (defaultBgPath) {
+            foreach (var i in bgSuffix) {
+                string path = $"{defaultPath}{i}";
+                if (File.Exists(path)) {
+                    bgImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
+                    break;
+                }
+            }
         }
 
         if (bgImage.UriSource != null) {

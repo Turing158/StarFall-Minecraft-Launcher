@@ -17,20 +17,20 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="local:CollapsePanel">
                         <Border x:Name="Main" 
-                                Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneTime}" 
+                                Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=local:CollapsePanel}, Mode=OneTime}" 
                                 Style="{StaticResource Rect}" CornerRadius="10" RenderTransformOrigin="0.5,0.5"
                                 Margin="0 10">
                             <Border.RenderTransform>
                                 <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
                             </Border.RenderTransform>
                             <StackPanel x:Name="EntirePanel">
-                                <Grid Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                <Grid Height="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=local:CollapsePanel}}">
                                     <Grid Margin="0 0 40 0">
                                         <ContentPresenter Content="{TemplateBinding TitleContent}"></ContentPresenter>
                                     </Grid>
                                     <TextBlock Name="StateIcon" Text="&#xe903;" FontFamily="{StaticResource IconFontFamily}" 
                                                HorizontalAlignment="Right" VerticalAlignment="Center" 
-                                               FontSize="{Binding ToggleBtnSize, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="10 0"
+                                               FontSize="{Binding ToggleBtnSize, RelativeSource={RelativeSource AncestorType=local:CollapsePanel}}" Margin="10 0"
                                                RenderTransformOrigin="0.5,0.5">
                                         <TextBlock.RenderTransform>
                                             <RotateTransform Angle="180"></RotateTransform>
@@ -42,10 +42,8 @@
                                             CornerRadius="10" IsHitTestVisible="True"
                                             Opacity="0" Background="#f1f1f1"></Border>
                                 </Grid>
-                                <Border Margin="10 0 10 5" Height="1" Background="Black" Visibility="{Binding NeedDivider, RelativeSource={RelativeSource AncestorType=UserControl}}"></Border>
-                                <Grid Margin="10 0 10 10">
-                                    <ContentPresenter></ContentPresenter>
-                                </Grid>
+                                <Border Margin="10 0 10 0" Height="1" Background="Black" Visibility="{Binding NeedDivider, RelativeSource={RelativeSource AncestorType=local:CollapsePanel}}"></Border>
+                                <ContentPresenter SizeChanged="Content_OnSizeChanged"></ContentPresenter>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Resources>
@@ -55,7 +53,7 @@
                             </Storyboard>
                             <Storyboard x:Key="CloseAnim">
                                 <DoubleAnimation Storyboard.TargetProperty="Height"
-                                                 To="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneTime}" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                                 To="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=local:CollapsePanel}, Mode=OneTime}" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                 <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
                                                  To="180" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                             </Storyboard>

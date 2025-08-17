@@ -91,7 +91,7 @@ public partial class CollapsePanel : UserControl {
             isMouseLeftDown = false;
             IsOpen = !IsOpen;
             if (IsOpen) {
-                if (this.Content != null) {
+                if (Content != null) {
                     var openAnim = new DoubleAnimation(
                         toValue:EntirePanel.ActualHeight,
                         duration:new Duration(TimeSpan.FromMilliseconds(200))
@@ -113,5 +113,27 @@ public partial class CollapsePanel : UserControl {
             MouseUpAnim.Begin();
         }
         isMouseLeftDown = false;
+    }
+
+    private Timer SizeChangeTimer;
+    private bool isSizeChanging = false;
+    private void Content_OnSizeChanged(object sender, SizeChangedEventArgs e) {
+        if (!isSizeChanging && IsOpen && Content != null) {
+            var content = sender as ContentPresenter;
+            isSizeChanging = true;
+            var openAnim = new DoubleAnimation(
+                toValue:content.ActualHeight + MainHeight + 1,
+                duration:new Duration(TimeSpan.FromMilliseconds(200))
+            );
+            openAnim.EasingFunction = new CubicEase();
+            Main.BeginAnimation(HeightProperty,openAnim);
+            SizeChangeTimer?.Dispose();
+            SizeChangeTimer = new Timer(o => {
+                this.Dispatcher.BeginInvoke(() => {
+                    isSizeChanging = false;
+                    SizeChangeTimer?.Dispose();
+                });
+            },null,200,0);
+        }
     }
 }

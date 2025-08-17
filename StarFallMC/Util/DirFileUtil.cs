@@ -1,9 +1,6 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
-using System.Windows;
 
 namespace StarFallMC.Util;
 
@@ -34,28 +31,47 @@ public class DirFileUtil {
     }
 
     public static string GetParentPath(string path) {
-        string[] paths = Path.GetFullPath(path).Split("\\");
-        if (paths.Length == 0 || paths.Length == 2) {
-            return path;
+        if (string.IsNullOrEmpty(path)) {
+            return path; 
         }
-        var newPaths = paths.SkipLast(1).ToList();
-        StringBuilder newPath = new StringBuilder();
-        for (int i = 0 ; i < newPaths.Count ; i++) {
-            newPath.Append(newPaths[i]);
-            if (i != newPaths.Count -1) {
-                newPath.Append("/");
-            }
+        try {
+            string result = Path.GetDirectoryName(Path.GetFullPath(path));
+            return result ?? path;
         }
-        return Path.GetFullPath(newPath.ToString());
+        catch (Exception e){
+            Console.WriteLine(e);
+            return path; 
+        }
     }
     
     public static string GetParentDirName(string path) {
-        string[] paths = Path.GetFullPath(path).Split("\\");
-        if (paths.Length == 0 || paths.Length == 2) {
+        if (string.IsNullOrEmpty(path)) {
             return path;
         }
-        var newPaths = paths.SkipLast(1).ToList();
-        return newPaths.Last();
+        try {
+            string result = Path.GetDirectoryName(Path.GetFullPath(path));
+            if (string.IsNullOrEmpty(result)) {
+                return path;
+            }
+            return Path.GetFileName(result);
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+            return path;
+        }
+    }
+
+    public static string GetAbsolutePathInLauncherSettingDir(string relativePath) {
+        string path = LauncherSettingsDir;
+        var sourceSplit =  relativePath.Split("../");
+        for (int i = 0; i < sourceSplit.Length -1; i++) {
+            string oldPath = path;
+            path = GetParentPath(path);
+            if (path == oldPath) {
+                break;
+            }
+        }
+        return Path.GetFullPath(Path.Combine(path, sourceSplit[^1]));
     }
 
     public static void DeleteDirAllContent(string path) {
