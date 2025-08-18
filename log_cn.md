@@ -237,4 +237,20 @@
     - DownloadUtil类添加"重试"、"取消"、"清除"、"继续"方法
     - 修改DownloadUtil类原StartDownload方法改为StartDownloadFunc，重写StartDownload方法，在下载列表不同状态下，提出操作建议
     - Minecraft启动方法在补全文件处添加文件不完整下载提示，并提出操作
-    
+
+---
+
+## 公告组件完成-2025-8-18
+
+1. CollapsePanel 组件能够自适应
+2. 修改了些不合理的代码
+3. DirFileUtil类添加和修改一些方法
+4. 让背景图片能够支持".jpg", ".jpeg", ".png"三种格式
+5. NoticeItem实体类辅助公告内容或文件的传入
+6. 添加Markdig.Wpf包，显示自定义Markdown文档
+7. 公告Notice组件完成
+   - 将Notice组件修改成能够显示普通内容和Markdown文档的功能
+   - Notices组件存储并展示Notice组件，可通过配置文件让Notices的展示和隐藏
+   - 通过Notices.json配置公告
+
+---
