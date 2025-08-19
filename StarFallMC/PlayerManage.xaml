@@ -138,210 +138,207 @@
             </Grid>
         </Border>
         
-        <Border Width="440" 
-                Margin="40 30" 
-                HorizontalAlignment="Right" 
-                Style="{StaticResource Rect}"
-                ClipToBounds="True">
+        <Grid Width="440" 
+              Margin="40 30" 
+              HorizontalAlignment="Right"
+              ClipToBounds="True">
             <Grid>
-                <Grid>
-                    <ScrollViewer>
-                        <ListView Name="PlayerListView" 
-                                  ItemsSource="{Binding Players}" 
-                                  ItemContainerStyle="{StaticResource PlayerList}"
-                                  SelectionChanged="PlayerListView_OnSelectionChanged"></ListView>
-                    </ScrollViewer>
-                    <Grid Name="NoUser">
-                        <TextBlock FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Run Text="&#xe61d;" FontFamily="{StaticResource IconFontFamily}"></Run>
-                            <Run Text="空空如也"></Run>
-                        </TextBlock>
-                        <TextBlock Text="点击这里添加→" FontSize="18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 0 50 15"></TextBlock>
-                    </Grid>
-                    <StackPanel Width="40" Height="120" 
-                                HorizontalAlignment="Right" 
-                                VerticalAlignment="Bottom"
-                                Opacity="0.3"
-                                Margin="5">
-                        <Button Name="RefreshPlayer" Width="30" Height="30" 
-                                Style="{StaticResource Btn}"
-                                Margin="0 5"
-                                FontSize="18"
-                                Click="RefreshPlayer_OnClick">
-                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe60c;"></TextBlock>
-                        </Button>
-                        <Button Name="DelPlayer" Width="30" Height="30" 
-                                Style="{StaticResource Btn}"
-                                Margin="0 5"
-                                FontSize="18"
-                                Click="DelPlayer_OnClick">
-                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
-                        </Button>
-                        <Button Name="AddPlayer" Width="30" Height="30" 
-                                Style="{StaticResource Btn}"
-                                Margin="0 5"
-                                FontSize="25"
-                                Click="AddPlayer_OnClick">
-                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
-                        </Button>
-                        <StackPanel.Triggers>
-                            <EventTrigger RoutedEvent="MouseEnter">
-                                <BeginStoryboard>
-                                    <Storyboard TargetProperty="Opacity">
-                                        <DoubleAnimation To="1" Duration="0:0:0.1"></DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                            <EventTrigger RoutedEvent="MouseLeave">
-                                <BeginStoryboard>
-                                    <Storyboard TargetProperty="Opacity">
-                                        <DoubleAnimation To="0.3" Duration="0:0:0.2" BeginTime="0:0:0.5"></DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </EventTrigger>
-                        </StackPanel.Triggers>
-                    </StackPanel>
+                <ScrollViewer>
+                    <ListView Name="PlayerListView" 
+                              ItemsSource="{Binding Players}" 
+                              ItemContainerStyle="{StaticResource PlayerList}"
+                              SelectionChanged="PlayerListView_OnSelectionChanged"></ListView>
+                </ScrollViewer>
+                <Grid Name="NoUser">
+                    <TextBlock FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Run Text="&#xe61d;" FontFamily="{StaticResource IconFontFamily}"></Run>
+                        <Run Text="空空如也"></Run>
+                    </TextBlock>
+                    <TextBlock Text="点击这里添加→" FontSize="18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 0 50 15"></TextBlock>
                 </Grid>
-                <Grid Name="Login" Opacity="0">
-                    <Grid.RenderTransform>
-                        <TranslateTransform X="{Binding ElementName=Login,Path=ActualWidth}"></TranslateTransform>
-                    </Grid.RenderTransform>
-                    <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                    <Button Name="LoginBackBtn" 
-                            Style="{StaticResource BackBtn}"
-                            Click="LoginBackBtn_OnClick"></Button>
-                    <Grid Name="SelectLogin" Width="300" Height="120">
-                        <Button Name="LoginBtn" Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; " FontSize="30"></TextBlock>
-                                <TextBlock Text="在线登录"></TextBlock>
-                            </StackPanel>
-                        </Button>
-                        <Button Name="OutlineBtn" VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; " FontSize="30"></TextBlock>
-                                <TextBlock Text="离线登录"></TextBlock>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </Grid>
-                <Grid Name="OutlineLogin" Opacity="0">
-                    <Grid.RenderTransform>
-                        <TranslateTransform X="{Binding ElementName=OutlineLogin,Path=ActualWidth}"></TranslateTransform>
-                    </Grid.RenderTransform>
-                    <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                    <Button Name="OutlineBackBtn" 
-                            Style="{StaticResource BackBtn}"
-                            Click="OutlineBackBtn_OnClick"></Button>
-                    <TextBlock VerticalAlignment="Center" 
-                               HorizontalAlignment="Center" 
-                               Margin="0 0 0 120" 
-                               Text="请输入你的游戏名"
-                               Foreground="#113032"
-                               FontSize="17"></TextBlock>
-                    <TextBox Name="OutlineInput"
-                             VerticalContentAlignment="Center"
-                             Margin="80 0 80 45" 
-                             FontSize="20"
-                             Padding="5 0 5 0"
-                             TextWrapping="NoWrap"
-                             HorizontalScrollBarVisibility="Disabled" 
-                             Background="#f1f1f1"
-                             Foreground="#113032"
-                             MaxLength="16"
-                             Height="35"
-                             VerticalAlignment="Center"></TextBox>
-                    <TextBlock Name="NameTips"
-                               Text="游戏名不能为空"
-                               Height="32"
-                               FontSize="16"
-                               Foreground="DarkRed"
-                               Margin="82 1.5 82 45" 
-                               Padding="0 7 0 0"
-                               Background="#f1f1f1"
-                               VerticalAlignment="Center"
-                               TextAlignment="Center"
-                               Opacity="0"
-                               IsHitTestVisible="False"></TextBlock>
-                    <Button Name="OutlineConfirm"
-                            Width="100" Height="30"
-                            Style="{StaticResource PlainBtn}"
-                            Margin="80 45 0 0 "
-                            HorizontalAlignment="Left"
-                            Content="确定"
-                            FontSize="15"
-                            Click="OutlineConfirm_OnClick"
-                            ></Button>
-                    <Button Name="OutlineCancel"
-                            Width="100" Height="30"
-                            Style="{StaticResource PlainBtn}"
-                            Margin="0 45 80 0 "
-                            HorizontalAlignment="Right"
-                            Content="取消"
-                            FontSize="15"
-                            Click="OutlineBackBtn_OnClick"></Button>
-                </Grid>
-                <Grid Name="OnlineLogin" Opacity="0">
-                    <Grid.RenderTransform>
-                        <!-- <TranslateTransform X="0"></TranslateTransform> -->
-                        <TranslateTransform X="{Binding ElementName=OnlineLogin,Path=ActualWidth}"></TranslateTransform>
-                    </Grid.RenderTransform>
-                    <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                    <Button Name="OnlineBackBtn" 
-                            Style="{StaticResource BackBtn}"
-                            Click="OnlineBackBtn_OnClick"></Button>
-                    <StackPanel HorizontalAlignment="Center" 
-                                VerticalAlignment="Center"
-                                Margin="20 0">
-                        <TextBlock TextWrapping="Wrap"
-                                   FontSize="18"
-                                   TextAlignment="Center">
-                            已自动为您打开浏览器，并复制以下代码至剪切板
-                            <LineBreak></LineBreak>
-                            请根据浏览器内提示进行操作
-                        </TextBlock>
-                        <TextBlock Name="VerifyCodeText" HorizontalAlignment="Center"
-                                   FontSize="40"
-                                   Margin="0 20"
-                                   Text="{Binding VerifyCode}"
-                                   MouseLeftButtonDown="VerifyCodeText_OnMouseLeftButtonDown"></TextBlock>
-                        <TextBlock TextWrapping="Wrap"
-                                   FontSize="16"
-                                   TextAlignment="Center">
-                            若未打开浏览器，点击复制链接
-                            <LineBreak></LineBreak>
-                            https://www.microsoft.com/link
-                            <LineBreak></LineBreak>
-                            然后自行打开浏览器，点击代码可以复制代码
-                        </TextBlock>
-                    </StackPanel>
-                    <Border Name="Loading" Background="#D7C6C5" Margin="20 60" Visibility="Hidden">
-                        <Grid>
-                            <TextBlock 
-                                FontFamily="{StaticResource IconFontFamily}" 
-                                Text="&#xe679;" FontSize="50" 
-                                HorizontalAlignment="Center" 
-                                VerticalAlignment="Center" 
-                                Margin="0 0 0 50"
-                                RenderTransformOrigin="0.5,0.5">
-                                <TextBlock.RenderTransform>
-                                    <RotateTransform Angle="0"></RotateTransform>
-                                </TextBlock.RenderTransform>
-                                <TextBlock.Triggers>
-                                    <EventTrigger RoutedEvent="Loaded">
-                                        <BeginStoryboard>
-                                            <Storyboard TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
-                                                <DoubleAnimation RepeatBehavior="Forever" Duration="0:0:1.5" From="0" To="360"></DoubleAnimation>
-                                            </Storyboard>
-                                        </BeginStoryboard>
-                                    </EventTrigger>
-                                </TextBlock.Triggers>
-                            </TextBlock>
-                            <TextBlock Name="LoadingText" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="23" Margin="0 80 0 0"></TextBlock>
-                        </Grid>
-                    </Border>
+                <StackPanel Width="40" Height="120" 
+                            HorizontalAlignment="Right" 
+                            VerticalAlignment="Bottom"
+                            Opacity="0.3"
+                            Margin="5">
+                    <Button Name="RefreshPlayer" Width="30" Height="30" 
+                            Style="{StaticResource Btn}"
+                            Margin="0 5"
+                            FontSize="18"
+                            Click="RefreshPlayer_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe60c;"></TextBlock>
+                    </Button>
+                    <Button Name="DelPlayer" Width="30" Height="30" 
+                            Style="{StaticResource Btn}"
+                            Margin="0 5"
+                            FontSize="18"
+                            Click="DelPlayer_OnClick">
+                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
+                    </Button>
+                    <Button Name="AddPlayer" Width="30" Height="30" 
+                            Style="{StaticResource Btn}"
+                            Margin="0 5"
+                            FontSize="25"
+                            Click="AddPlayer_OnClick">
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
+                    </Button>
+                    <StackPanel.Triggers>
+                        <EventTrigger RoutedEvent="MouseEnter">
+                            <BeginStoryboard>
+                                <Storyboard TargetProperty="Opacity">
+                                    <DoubleAnimation To="1" Duration="0:0:0.1"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="MouseLeave">
+                            <BeginStoryboard>
+                                <Storyboard TargetProperty="Opacity">
+                                    <DoubleAnimation To="0.3" Duration="0:0:0.2" BeginTime="0:0:0.5"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </StackPanel.Triggers>
+                </StackPanel>
+            </Grid>
+            <Grid Name="Login" Opacity="0">
+                <Grid.RenderTransform>
+                    <TranslateTransform X="{Binding ElementName=Login,Path=ActualWidth}"></TranslateTransform>
+                </Grid.RenderTransform>
+                <Border Background="#D7C6C5" CornerRadius="10"></Border>
+                <Button Name="LoginBackBtn" 
+                        Style="{StaticResource BackBtn}"
+                        Click="LoginBackBtn_OnClick"></Button>
+                <Grid Name="SelectLogin" Width="300" Height="120">
+                    <Button Name="LoginBtn" Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; " FontSize="30"></TextBlock>
+                            <TextBlock Text="在线登录"></TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Name="OutlineBtn" VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; " FontSize="30"></TextBlock>
+                            <TextBlock Text="离线登录"></TextBlock>
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Grid>
-        </Border>
+            <Grid Name="OutlineLogin" Opacity="0">
+                <Grid.RenderTransform>
+                    <TranslateTransform X="{Binding ElementName=OutlineLogin,Path=ActualWidth}"></TranslateTransform>
+                </Grid.RenderTransform>
+                <Border Background="#D7C6C5" CornerRadius="10"></Border>
+                <Button Name="OutlineBackBtn" 
+                        Style="{StaticResource BackBtn}"
+                        Click="OutlineBackBtn_OnClick"></Button>
+                <TextBlock VerticalAlignment="Center" 
+                           HorizontalAlignment="Center" 
+                           Margin="0 0 0 120" 
+                           Text="请输入你的游戏名"
+                           Foreground="#113032"
+                           FontSize="17"></TextBlock>
+                <TextBox Name="OutlineInput"
+                         VerticalContentAlignment="Center"
+                         Margin="80 0 80 45" 
+                         FontSize="20"
+                         Padding="5 0 5 0"
+                         TextWrapping="NoWrap"
+                         HorizontalScrollBarVisibility="Disabled" 
+                         Background="#f1f1f1"
+                         Foreground="#113032"
+                         MaxLength="16"
+                         Height="35"
+                         VerticalAlignment="Center"></TextBox>
+                <TextBlock Name="NameTips"
+                           Text="游戏名不能为空"
+                           Height="32"
+                           FontSize="16"
+                           Foreground="DarkRed"
+                           Margin="82 1.5 82 45" 
+                           Padding="0 7 0 0"
+                           Background="#f1f1f1"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           Opacity="0"
+                           IsHitTestVisible="False"></TextBlock>
+                <Button Name="OutlineConfirm"
+                        Width="100" Height="30"
+                        Style="{StaticResource PlainBtn}"
+                        Margin="80 45 0 0 "
+                        HorizontalAlignment="Left"
+                        Content="确定"
+                        FontSize="15"
+                        Click="OutlineConfirm_OnClick"
+                        ></Button>
+                <Button Name="OutlineCancel"
+                        Width="100" Height="30"
+                        Style="{StaticResource PlainBtn}"
+                        Margin="0 45 80 0 "
+                        HorizontalAlignment="Right"
+                        Content="取消"
+                        FontSize="15"
+                        Click="OutlineBackBtn_OnClick"></Button>
+            </Grid>
+            <Grid Name="OnlineLogin" Opacity="0">
+                <Grid.RenderTransform>
+                    <!-- <TranslateTransform X="0"></TranslateTransform> -->
+                    <TranslateTransform X="{Binding ElementName=OnlineLogin,Path=ActualWidth}"></TranslateTransform>
+                </Grid.RenderTransform>
+                <Border Background="#D7C6C5" CornerRadius="10"></Border>
+                <Button Name="OnlineBackBtn" 
+                        Style="{StaticResource BackBtn}"
+                        Click="OnlineBackBtn_OnClick"></Button>
+                <StackPanel HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            Margin="20 0">
+                    <TextBlock TextWrapping="Wrap"
+                               FontSize="18"
+                               TextAlignment="Center">
+                        已自动为您打开浏览器，并复制以下代码至剪切板
+                        <LineBreak></LineBreak>
+                        请根据浏览器内提示进行操作
+                    </TextBlock>
+                    <TextBlock Name="VerifyCodeText" HorizontalAlignment="Center"
+                               FontSize="40"
+                               Margin="0 20"
+                               Text="{Binding VerifyCode}"
+                               MouseLeftButtonDown="VerifyCodeText_OnMouseLeftButtonDown"></TextBlock>
+                    <TextBlock TextWrapping="Wrap"
+                               FontSize="16"
+                               TextAlignment="Center">
+                        若未打开浏览器，点击复制链接
+                        <LineBreak></LineBreak>
+                        https://www.microsoft.com/link
+                        <LineBreak></LineBreak>
+                        然后自行打开浏览器，点击代码可以复制代码
+                    </TextBlock>
+                </StackPanel>
+                <Border Name="Loading" Background="#D7C6C5" Margin="20 60" Visibility="Hidden">
+                    <Grid>
+                        <TextBlock 
+                            FontFamily="{StaticResource IconFontFamily}" 
+                            Text="&#xe679;" FontSize="50" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center" 
+                            Margin="0 0 0 50"
+                            RenderTransformOrigin="0.5,0.5">
+                            <TextBlock.RenderTransform>
+                                <RotateTransform Angle="0"></RotateTransform>
+                            </TextBlock.RenderTransform>
+                            <TextBlock.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                            <DoubleAnimation RepeatBehavior="Forever" Duration="0:0:1.5" From="0" To="360"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </TextBlock.Triggers>
+                        </TextBlock>
+                        <TextBlock Name="LoadingText" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="23" Margin="0 80 0 0"></TextBlock>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>

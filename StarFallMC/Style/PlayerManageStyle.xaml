@@ -21,7 +21,7 @@
                             Name="Border"
                             Width="{TemplateBinding Width}" 
                             Height="{TemplateBinding Height}" 
-                            Background="#C4ABAA"
+                            Background="#55f1f1f1"
                             CornerRadius="5"
                             BorderThickness="1"
                             Opacity="0"
@@ -45,7 +45,7 @@
                                 <TextBlock Foreground="#d1d1d1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
                             </Grid>
                         </Border>
-                        <Border Width="50" Height="22" CornerRadius="5" Background="#B2908F" HorizontalAlignment="Right" Margin="10 0">
+                        <Border Width="50" Height="22" CornerRadius="5" Background="#D7C6C5" HorizontalAlignment="Right" Margin="10 0">
                             <TextBlock Foreground="#001D1F" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13">
                                 <Run Text="&#xe61e;" FontFamily="{StaticResource IconFontFamily}"></Run>
                                 <Run Text="离线"></Run>
