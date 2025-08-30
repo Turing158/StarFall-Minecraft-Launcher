@@ -254,3 +254,33 @@
    - 通过Notices.json配置公告
 
 ---
+
+## 代码和项目结构大更新-2025-8-30
+
+1. 将大部分样式组件化，添加了更多动画更多功能；添加组件，修改组件的代码逻辑和动画
+   - 组件化Button
+   - 组件化PlainButton
+   - 组件化Slider
+   - 组件化TextButton
+   - 组件化TextInput
+   - 组件化ToggleButton
+   - CollapsePanel脱离`InitializeComponent();`
+   - MaskControll脱离`InitializeComponent();`
+   - NavigationBar组件高自定义
+2. 使用主题化颜色，通过代码或DynamicResource绑定颜色
+3. 添加和修改了一些Util类的方法，修复BUG
+   - 去除不必要的包
+   - DirFileUtil修复CompressZip方法，无法解压覆盖正在使用的文件
+   - MinecraftUtil添加GetJavaVersion方法获取Java版本号
+   - MinecraftUtil修复CompressNative方法，无法解压覆盖使用的dll
+   - 解决是否开启版本隔离的问题
+   - ThemeUtil用于切换主题色
+4. 修改资源
+   - 更新图标文件
+5. 完善界面
+   - 修改MainWindow的导航栏和动画逻辑
+   - 修改PlayerManage正版验证的操作和界面逻辑
+   - 新增ResourcePage下载页面（Minecraft下载和资源下载）
+   - Setting界面新增LauncherSetting界面（启动器设置）
+
+---
