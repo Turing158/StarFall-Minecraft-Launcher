@@ -642,7 +642,7 @@ public class MinecraftUtil {
     }
     
     // 解压Native
-    public static bool CompressNative(List<Lib> libs,string currentDir,string versionName){
+    public static bool CompressNative(List<Lib> libs,string currentDir,string versionName, bool overwrite = false){
         string orderPath = $"{currentDir}/versions/{versionName}/{versionName}-natives";
         foreach(var i in libs){
             if(i.isNativeWindows){
@@ -653,7 +653,7 @@ public class MinecraftUtil {
                             if (!File.Exists(path)) {
                                 return false;
                             }
-                            DirFileUtil.CompressZip(path,orderPath);
+                            DirFileUtil.CompressZip(path,orderPath,overwrite);
                         }
                     }
                 }
@@ -662,7 +662,7 @@ public class MinecraftUtil {
                     if (!File.Exists(path)) {
                         return false;
                     }
-                    DirFileUtil.CompressZip(path,orderPath);
+                    DirFileUtil.CompressZip(path,orderPath,overwrite);
                 }
             }
         }
@@ -723,6 +723,7 @@ public class MinecraftUtil {
         }
     }
     
+    // 获取Forge额外参数
     private static (string, string, string) GetForgeFmlArgs(string json) {
         JObject root = JObject.Parse(json);
         string forgeVersion = "";
@@ -745,11 +746,12 @@ public class MinecraftUtil {
             }
         }
         catch (Exception e){
-            Console.WriteLine(e);
+            
         }
         return (forgeVersion, mcVersion, mcpVersion);
     }
 
+    // 获取Forge额外参数下载文件
     private static DownloadFile GetForgeFmlDownloadFile(string json,string currentDir) {
         var (forgeVersion, mcVersion, mcpVersion) = GetForgeFmlArgs(json);
         if (string.IsNullOrEmpty(forgeVersion) || string.IsNullOrEmpty(mcVersion) || string.IsNullOrEmpty(mcpVersion)) {
@@ -952,6 +954,33 @@ public class MinecraftUtil {
         return (java, xms);
     }
     
+    //获取JavaHome路径下java的版本号
+    public static async Task<string> GetJavaVersion(string javaHome) {
+        string path = $"{javaHome}/bin/java.exe";
+        if (!File.Exists(path)) {
+            return null;
+        }
+        var result = await ProcessUtil.RunCmd($"{javaHome}/bin/java.exe", "-version",showOutput:false);
+        var javaVersion = result.StandardError.ReadToEnd().Split("\"")[1];
+        return string.IsNullOrEmpty(javaVersion) ? null : javaVersion;
+    }
+
+    // 获取Minecraft游戏目录
+    public static string GetMinecraftGameDir(string currentDir ,string name) {
+        string gameDir = $"{currentDir}/versions/{name}";
+        JObject root = PropertiesUtil.loadJson;
+        var gsvm = GameSetting.GetViewModel?.Invoke();
+        if (gsvm != null) {
+            return Path.GetFullPath(gsvm.IsIsolation ? gameDir : currentDir);
+        }
+        try {
+            return Path.GetFullPath(root["gameArgs"]["isolation"].ToObject<bool>() ? gameDir : currentDir);
+        }
+        catch (Exception e) {
+            return Path.GetFullPath(gameDir);
+        }
+    }
+    
     //  输出启动命令的.bat文件
     public static string OutputBat(string currentDir,MinecraftItem minecraft,string java,string cmd) {
         StringBuilder sb = new StringBuilder();
@@ -1011,6 +1040,7 @@ public class MinecraftUtil {
             }
             cancellationToken.ThrowIfCancellationRequested();
             if (minecraft.Loader == "OptiFine") {
+                Home.StartingState?.Invoke("补全OptiFine文件中...");
                 var OptiFineLib = libs.FirstOrDefault(i => i.name.Contains("OptiFine"));
                 var launchwrapperLib = libs.FirstOrDefault(i => i.name.Contains("launchwrapper"));
                 if ((launchwrapperLib != null && OptiFineLib != null) &&
@@ -1021,6 +1051,7 @@ public class MinecraftUtil {
             }
             cancellationToken.ThrowIfCancellationRequested();
             if (forgeFmlFile != null && minecraft.Loader == "Forge") {
+                Home.StartingState?.Invoke("补全Forge文件中...");
                 await InstallForge(forgeFmlFile, currentDir);
             }
             cancellationToken.ThrowIfCancellationRequested();
@@ -1056,7 +1087,7 @@ public class MinecraftUtil {
             string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
                 username: player.Name,
                 version: minecraft.Name,
-                gameDir: currentDir + "/versions/" + minecraft.Name,
+                gameDir: GetMinecraftGameDir(currentDir,minecraft.Name),
                 assetsDir: currentDir + "/assets",
                 uuid: player.UUID,
                 accessToken: player.AccessToken
@@ -1110,9 +1141,10 @@ public class MinecraftUtil {
                     // Console.WriteLine("窗口出现");
                     GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
                     ProcessUtil.SetWindowTitle(MinecraftProcess.Id,gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
+                    Console.WriteLine(gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
                     Home.HideLaunching?.Invoke(false);
                 }
-            }, null, 500, 500);
+            }, null, 500, 1000);
             processTimer = new Timer(o => {
                 // Console.WriteLine("检测Minecraft进程中...");
                 if (MinecraftProcess.HasExited) {

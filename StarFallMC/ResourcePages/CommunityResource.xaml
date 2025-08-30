@@ -1,0 +1,22 @@
+﻿<Page x:Class="StarFallMC.ResourcePages.CommunityResource"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:StarFallMC.ResourcePages"
+      mc:Ignorable="d"
+      Title="CommunityResource" Height="380" Width="600">
+    <Grid>
+        <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
+        <ScrollViewer Margin="0 5 10 5"
+                      HorizontalScrollBarVisibility="Hidden"
+                      VerticalScrollBarVisibility="Auto"
+                      CanContentScroll="False">
+            <StackPanel>
+                <Border Height="100" Style="{StaticResource RectByMargin}">
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="社区资源"></TextBlock>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

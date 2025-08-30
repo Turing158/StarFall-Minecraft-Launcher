@@ -1,0 +1,157 @@
+﻿<UserControl x:Class="StarFallMC.Component.ComboBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:StarFallMC.Component"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
+             TextOptions.TextFormattingMode="Display"
+             TextOptions.TextRenderingMode="ClearType">
+    <UserControl.Resources>
+        <local:ComboBoxChoiceVisibleConverter x:Key="ComboBoxChoiceVisibleConverter"/>
+        <local:ComboBoxChoiceMarginAnimationConverter x:Key="ComboBoxChoiceMarginAnimationConverter"/>
+        <local:ComboBoxTitleContentMarginConverter x:Key="ComboBoxTitleContentMarginConverter"/>
+        
+        <Style x:Key="DefaultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Grid>
+                            <Border Name="Bg" 
+                                    Background="{DynamicResource PrimaryBrush_1}" 
+                                    BorderBrush="{DynamicResource PrimaryBrush_4}" 
+                                    BorderThickness="1"
+                                    CornerRadius="5"
+                                    Opacity="0">
+                                <Border HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0"
+                                        Visibility="{Binding DeleteButtonVisibility ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
+                                    <local:TextButton Name="DeleteButton" Focusable="False"
+                                                      FontSize="20"
+                                                      Content="&#xe90b;"
+                                                      ToolTip="删除"
+                                                      Tag="{TemplateBinding Content}"
+                                                      Click="DeleteItem_OnClick">
+                                        <local:TextButton.Style>
+                                            <Style TargetType="local:TextButton" BasedOn="{StaticResource {x:Type local:TextButton}}">
+                                                <Setter Property="Visibility">
+                                                    <Setter.Value>
+                                                        <MultiBinding Converter="{StaticResource ComboBoxChoiceVisibleConverter}">
+                                                            <Binding Path="Content" RelativeSource="{RelativeSource TemplatedParent}"></Binding>
+                                                            <Binding Path="ItemsSource" RelativeSource="{RelativeSource AncestorType=local:ComboBox}"></Binding>
+                                                            <Binding Path="ForbiddenDeleteFirstLengthChoice" RelativeSource="{RelativeSource AncestorType=local:ComboBox}"></Binding>
+                                                        </MultiBinding>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </local:TextButton.Style>
+                                    </local:TextButton>
+                                </Border>
+                            </Border>
+                            <ContentControl Name="ContentControl" 
+                                            Margin="{Binding Visibility,ElementName=DeleteButton,Converter={StaticResource ComboBoxChoiceMarginAnimationConverter}}" 
+                                            Content="{TemplateBinding Content}" 
+                                            ContentTemplate="{Binding ChoiceTemplate ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
+                            </ContentControl>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" 
+                                                             To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" 
+                                                             To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="MouseLeftButtonUp" Handler="ItemMouseLeftButtonUp_OnHandler"></EventSetter>
+        </Style>
+        
+        <DataTemplate x:Key="DefaultChoice">
+            <TextBlock Text="{Binding}"
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Left"
+                       Foreground="{DynamicResource SecondaryBrush}"
+                       FontSize="14" Margin="30 5"
+                       TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis"></TextBlock>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="DefaultCurrentChoice">
+            <TextBlock Text="{Binding}"
+                       VerticalAlignment="Center" 
+                       HorizontalAlignment="Left"
+                       Foreground="{DynamicResource SecondaryBrush}"
+                       FontSize="15" Margin="30 5"
+                       TextWrapping="NoWrap"
+                       TextTrimming="CharacterEllipsis"></TextBlock>
+        </DataTemplate>
+            
+        <DataTemplate x:Key="DefaultNoSelect">
+            <TextBlock Text="{Binding }" 
+                       Foreground="{DynamicResource SecondaryBrush}"
+                       HorizontalAlignment="Left" 
+                       VerticalAlignment="Center" 
+                       FontSize="15" 
+                       Margin="20 0"></TextBlock>
+        </DataTemplate>
+    </UserControl.Resources>
+    <local:CollapsePanel x:Name="ComboBoxPanel" MainHeight="40" Background="{DynamicResource PrimaryBrush_1}">
+        <local:CollapsePanel.TitleContent>
+            <Grid Margin="{Binding ClearButtonVisibility,RelativeSource={RelativeSource AncestorType=local:ComboBox},Converter={StaticResource ComboBoxTitleContentMarginConverter}}">
+                <ContentControl Name="NoSelect" 
+                                Content="{Binding NoSelectText, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                                ContentTemplate="{Binding NoSelectTemplate, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
+                <ContentControl Content="{Binding CurrentItem, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                                ContentTemplate="{Binding CurrentChoiceTemplate, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
+            </Grid>
+        </local:CollapsePanel.TitleContent>
+        <local:CollapsePanel.TitleOperateContent>
+            <Border Visibility="{Binding ClearButtonVisibility,RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
+                <local:TextButton x:Name="ClearButton" Content="&#xe7d1;" 
+                                  Click="ClearCurrentChoice_OnClick" 
+                                  HorizontalAlignment="Right" 
+                                  VerticalAlignment="Center"
+                                  FontSize="20"
+                                  ToolTip="清空选项"></local:TextButton>
+            </Border>
+        </local:CollapsePanel.TitleOperateContent>
+        <local:CollapsePanel.Content>
+            <Grid>
+                <TextBlock Name="NoChoice" Text="空" HorizontalAlignment="Center" VerticalAlignment="Top" 
+                           FontSize="16" Foreground="{DynamicResource SecondaryBrush}"
+                           Margin="0 10"></TextBlock>
+                <ScrollViewer Name="ScrollViewer" MaxHeight="{Binding MaxDropDownHeight,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                              ItemContainerStyle="{StaticResource DefaultItemStyle}"
+                              ItemTemplate="{Binding ChoiceTemplate ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                              SelectedIndex="{Binding SelectedIndex, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Mode=TwoWay}"
+                              SelectedItem="{Binding CurrentItem, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                              SelectionChanged="ListView_SelectionChanged"
+                              Loaded="ListView_OnLoaded"
+                              Margin="5">
+                    </ListView>
+                </ScrollViewer>
+            </Grid>
+        </local:CollapsePanel.Content>
+    </local:CollapsePanel>
+</UserControl>

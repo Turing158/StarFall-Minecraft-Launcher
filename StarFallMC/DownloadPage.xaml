@@ -3,10 +3,9 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC"
-      xmlns:component="clr-namespace:StarFallMC.Component"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Download" Height="395" Width="800" Background="Transparent">
+      Title="Download" Height="400" Width="800" Background="Transparent">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -24,7 +23,8 @@
             <Grid>
                 <Border Style="{StaticResource Rect}" Margin="40 20 20 20">
                     <Grid>
-                        <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 20">
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Top" 
+                              Margin="0 20">
                             <Image Width="30" Height="30" 
                                    Source="assets/element/bedrock.png" 
                                    RenderOptions.BitmapScalingMode="NearestNeighbor" 
@@ -40,36 +40,61 @@
                         </Grid>
                         <StackPanel VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 5">
-                                <TextBlock Text="--.--" FontSize="20" Foreground="#001D1F"></TextBlock>
-                                <TextBlock Text="Mb/s" Margin="5 0 0 2" VerticalAlignment="Bottom" Foreground="#264446"></TextBlock>
+                                <TextBlock Text="--.--" FontSize="20" 
+                                           Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                <TextBlock Text="Mb/s" Margin="5 0 0 2" 
+                                           VerticalAlignment="Bottom" 
+                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                             </StackPanel>
                             <Grid Margin="0 20" ToolTip="我是能点的！">
                                 <StackPanel HorizontalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="10 2">
-                                        <TextBlock Text="总共:" FontSize="14" Foreground="#001D1F"></TextBlock>
-                                        <TextBlock Text="{Binding Total}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="2 0 0 1" Foreground="#264446"></TextBlock>
+                                        <TextBlock Text="总共:" FontSize="14" Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                        <TextBlock Text="{Binding Total}" 
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                   Margin="2 0 0 1" Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="10 2">
-                                        <TextBlock Text="剩余:" FontSize="14" Foreground="#001D1F"></TextBlock>
-                                        <TextBlock Text="{Binding Remaining}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="2 0 0 1" Foreground="#264446"></TextBlock>
+                                        <TextBlock Text="剩余:" FontSize="14" 
+                                                   Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                        <TextBlock Text="{Binding Remaining}" 
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                   Margin="2 0 0 1" Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="10 2">
-                                        <TextBlock Text="成功:" FontSize="14" Foreground="#001D1F"></TextBlock>
-                                        <TextBlock Text="{Binding Finished}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="2 0 0 0" Foreground="#264446"></TextBlock>
+                                        <TextBlock Text="成功:" FontSize="14" 
+                                                   Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                        <TextBlock Text="{Binding Finished}" 
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                   Margin="2 0 0 0" Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="10 2">
-                                        <TextBlock Text="失败:" FontSize="14" Foreground="#001D1F"></TextBlock>
-                                        <TextBlock Text="{Binding ErrorCount}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="2 0 0 0" Foreground="#264446"></TextBlock>
+                                        <TextBlock Text="失败:" FontSize="14" 
+                                                   Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                        <TextBlock Text="{Binding ErrorCount}" 
+                                                   HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                   Margin="2 0 0 0" Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                     </StackPanel>
                                 </StackPanel>
-                                <Grid Name="ProgressGrid" Background="#D7C6C5" Opacity="1" Margin="1 0" MouseLeftButtonDown="ProgressGrid_OnMouseLeftButtonDown">
-                                    <TextBlock HorizontalAlignment="Center" FontSize="16" Text="- 进度 -" Foreground="#264446" Margin="0 10"></TextBlock>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Remaining}" FontSize="18" Foreground="#001D1F"></TextBlock>
-                                        <TextBlock Text="/" Margin="5 0" FontSize="18" Foreground="#264446"></TextBlock>
-                                        <TextBlock Text="{Binding Total}" FontSize="18" Foreground="#001D1F"></TextBlock>
+                                <Grid Name="ProgressGrid" Background="{DynamicResource PrimaryBrush}" 
+                                      Opacity="1" Margin="1 0" 
+                                      MouseLeftButtonDown="ProgressGrid_OnMouseLeftButtonDown">
+                                    <TextBlock HorizontalAlignment="Center" FontSize="16" Text="- 进度 -" 
+                                               Foreground="{DynamicResource SecondaryBrush}" 
+                                               Margin="0 10"></TextBlock>
+                                    <StackPanel Orientation="Horizontal" 
+                                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Remaining}" FontSize="18" 
+                                                   Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
+                                        <TextBlock Text="/" Margin="5 0" FontSize="18" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                        <TextBlock Text="{Binding Total}" FontSize="18" 
+                                                   Foreground="{DynamicResource SecondaryBrush_2}"></TextBlock>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding ProgressText}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0 5" FontSize="14" Foreground="#264446"></TextBlock>
+                                    <TextBlock Text="{Binding ProgressText}" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                                               Margin="0 5" FontSize="14" 
+                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                 </Grid>
                             </Grid>
                         </StackPanel>
@@ -79,31 +104,36 @@
                                     VerticalAlignment="Bottom"
                                     Margin="0 10"
                                     Orientation="Horizontal">
-                            <Button Name="CancelAndCleanDownload" Width="65"
-                                    Style="{StaticResource Btn}" 
+                            <comp:Button x:Name="CancelAndCleanDownload" Width="65"
                                     Content="取 消" FontSize="15" 
                                     Click="CancelAndCleanDownload_OnClick"
-                                    Margin="5 0"></Button>
-                            <Button Name="RetryAndContinueDownload" Width="65"
-                                    Style="{StaticResource Btn}" 
-                                    Content="重 试" FontSize="15" 
-                                    Click="RetryAndContinueDownload_OnClick"
-                                    Margin="5 0"></Button>
+                                    Margin="5 0"></comp:Button>
+                            <comp:Button x:Name="RetryAndContinueDownload" Width="65"
+                                              Content="重 试" FontSize="15" 
+                                              Click="RetryAndContinueDownload_OnClick"
+                                              Margin="5 0"></comp:Button>
                         </StackPanel>
                     </Grid>
                 </Border>
             </Grid>
-            <Border Grid.Column="1" Style="{StaticResource Rect}" Margin="20 20 40 20">
-                <Grid>
-                    <Grid Height="40" VerticalAlignment="Top">
-                        <component:NavigationBar x:Name="DownloadNavigationBar" 
-                                                 HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding DownloadStates}" 
-                                                 SelectedIndex="0"
-                                                 SelectionChanged="Selector_OnSelectionChanged"></component:NavigationBar>
-                    </Grid>
-                    <Grid Name="DownloadList" Margin="0 40 0 0">
-                        <TextBlock Name="EmptyList" FontSize="18" Foreground="#001D1F" Text="没有任何下载项" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                        <ListView Name="ListScrollViewer" Margin="0 5" ItemsSource="{Binding Downloads}">
+            <Grid Grid.Column="1" Margin="20 20 40 20">
+                <Border Height="50" VerticalAlignment="Top" 
+                        Background="{DynamicResource PrimaryBrush_2}" 
+                        Style="{StaticResource Rect}">
+                    <comp:NavigationBar x:Name="DownloadNavigationBar" 
+                                        HorizontalAlignment="Center" VerticalAlignment="Top" ItemsSource="{Binding DownloadStates}" 
+                                        Margin="0 2 0 0"
+                                        SelectedIndex="0"
+                                        SelectionChanged="Selector_OnSelectionChanged"></comp:NavigationBar>
+                </Border>
+                <Border Style="{StaticResource Rect}" Margin="0 40 0 0">
+                    <Grid Name="DownloadList">
+                        <TextBlock Name="EmptyList" FontSize="18" 
+                                   Foreground="{DynamicResource SecondaryBrush_2}" 
+                                   Text="没有任何下载项" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <ListView Name="ListScrollViewer" Margin="0 5" 
+                                  ItemsSource="{Binding Downloads}">
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel></VirtualizingStackPanel>
@@ -111,8 +141,8 @@
                             </ListView.ItemsPanel>
                         </ListView>
                     </Grid>
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

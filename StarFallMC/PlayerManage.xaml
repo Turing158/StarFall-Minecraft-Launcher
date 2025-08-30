@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       KeepAlive="True"
       Title="PlayerManage" Height="400" Width="800"
@@ -14,12 +14,21 @@
     </Page.Resources>
     <Grid Background="Transparent">
         <Border Style="{StaticResource FrameBg}"></Border>
-        <Border Width="240" 
+        <Border Width="0" 
                 Margin="40 30" 
                 Style="{StaticResource Rect}"
-                Background="#aaD7C6C5"
                 HorizontalAlignment="Left"
                 CornerRadius="10">
+            <Border.Triggers>
+                <EventTrigger RoutedEvent="Loaded">
+                    <BeginStoryboard>
+                        <Storyboard TargetProperty="Width">
+                            <DoubleAnimation To="240" Duration="0:0:0.5" 
+                                             EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Border.Triggers>
             <Grid>
                 <Border VerticalAlignment="Top" Margin=" 10 20">
                     <TextBlock Name="PlayerName"
@@ -46,33 +55,40 @@
                         <StackPanel Orientation="Vertical">
                             <Grid Width="70" Height="66" ClipToBounds="True">
                                 <Canvas Width="64" Height="64" ClipToBounds="True" VerticalAlignment="Bottom">
-                                    <Image Name="Test" Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-64" Canvas.Top="-64"></Image>
+                                    <Image Name="Test" Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-64" Canvas.Top="-64"></Image>
                                 </Canvas>
                                 <Canvas Width="70" Height="70">
-                                    <Image Width="560" Source="{DynamicResource PlayerSkin}" Canvas.Left="-350" Canvas.Top="-70" VerticalAlignment="Top"></Image>
+                                    <Image Width="560" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-350" Canvas.Top="-70" VerticalAlignment="Top"></Image>
                                 </Canvas>
                             </Grid>
                             <StackPanel Width="128" Height="96" Orientation="Horizontal">
                                 <Grid>
                                     <!-- 左手 -->
                                     <Canvas Width="32" Height="96" ClipToBounds="True">
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-352" Canvas.Top="-160"></Image>
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-352" Canvas.Top="-282"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                        Canvas.Left="-352" Canvas.Top="-160"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                        Canvas.Left="-352" Canvas.Top="-282"></Image>
                                     </Canvas>
                                 </Grid>
                                 <Grid>
                                     <!-- 衣服 -->
                                     <Canvas Width="64" Height="96" ClipToBounds="True">
                                         <!-- 一层衣服 -->
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-160" Canvas.Top="-160"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                               Canvas.Left="-160" Canvas.Top="-160"></Image>
                                         <!-- 二层衣服 -->
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-160" Canvas.Top="-282"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                               Canvas.Left="-160" Canvas.Top="-282"></Image>
                                     </Canvas>
                                 </Grid>
                                 <Grid>
                                     <!-- 右手 -->
                                     <Canvas Width="32" Height="96" ClipToBounds="True">
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-352" Canvas.Top="-160"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                               Canvas.Left="-352" Canvas.Top="-160"></Image>
                                         <Canvas.RenderTransform>
                                             <ScaleTransform ScaleX="-1" CenterX="16"/>
                                         </Canvas.RenderTransform>
@@ -80,9 +96,11 @@
                                     <!-- 双层右手 -->
                                     <Canvas Width="32" Height="96" ClipToBounds="True">
                                         <!-- 双层右手一层 -->
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-288" Canvas.Top="-416"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                               Canvas.Left="-288" Canvas.Top="-416"></Image>
                                         <!-- 双层右手二层 -->
-                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-416" Canvas.Top="-416"></Image>
+                                        <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                               Canvas.Left="-416" Canvas.Top="-416"></Image>
                                     </Canvas>
                                 </Grid>
                             </StackPanel>
@@ -94,14 +112,17 @@
                                 <!-- 左脚 -->
                                 <Canvas Width="32" Height="96" ClipToBounds="True">
                                     <!-- 一层左脚 -->
-                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-32" Canvas.Top="-160"></Image>
+                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-32" Canvas.Top="-160"></Image>
                                     <!-- 双层左脚二层 -->
-                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-32" Canvas.Top="-288"></Image>
+                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-32" Canvas.Top="-288"></Image>
                                 </Canvas>
                                 
                                 <!-- 右脚 -->
                                 <Canvas Grid.Column="1" Width="32" Height="96" ClipToBounds="True">
-                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-32" Canvas.Top="-160"></Image>
+                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-32" Canvas.Top="-160"></Image>
                                     <Canvas.RenderTransform>
                                         <ScaleTransform ScaleX="-1" CenterX="16"/>
                                     </Canvas.RenderTransform>
@@ -109,31 +130,31 @@
                                 <!-- 双层右脚 -->
                                 <Canvas Grid.Column="1" Width="32" Height="96" ClipToBounds="True">
                                     <!-- 双层右脚一层 -->
-                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-160" Canvas.Top="-416"></Image>
+                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-160" Canvas.Top="-416"></Image>
                                     <!-- 双层右脚二层 -->
-                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" Canvas.Left="-32" Canvas.Top="-416"></Image>
+                                    <Image Width="512" Source="{DynamicResource PlayerSkin}" 
+                                           Canvas.Left="-32" Canvas.Top="-416"></Image>
                                 </Canvas>
                             </Grid>
                         </StackPanel>
                     </Border>
                 </Viewbox>
                 <Grid Height="35" VerticalAlignment="Bottom" Margin="0 0 0 10">
-                    <Button Name="SkinChangeBtn" 
-                            Width="80" 
-                            HorizontalAlignment="Left" 
-                            Margin="25 0" 
-                            Style="{StaticResource PlainBtn}" 
-                            Content="更换皮肤"
-                            FontSize="15"
-                            Click="SkinChangeBtn_OnClick"></Button>
-                    <Button Name="NameChangeBtn" 
-                            Width="80" 
-                            HorizontalAlignment="Right" 
-                            Margin="25 0" 
-                            Style="{StaticResource PlainBtn}"
-                            Content="更改名称"
-                            FontSize="15"
-                            Click="NameChangeBtn_OnClick"></Button>
+                    <comp:PlainButton x:Name="SkinChangeBtn" 
+                                      Width="80" 
+                                      HorizontalAlignment="Left" 
+                                      Margin="25 0" 
+                                      Content="更换皮肤"
+                                      FontSize="15"
+                                      Click="SkinChangeBtn_OnClick"></comp:PlainButton>
+                    <comp:PlainButton x:Name="NameChangeBtn" 
+                                      Width="80" 
+                                      HorizontalAlignment="Right" 
+                                      Margin="25 0" 
+                                      Content="更改名称"
+                                      FontSize="15"
+                                      Click="NameChangeBtn_OnClick"></comp:PlainButton>
                 </Grid>
             </Grid>
         </Border>
@@ -154,34 +175,34 @@
                         <Run Text="&#xe61d;" FontFamily="{StaticResource IconFontFamily}"></Run>
                         <Run Text="空空如也"></Run>
                     </TextBlock>
-                    <TextBlock Text="点击这里添加→" FontSize="18" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0 0 50 15"></TextBlock>
+                    <TextBlock Text="点击这里添加→" FontSize="18" 
+                               HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                               Margin="0 0 50 15"></TextBlock>
                 </Grid>
                 <StackPanel Width="40" Height="120" 
                             HorizontalAlignment="Right" 
                             VerticalAlignment="Bottom"
                             Opacity="0.3"
                             Margin="5">
-                    <Button Name="RefreshPlayer" Width="30" Height="30" 
-                            Style="{StaticResource Btn}"
+                    <comp:Button Width="30" Height="30"
                             Margin="0 5"
                             FontSize="18"
                             Click="RefreshPlayer_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe60c;"></TextBlock>
-                    </Button>
-                    <Button Name="DelPlayer" Width="30" Height="30" 
-                            Style="{StaticResource Btn}"
-                            Margin="0 5"
-                            FontSize="18"
-                            Click="DelPlayer_OnClick">
+                    </comp:Button>
+                    <comp:Button Width="30" Height="30"
+                                     Margin="0 5"
+                                     FontSize="18"
+                                     Click="DelPlayer_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe926;"></TextBlock>
-                    </Button>
-                    <Button Name="AddPlayer" Width="30" Height="30" 
-                            Style="{StaticResource Btn}"
-                            Margin="0 5"
-                            FontSize="25"
-                            Click="AddPlayer_OnClick">
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
-                    </Button>
+                    </comp:Button>
+                    <comp:Button Width="30" Height="30"
+                                     Margin="0 5"
+                                     FontSize="25"
+                                     Click="AddPlayer_OnClick">
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="&#xe61b;" 
+                                   FontFamily="{StaticResource IconFontFamily}" FontSize="32"></TextBlock>
+                    </comp:Button>
                     <StackPanel.Triggers>
                         <EventTrigger RoutedEvent="MouseEnter">
                             <BeginStoryboard>
@@ -204,51 +225,49 @@
                 <Grid.RenderTransform>
                     <TranslateTransform X="{Binding ElementName=Login,Path=ActualWidth}"></TranslateTransform>
                 </Grid.RenderTransform>
-                <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                <Button Name="LoginBackBtn" 
+                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="10"></Border>
+                <comp:PlainButton x:Name="LoginBackBtn" 
                         Style="{StaticResource BackBtn}"
-                        Click="LoginBackBtn_OnClick"></Button>
+                        Click="LoginBackBtn_OnClick"></comp:PlainButton>
                 <Grid Name="SelectLogin" Width="300" Height="120">
-                    <Button Name="LoginBtn" Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
+                    <comp:PlainButton Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; " FontSize="30"></TextBlock>
                             <TextBlock Text="在线登录"></TextBlock>
                         </StackPanel>
-                    </Button>
-                    <Button Name="OutlineBtn" VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
+                    </comp:PlainButton>
+                    <comp:PlainButton VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; " FontSize="30"></TextBlock>
                             <TextBlock Text="离线登录"></TextBlock>
                         </StackPanel>
-                    </Button>
+                    </comp:PlainButton>
                 </Grid>
             </Grid>
             <Grid Name="OutlineLogin" Opacity="0">
                 <Grid.RenderTransform>
                     <TranslateTransform X="{Binding ElementName=OutlineLogin,Path=ActualWidth}"></TranslateTransform>
                 </Grid.RenderTransform>
-                <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                <Button Name="OutlineBackBtn" 
+                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="10"></Border>
+                <comp:PlainButton
                         Style="{StaticResource BackBtn}"
-                        Click="OutlineBackBtn_OnClick"></Button>
+                        Click="OutlineBackBtn_OnClick"></comp:PlainButton>
                 <TextBlock VerticalAlignment="Center" 
                            HorizontalAlignment="Center" 
                            Margin="0 0 0 120" 
                            Text="请输入你的游戏名"
-                           Foreground="#113032"
+                           Foreground="{DynamicResource SecondaryBrush_1}"
                            FontSize="17"></TextBlock>
-                <TextBox Name="OutlineInput"
+                <comp:TextInput x:Name="OutlineInput"
                          VerticalContentAlignment="Center"
                          Margin="80 0 80 45" 
                          FontSize="20"
                          Padding="5 0 5 0"
                          TextWrapping="NoWrap"
                          HorizontalScrollBarVisibility="Disabled" 
-                         Background="#f1f1f1"
-                         Foreground="#113032"
                          MaxLength="16"
                          Height="35"
-                         VerticalAlignment="Center"></TextBox>
+                         VerticalAlignment="Center"></comp:TextInput>
                 <TextBlock Name="NameTips"
                            Text="游戏名不能为空"
                            Height="32"
@@ -261,33 +280,26 @@
                            TextAlignment="Center"
                            Opacity="0"
                            IsHitTestVisible="False"></TextBlock>
-                <Button Name="OutlineConfirm"
-                        Width="100" Height="30"
-                        Style="{StaticResource PlainBtn}"
-                        Margin="80 45 0 0 "
-                        HorizontalAlignment="Left"
-                        Content="确定"
-                        FontSize="15"
-                        Click="OutlineConfirm_OnClick"
-                        ></Button>
-                <Button Name="OutlineCancel"
-                        Width="100" Height="30"
-                        Style="{StaticResource PlainBtn}"
-                        Margin="0 45 80 0 "
-                        HorizontalAlignment="Right"
-                        Content="取消"
-                        FontSize="15"
-                        Click="OutlineBackBtn_OnClick"></Button>
+                <comp:PlainButton Width="100" Height="30"
+                                       Margin="80 45 0 0 "
+                                       HorizontalAlignment="Left"
+                                       Content="确定"
+                                       FontSize="15"
+                                       Click="OutlineConfirm_OnClick"
+                ></comp:PlainButton>
+                <comp:PlainButton Width="100" Height="30"
+                                       Margin="0 45 80 0 "
+                                       HorizontalAlignment="Right"
+                                       Content="取消"
+                                       FontSize="15"
+                                       Click="OutlineBackBtn_OnClick"></comp:PlainButton>
             </Grid>
             <Grid Name="OnlineLogin" Opacity="0">
                 <Grid.RenderTransform>
-                    <!-- <TranslateTransform X="0"></TranslateTransform> -->
                     <TranslateTransform X="{Binding ElementName=OnlineLogin,Path=ActualWidth}"></TranslateTransform>
                 </Grid.RenderTransform>
-                <Border Background="#D7C6C5" CornerRadius="10"></Border>
-                <Button Name="OnlineBackBtn" 
-                        Style="{StaticResource BackBtn}"
-                        Click="OnlineBackBtn_OnClick"></Button>
+                <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="10"></Border>
+                <comp:PlainButton Style="{StaticResource BackBtn}" Click="OnlineBackBtn_OnClick"></comp:PlainButton>
                 <StackPanel HorizontalAlignment="Center" 
                             VerticalAlignment="Center"
                             Margin="20 0">
@@ -303,17 +315,12 @@
                                Margin="0 20"
                                Text="{Binding VerifyCode}"
                                MouseLeftButtonDown="VerifyCodeText_OnMouseLeftButtonDown"></TextBlock>
-                    <TextBlock TextWrapping="Wrap"
-                               FontSize="16"
-                               TextAlignment="Center">
-                        若未打开浏览器，点击复制链接
-                        <LineBreak></LineBreak>
-                        https://www.microsoft.com/link
-                        <LineBreak></LineBreak>
-                        然后自行打开浏览器，点击代码可以复制代码
-                    </TextBlock>
+                    <TextBlock FontSize="16" TextAlignment="Center" Text="若未打开浏览器，点击复制链接"></TextBlock>
+                    <TextBlock FontSize="16" TextAlignment="Center" Text="https://www.microsoft.com/link" 
+                               MouseLeftButtonDown="LinkText_OnMouseLeftButtonDown"></TextBlock>
+                    <TextBlock FontSize="16" TextAlignment="Center" Text="然后自行打开浏览器，点击代码可以复制代码"></TextBlock>
                 </StackPanel>
-                <Border Name="Loading" Background="#D7C6C5" Margin="20 60" Visibility="Hidden">
+                <Border Name="Loading" Background="{DynamicResource PrimaryBrush}" Margin="20 60" Visibility="Hidden">
                     <Grid>
                         <TextBlock 
                             FontFamily="{StaticResource IconFontFamily}" 
@@ -335,7 +342,9 @@
                                 </EventTrigger>
                             </TextBlock.Triggers>
                         </TextBlock>
-                        <TextBlock Name="LoadingText" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="23" Margin="0 80 0 0"></TextBlock>
+                        <TextBlock Name="LoadingText" Text="" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                   FontSize="23" Margin="0 80 0 0"></TextBlock>
                     </Grid>
                 </Border>
             </Grid>

@@ -9,8 +9,6 @@ public class DirFileUtil {
     public static string CurrentDirPosition = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
     public static string LauncherSettingsDir = Path.Combine(CurrentDirPosition, "SFMCL");
     
-    
-    
     //通过资源管理器打开文件夹
     public static bool openDirByExplorer(string path) {
         if (!Directory.Exists(path)) {
@@ -80,11 +78,31 @@ public class DirFileUtil {
         }
     }
     
-    public static void CompressZip(string path,string orderPath) {
+    public static void CompressZip(string path,string orderPath,bool overwrite = false) {
         if (!Directory.Exists(orderPath)) {
             Directory.CreateDirectory(orderPath);
         }
-        ZipFile.ExtractToDirectory(path,orderPath,true);
+        if (overwrite) {
+            ZipFile.ExtractToDirectory(path,orderPath,true);
+        }
+        else {
+            using (ZipArchive archive = ZipFile.Open(path,ZipArchiveMode.Read)) {
+                foreach (var entry in archive.Entries) {
+                    string fileName = Path.GetFullPath(Path.Combine(orderPath, entry.FullName));
+                    if (Path.GetFileName(fileName).Length == 0) {
+                        continue;
+                    }
+
+                    if (!File.Exists(fileName)) {
+                        string dirPath = Path.GetDirectoryName(fileName);
+                        if (!Directory.Exists(dirPath)) {
+                            Directory.CreateDirectory(dirPath);
+                        }
+                        entry.ExtractToFile(fileName);
+                    }
+                }
+            }
+        }
     }
 
     public static bool GetZipFileToOrder(string zipPath, string orderFilePathInZip, string orderPath) {

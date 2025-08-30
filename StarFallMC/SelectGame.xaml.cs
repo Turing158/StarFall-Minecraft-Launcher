@@ -8,7 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
@@ -39,8 +38,6 @@ public partial class SelectGame : Page {
         reloadGameByDir(viewModel.CurrentDir.Path);
     }
     public class ViewModel : INotifyPropertyChanged {
-        public event PropertyChangedEventHandler? PropertyChanged;
-        
         private MinecraftItem _currentGame;
         public MinecraftItem CurrentGame {
             get => _currentGame;
@@ -77,6 +74,8 @@ public partial class SelectGame : Page {
             set => SetField(ref _renameVersionTips, value);
         }
         
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -120,13 +119,10 @@ public partial class SelectGame : Page {
         ofd.Title = "请选择.minecraft的根目录[上一级目录]或.minecraft目录";
         ofd.DefaultDirectory = DirFileUtil.CurrentDirPosition;
         if (ofd.ShowDialog() == true) {
-
             if (viewModel.Dirs.Any(i => i.Path == ofd.FolderName || i.Path == ofd.FolderName+"\\.minecraft")) {
-                //提示存在该文件夹
-                Console.WriteLine("该文件夹已存在");
+                MessageTips.Show($"该文件夹已存在");
                 return;
             }
-            
             string check = Path.GetFileName(ofd.FolderName);
             DirItem dirItem = new DirItem();
             if (check == ".minecraft") {
@@ -139,10 +135,8 @@ public partial class SelectGame : Page {
             }
             viewModel.Dirs.Add(dirItem);
             MessageTips.Show($"成功添加文件夹 {dirItem.Name}");
-            // DirList.Add(dirItem);
             DirSelect.SelectedIndex = viewModel.Dirs.Count - 1;
         }
-        //添加文件夹
     }
 
     private void DelDir_OnClick(object sender, RoutedEventArgs e) {
@@ -160,14 +154,12 @@ public partial class SelectGame : Page {
     }
 
     private void OpenDir_OnClick(object sender, RoutedEventArgs e) {
-        //打开文件夹
         var dir = (DirItem)DirSelect.SelectedItem;
         MessageTips.Show($"已打开文件夹 {dir.Name}");
         DirFileUtil.openDirByExplorer(dir.Path);
     }
 
     private void RefreshDir_OnClick(object sender, RoutedEventArgs e) {
-        //刷新文件夹
         MessageTips.Show($"已刷新文件夹 {viewModel.CurrentDir.Name}");
         loadGameByDir();
     }
@@ -187,7 +179,6 @@ public partial class SelectGame : Page {
     }
 
     private void reloadGameByDir(string path) {
-        //重新加载该地址内的Minecraft版本
         var item = viewModel.CurrentGame;
         viewModel.Games = new ObservableCollection<MinecraftItem>(MinecraftUtil.GetMinecraft(path));
         if (viewModel.Games == null || viewModel.Games.Count == 0) {
@@ -276,29 +267,20 @@ public partial class SelectGame : Page {
     }
 
     private void OpenModDir_OnClick(object sender, RoutedEventArgs e) {
-        //  这里得重写，要判断是否版本隔离
-        string path = viewModel.CurrentGame.Path + "/mods";
-        if (Directory.Exists(path)) {
-
-            DirFileUtil.openDirByExplorer(path);
-            return;
-        }
-        path = viewModel.CurrentDir.Path + "/mods";
+        string path = MinecraftUtil.GetMinecraftGameDir(viewModel.CurrentDir.Path,viewModel.CurrentGame.Name) == Path.GetFullPath(viewModel.CurrentGame.Path) ?
+            $"{viewModel.CurrentGame.Path}/mods" :
+            $"{viewModel.CurrentDir.Path}/resourcepacks";
         if (Directory.Exists(path)) {
             DirFileUtil.openDirByExplorer(path);
             return;
         }
-        MessageTips.Show($"不存在 mods 文件夹");
+        MessageTips.Show($"不存在 resources 文件夹");
     }
 
     private void OpenResourcesDir_OnClick(object sender, RoutedEventArgs e) {
-        //  这里得重写，要判断是否版本隔离
-        string path = viewModel.CurrentGame.Path + "/resources";
-        if (Directory.Exists(path)) {
-            DirFileUtil.openDirByExplorer(path);
-            return;
-        }
-        path = viewModel.CurrentDir.Path + "/resources";
+        string path = MinecraftUtil.GetMinecraftGameDir(viewModel.CurrentDir.Path,viewModel.CurrentGame.Name) == Path.GetFullPath(viewModel.CurrentGame.Path) ?
+            $"{viewModel.CurrentGame.Path}/resourcepacks" :
+            $"{viewModel.CurrentDir.Path}/resourcepacks";
         if (Directory.Exists(path)) {
             DirFileUtil.openDirByExplorer(path);
             return;
@@ -324,7 +306,6 @@ public partial class SelectGame : Page {
         else {
             viewModel.RenameVersionTips = "";
             if (e.Key == Key.Enter) {
-                var currentGame = viewModel.CurrentGame;
                 var item = MinecraftUtil.RenameVersion(viewModel.CurrentGame, tb.Text);
                 if (item == null) {
                     viewModel.RenameVersionTips = "已存在该名称文件夹或版本，请删除后重试";
@@ -337,23 +318,8 @@ public partial class SelectGame : Page {
             }
         }
     }
-    
-    
-    //方法备用，以免往后需要
-    private void ToFixListViewRefresh(MinecraftItem item) {
-        PropertiesUtil.loadJson["game"]["minecraft"] = JObject.FromObject(item);
-        MainWindow.ReloadSubFrame?.Invoke("SelectGame", () => {
-            globalTimer = new Timer(o => {
-                Dispatcher.Invoke(() => {
-                    SelectGame.GameInfoShow?.Invoke(null,null);
-                    globalTimer.Dispose();
-                });
-            }, null, 50, 0);
-        });
-    }
 
     private void RenameVersion_OnOnClose(object sender, RoutedEventArgs e) {
         viewModel.RenameVersionText = "";
     }
-    
 }

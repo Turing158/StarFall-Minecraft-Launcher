@@ -4,107 +4,111 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC.SettingPages"
-      xmlns:starFallMc="clr-namespace:StarFallMC"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="GameSetting" Height="380" Width="600"
       Unloaded="GameSetting_OnUnloaded">
     <Page.Resources>
-        <ResourceDictionary Source="../Style/GameSettingStyle.xaml"></ResourceDictionary>
+        <ResourceDictionary Source="Style/GameSettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>
     <Grid>
         <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
         <StackPanel Orientation="Horizontal">
             <ScrollViewer Name="ScrollViewer"
-                          HorizontalScrollBarVisibility="Hidden" 
+                          HorizontalScrollBarVisibility="Disabled" 
                           VerticalScrollBarVisibility="Auto" 
                           Margin="10 5"
                           HorizontalAlignment="Right"
                           CanContentScroll="False">
                 <StackPanel>
-                    <Border Height="120" Style="{StaticResource RectByMargin}">
-                        <Grid>
-                            <TextBlock Text="选择Java版本:" Style="{StaticResource RectTitle}"></TextBlock>
-                            <ComboBox Name="JavaList" 
-                                      HorizontalAlignment="Center" 
-                                      VerticalAlignment="Center" 
-                                      Width="480"
-                                      Margin="20 8 20 15" 
-                                      ItemsSource="{Binding JavaVersions}"
-                                      SelectedIndex="{Binding CurrentJavaVersionIndex}"
-                                      MaxDropDownHeight="180"
-                                      ToolTip="选择Java版本"
-                                      DropDownOpened="JavaList_OnDropDownOpened"
-                                      DropDownClosed="JavaList_OnDropDownClosed">
-                                <ComboBox.ItemTemplate>
+                    <Border Style="{StaticResource RectByMargin}">
+                        <StackPanel>
+                            <TextBlock Text="选择Java版本:" Style="{StaticResource RectTitle}" Margin="10 10 0 5"></TextBlock>
+                            <comp:ComboBox x:Name="JavaList" 
+                                          HorizontalAlignment="Center" 
+                                          VerticalAlignment="Center" 
+                                          Width="480"
+                                          Margin="20 0" 
+                                          ItemsSource="{Binding JavaVersions}"
+                                          SelectedIndex="{Binding CurrentJavaVersionIndex}"
+                                          ForbiddenDeleteFirstLengthChoice="1"
+                                          DefaultIndex="0"
+                                          ToolTip="选择Java版本">
+                                <comp:ComboBox.CurrentChoiceTemplate>
                                     <DataTemplate>
-                                        <Grid Width="{Binding ElementName=JavaList,Path=ActualWidth}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                                <ColumnDefinition Width="40"></ColumnDefinition>
-                                            </Grid.ColumnDefinitions>
-                                            <Grid>
-                                                <TextBlock FontSize="15" Text="{Binding Name}" Foreground="#001D1F" Margin="15 0 0 0"/>
-                                                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding Version}" Foreground="#264446" Margin="0 0 10 0"/>
-                                            </Grid>
-                                            <Border Grid.Column="1"></Border>
+                                        <Grid>
+                                            <TextBlock Text="{Binding Name}" FontSize="15" 
+                                                       Foreground="{DynamicResource SecondaryBrush_1}"
+                                                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                       Margin="20 0"></TextBlock>
+                                            <TextBlock Text="{Binding Version}" FontSize="14"
+                                                       Foreground="{DynamicResource SecondaryBrush}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       Margin="0 0"></TextBlock>
                                         </Grid>
                                     </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0 12" Orientation="Horizontal">
-                                <TextBlock Name="Auto"
-                                           Margin="40 0" 
-                                           Style="{StaticResource TextButton}" 
-                                           MouseLeftButtonDown="Auto_OnMouseLeftButtonDown"
-                                           ToolTip="自动导入Java版本">
-                                    <Run FontFamily="{StaticResource IconFontFamily}" Text="&#xe8d0;"></Run>
-                                    <Run Text="自动导入"></Run>
-                                </TextBlock>
-                                <TextBlock Name="AddJavaList" 
-                                           Margin="20 0" 
-                                           Style="{StaticResource TextButton}" 
-                                           MouseLeftButtonDown="AddJavaList_OnMouseLeftButtonDown"
-                                           ToolTip="手动选择添加Java版本">
-                                    <Run FontFamily="{StaticResource IconFontFamily}" Text="&#xe901;"></Run>
-                                    <Run Text="手动添加"></Run>
-                                </TextBlock>
+                                </comp:ComboBox.CurrentChoiceTemplate>
+                                <comp:ComboBox.ChoiceTemplate>
+                                    <DataTemplate>
+                                        <Grid ToolTip="{Binding Path}">
+                                            <TextBlock Text="{Binding Name}" FontSize="14" 
+                                                       Foreground="{DynamicResource SecondaryBrush_1}"
+                                                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                       Margin="20 0 100 0" Padding="0 10"></TextBlock>
+                                            <Border Margin="100 0" Height="10"></Border>
+                                            <TextBlock Text="{Binding Version}" FontSize="12"
+                                                       Foreground="{DynamicResource SecondaryBrush}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       Margin="35 0 0 10"></TextBlock>
+                                            <TextBlock Text="{Binding Path}" FontSize="11"
+                                                       Foreground="{DynamicResource PrimaryBrush_4}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="300"
+                                                       Margin="0 15 0 0"></TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </comp:ComboBox.ChoiceTemplate>
+                            </comp:ComboBox>
+                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="0 10" Orientation="Horizontal">
+                                <comp:TextButton Content="&#xe8d0; 自动导入" 
+                                                 Margin="40 0" 
+                                                 ToolTip="自动导入Java版本 tip：自动导入Java版本后，会自动清除Java列表" 
+                                                 Click="Auto_OnClick"></comp:TextButton>
+                                <comp:TextButton Content="&#xe901; 手动添加"
+                                                 Margin="20 0" 
+                                                 ToolTip="手动选择添加Java版本"
+                                                 Click="AddJavaList_OnClick"></comp:TextButton>
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
                     </Border>
                     
                     <Border Height="100" Style="{StaticResource RectByMargin}">
                         <Grid>
                             <TextBlock Text="游戏内存:" Style="{StaticResource RectTitle}"></TextBlock>
-                            <ToggleButton Name="MemoryMode" 
+                            <comp:ToggleButton x:Name="MemoryMode" 
                                           HorizontalAlignment="Right" 
                                           VerticalAlignment="Top" 
                                           Margin="50 10" 
-                                          Width="80" Height="30" 
-                                          Style="{StaticResource TbStyle}" Click="MemoryMode_OnClick"
+                                          Click="MemoryMode_OnClick"
                                           IsChecked="{Binding AutoMemoryDisable}">
-                                <ToggleButton.Content>
-                                    <Grid>
-                                        <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Left" Text="自动"></TextBlock>
-                                        <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Right" Text="手动"></TextBlock>
-                                    </Grid>
-                                </ToggleButton.Content>
-                            </ToggleButton>
-                            <Grid VerticalAlignment="Center" 
-                                  Margin="30 20 30 0" >
-                                <Slider Name="MemorySlider" 
-                                        AutoToolTipPlacement="TopLeft"
-                                        ValueChanged="Memory_OnValueChanged"
-                                        PreviewMouseLeftButtonDown="Memory_OnPreviewMouseLeftButtonDown"
-                                        Value="{Binding MemoryValue}"
-                                        IsEnabled="{Binding AutoMemoryDisable}">
-                                </Slider>
-                            </Grid>
-                            
-                            <Grid VerticalAlignment="Center" Margin="30 60 30 0">
-                                <TextBlock Name="MinMemory" Text="0MB" FontSize="15" FontFamily="Inter"></TextBlock>
-                                <TextBlock Name="MaxMemory" HorizontalAlignment="Right" Text="0MB" FontSize="15" FontFamily="Inter"></TextBlock>
-                                <TextBlock Name="CurrentMemory" HorizontalAlignment="Center" Text="0MB" FontSize="15" FontFamily="Inter"></TextBlock>
-                            </Grid>
+                                <comp:ToggleButton.LeftContent>
+                                    <TextBlock Text="自动" FontSize="13"></TextBlock>
+                                </comp:ToggleButton.LeftContent>
+                                <comp:ToggleButton.RightContent>
+                                    <TextBlock Text="手动" FontSize="13"></TextBlock>
+                                </comp:ToggleButton.RightContent>
+                            </comp:ToggleButton>
+                            <comp:Slider x:Name="MemorySlider" 
+                                         Margin="40 20 40 0"
+                                         VerticalAlignment="Center" 
+                                         AutoToolTipPlacement="TopLeft"
+                                         ValueChanged="Memory_OnValueChanged"
+                                         ValueFontSize="15"
+                                         Value="{Binding MemoryValue}"
+                                         IsEnabled="{Binding AutoMemoryDisable}">
+                            </comp:Slider>
                         </Grid>
                     </Border>
                     
@@ -117,22 +121,18 @@
                         <Border Style="{StaticResource RectByMargin}" Margin="20 10 10 10">
                             <Grid>
                                 <TextBlock Text="版本隔离:" Style="{StaticResource RectTitle}"></TextBlock>
-                                <ToggleButton Name="IsIsolation" 
-                                              HorizontalAlignment="Right" 
-                                              VerticalAlignment="Top" 
-                                              Margin="10 10" 
-                                              Width="80" Height="30" 
-                                              Style="{StaticResource TbStyle}"
-                                              MouseDown="IsIsolation_OnMouseDown"
-                                              IsChecked="{Binding IsIsolation}">
-                                    <ToggleButton.Content>
-                                        <Grid>
-                                            <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Left" Text="关闭"></TextBlock>
-                                            <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Right" Text="开启"></TextBlock>
-                                        </Grid>
-                                    </ToggleButton.Content>
-                                </ToggleButton>
-                                <TextBlock Width="250" Height="40" FontFamily="黑体" Foreground="#113032" FontSize="13" VerticalAlignment="Bottom" Text="版本隔离：若开启版本隔离，则每个版本的资源文件都储存在版本核心文件夹内" TextWrapping="WrapWithOverflow" Margin="0 5"></TextBlock>
+                                <comp:ToggleButton HorizontalAlignment="Right" 
+                                                   VerticalAlignment="Top" 
+                                                   Margin="10 10" 
+                                                   IsChecked="{Binding IsIsolation}">
+                                    <comp:ToggleButton.LeftContent>
+                                        <TextBlock Text="关闭" FontSize="13"></TextBlock>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <TextBlock Text="开启" FontSize="13"></TextBlock>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
+                                <TextBlock Width="260" FontSize="14" VerticalAlignment="Bottom" Text="版本隔离：若开启版本隔离，则每个版本的资源文件都储存在版本核心文件夹内" TextWrapping="WrapWithOverflow" Margin="0 0 0 5"></TextBlock>
                             </Grid>
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource RectByMargin}" Margin="10 10 20 10">
@@ -142,37 +142,35 @@
                                       HorizontalAlignment="Center" 
                                       VerticalAlignment="Bottom" 
                                       Margin="15" ToolTip="输入窗口大小：宽x高">
-                                    <TextBox Name="GameWidth" 
-                                             Width="60" Height="30" 
-                                             HorizontalAlignment="Left" 
-                                             Style="{StaticResource WindowTextBox}"
-                                             Text="{Binding GameWidth}"
-                                             LostFocus="GameWidth_OnLostFocus"
-                                             PreviewTextInput="GameWidth_OnPreviewTextInput"></TextBox>
+                                    <comp:TextInput x:Name="GameWidth" 
+                                                  Width="60" Height="30" 
+                                                  HorizontalAlignment="Left" 
+                                                  Style="{StaticResource WindowTextBox}"
+                                                  Text="{Binding GameWidth}"
+                                                  LostFocus="GameWidth_OnLostFocus"
+                                                  PreviewTextInput="GameWidth_OnPreviewTextInput"></comp:TextInput>
                                     <TextBlock Text="x" HorizontalAlignment="Center" Margin="10" VerticalAlignment="Center"></TextBlock>
-                                    <TextBox Name="GameHeight" 
-                                             Width="60" Height="30" 
-                                             HorizontalAlignment="Right" 
-                                             Style="{StaticResource WindowTextBox}"
-                                             Text="{Binding GameHeight}"
-                                             LostFocus="GameHeight_OnLostFocus"></TextBox>
+                                    <comp:TextInput x:Name="GameHeight" 
+                                                    Width="60" Height="30" 
+                                                    HorizontalAlignment="Right" 
+                                                    Style="{StaticResource WindowTextBox}"
+                                                    Text="{Binding GameHeight}"
+                                                    LostFocus="GameHeight_OnLostFocus"></comp:TextInput>
                                 </Grid>
-                                <ToggleButton Name="IsFullScreen" 
+                                <comp:ToggleButton x:Name="IsFullScreen" 
                                               HorizontalAlignment="Right" 
                                               VerticalAlignment="Top" 
                                               Margin="10 10" 
-                                              Width="80" Height="30" 
-                                              Style="{StaticResource TbStyle}"
                                               Click="IsFullScreen_OnClick"
                                               ToolTip="全屏or窗口化"
                                               IsChecked="{Binding IsFullScreen}">
-                                    <ToggleButton.Content>
-                                        <Grid>
-                                            <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Left" Text="窗口"></TextBlock>
-                                            <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Right" Text="全屏"></TextBlock>
-                                        </Grid>
-                                    </ToggleButton.Content>
-                                </ToggleButton>
+                                    <comp:ToggleButton.LeftContent>
+                                        <TextBlock Text="窗口" FontSize="13"></TextBlock>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <TextBlock Text="全屏" FontSize="13"></TextBlock>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
                             </Grid>
                         </Border>
                     </Grid>
@@ -183,11 +181,11 @@
                             <TextBlock Text="其他信息:" Style="{StaticResource RectTitle}"></TextBlock>
                             <DockPanel Height="30">
                                 <TextBlock Text="窗口标题" Style="{StaticResource CustomInfoTitle}"></TextBlock>
-                                <TextBox Style="{StaticResource CustomInfoTextBox}" Text="{Binding WindowTitle}" ToolTip="这里的文字会显示到游戏窗口上"></TextBox>
+                                <comp:TextInput Style="{StaticResource CustomInfoTextBox}" Text="{Binding WindowTitle}" ToolTip="这里的文字会显示到游戏窗口上"></comp:TextInput>
                             </DockPanel>
                             <DockPanel Height="30">
                                 <TextBlock Text="自定义信息" Style="{StaticResource CustomInfoTitle}"></TextBlock>
-                                <TextBox Style="{StaticResource CustomInfoTextBox}" Text="{Binding CustomInfo}" ToolTip="这里的文字会显示到游戏F3的信息中"></TextBox>
+                                <comp:TextInput Style="{StaticResource CustomInfoTextBox}" Text="{Binding CustomInfo}" ToolTip="这里的文字会显示到游戏F3的信息中"></comp:TextInput>
                             </DockPanel>
                         </StackPanel>
                     </Border>
@@ -203,27 +201,25 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Width="120">
                                     <TextBlock Text="JVM参数" Style="{StaticResource CustomInfoTitle}" VerticalAlignment="Top" Margin="10 5"></TextBlock>
-                                    <ToggleButton Name="JvmExtraAreaEnable" 
+                                    <comp:ToggleButton x:Name="JvmExtraAreaEnable" 
                                                   HorizontalAlignment="Center" 
                                                   VerticalAlignment="Center" 
-                                                  Width="80" Height="30" 
-                                                  Style="{StaticResource TbStyle}"
                                                   Click="JvmExtraAreaEnable_OnClick"
                                                   IsChecked="{Binding JvmExtraAreaEnable}">
-                                        <ToggleButton.Content>
-                                            <Grid>
-                                                <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Left" Text="关闭"></TextBlock>
-                                                <TextBlock Style="{StaticResource ToggleButtonText}" HorizontalAlignment="Right" Text="启用"></TextBlock>
-                                            </Grid>
-                                        </ToggleButton.Content>
-                                    </ToggleButton>
+                                        <comp:ToggleButton.LeftContent>
+                                            <TextBlock Text="关闭" FontSize="13"></TextBlock>
+                                        </comp:ToggleButton.LeftContent>
+                                        <comp:ToggleButton.RightContent>
+                                            <TextBlock Text="启用" FontSize="13"></TextBlock>
+                                        </comp:ToggleButton.RightContent>
+                                    </comp:ToggleButton>
                                 </StackPanel>
-                                <TextBox Name="JvmExtraArea"
+                                <comp:TextInput x:Name="JvmExtraArea"
                                          Grid.Column="1" 
-                                         Style="{StaticResource TextArea}" 
+                                         InputType="TextArea"
                                          Height="120" 
                                          Margin="0 0 20 0" 
-                                         IsEnabled="{Binding JvmExtraAreaEnable}"></TextBox>
+                                         IsEnabled="{Binding JvmExtraAreaEnable}"></comp:TextInput>
                             </Grid>
                             <Grid Margin="0 5">
                                 <Grid.ColumnDefinitions>
@@ -231,16 +227,11 @@
                                     <ColumnDefinition Width="*"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Width="90" Text="游戏尾部参数" Style="{StaticResource CustomInfoTitle}"></TextBlock>
-                                <TextBox Name="GameTail" Grid.Column="1" 
-                                         Style="{StaticResource TextArea}" 
-                                         HorizontalScrollBarVisibility="Auto" 
-                                         VerticalScrollBarVisibility="Disabled"
+                                <comp:TextInput x:Name="GameTail" Grid.Column="1" 
                                          VerticalContentAlignment="Center"
-                                         TextWrapping="NoWrap"
-                                         AcceptsReturn="False"
                                          Height="30" 
                                          Text="{Binding GameTailArgs}"
-                                         Margin="0 0 20 0" ></TextBox>
+                                         Margin="0 0 20 0" ></comp:TextInput>
                             </Grid>
                         </StackPanel>
                     </Border>

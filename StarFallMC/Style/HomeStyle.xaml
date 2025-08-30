@@ -4,44 +4,35 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid Name="Grid" RenderTransformOrigin="0.5,0.5">
-                        <Grid.RenderTransform>
-                            <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
-                        </Grid.RenderTransform>
-                        <Border Name="Bg" Background="#113032" BorderBrush="#264446" BorderThickness="2" CornerRadius="100"></Border>
+                    <Grid Name="Grid">
+                        <Border Background="{DynamicResource SecondaryBrush_1}" 
+                                BorderBrush="{DynamicResource SecondaryBrush}" 
+                                BorderThickness="2" CornerRadius="100"></Border>
+                        <Border Name="Bg" Background="{DynamicResource SecondaryBrush_2}" 
+                                CornerRadius="100" Opacity="0"></Border>
                         <TextBlock Text="&#xe635;" 
                                    FontFamily="{StaticResource IconFontFamily}" 
                                    HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                   Foreground="#D7C6C5" 
+                                   Foreground="{DynamicResource PrimaryBrush}" 
                                    FontSize="30" FontWeight="Normal"></TextBlock>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
-                                    <Storyboard TargetName="Bg" TargetProperty="Background.Color">
-                                        <ColorAnimation Duration="0:0:0.2" To="#001D1F"></ColorAnimation>
+                                    <Storyboard TargetName="Bg" TargetProperty="Opacity">
+                                        <DoubleAnimation Duration="0:0:0.2" To="1"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
-                                    <Storyboard TargetName="Bg" TargetProperty="Background.Color">
-                                        <ColorAnimation Duration="0:0:0.2" To="#113032"></ColorAnimation>
+                                    <Storyboard TargetName="Bg" TargetProperty="Opacity">
+                                        <DoubleAnimation Duration="0:0:0.2" To="0"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
                         </Trigger>
-                        <EventTrigger RoutedEvent="Click">
-                            <BeginStoryboard>
-                                <Storyboard TargetName="Grid">
-                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="0.9" Duration="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="0.9" Duration="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="1" Duration="0:0:0.2" BeginTime="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="1" Duration="0:0:0.2" BeginTime="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -50,7 +41,8 @@
     
     <Storyboard x:Key="Downloading" TargetName="DownloadBorder" TargetProperty="Opacity" FillBehavior="HoldEnd">
         <DoubleAnimation To="1" Duration="0:0:0.3"></DoubleAnimation>
-        <DoubleAnimation To="0" Duration="0:0:1.5" BeginTime="0:0:0.3" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation To="0" Duration="0:0:1.5" BeginTime="0:0:0.3" 
+                         EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
     </Storyboard>
     
     <Storyboard x:Key="InitBottomFrame" TargetName="BottomFrame" TargetProperty="Height">
@@ -60,6 +52,7 @@
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="InitStartGameBtn" TargetName="StartGameBtn" TargetProperty="Width">
         <DoubleAnimation From="0" To="50" Duration="0:0:1">
             <DoubleAnimation.EasingFunction>
@@ -75,6 +68,7 @@
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="CurrentPlayerExit" TargetName="CurrentPlayer" TargetProperty="Width">
         <DoubleAnimation To="60" BeginTime="0:0:1" Duration="0:0:0.5">
             <DoubleAnimation.EasingFunction>
@@ -82,6 +76,7 @@
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="AvatarEnter">
         <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Width" 
                          To="180" Duration="0:0:0.5" 
@@ -102,6 +97,7 @@
                          To="20" Duration="0:0:0.5" 
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="AvatarLeave">
         <StaticResource ResourceKey="AvatarEnter"/>
         <DoubleAnimation Storyboard.TargetName="CurrentPlayer" Storyboard.TargetProperty="Width" 
@@ -123,6 +119,7 @@
                          To="30" Duration="0:0:0.5" BeginTime="0:0:1"
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="GameEnter">
         <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Width"
                          To="200" Duration="0:0:0.5"
@@ -140,6 +137,7 @@
                          To="-70" Duration="0:0:0.5"
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="GameLeave">
         <StaticResource ResourceKey="GameEnter"/>
         <DoubleAnimation Storyboard.TargetName="CurrentGame" Storyboard.TargetProperty="Width"
@@ -158,6 +156,7 @@
                          To="0" Duration="0:0:0.5" BeginTime="0:0:1"
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="LaunchEnter">
         <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Width"
                          To="150" Duration="0:0:0.5"
@@ -173,6 +172,7 @@
         <DoubleAnimation Storyboard.TargetName="StartGameBtnIcon" Storyboard.TargetProperty="Opacity"
                          To="0" Duration="0:0:0.1"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="LaunchLeave">
         <StaticResource ResourceKey="LaunchEnter"/>
         <DoubleAnimation Storyboard.TargetName="StartGameBtn" Storyboard.TargetProperty="Width"
@@ -189,6 +189,7 @@
         <DoubleAnimation Storyboard.TargetName="StartGameBtnIcon" Storyboard.TargetProperty="Opacity"
                          To="1" Duration="0:0:0.3" BeginTime="0:0:1"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="Starting">
         <StaticResource ResourceKey="LaunchEnter"/>
         <StaticResource ResourceKey="AvatarEnter"/>
@@ -221,12 +222,14 @@
                          To="0" Duration="0:0:0.5"
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="StartingBtnEnter">
         <DoubleAnimation Storyboard.TargetName="StatusText" Storyboard.TargetProperty="Opacity"
                          To="0" Duration="0:0:0.3"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetName="cancelText" Storyboard.TargetProperty="Opacity"
                          To="1" Duration="0:0:0.1"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="StartingBtnExit">
         <DoubleAnimation Storyboard.TargetName="StatusText" Storyboard.TargetProperty="Opacity"
                          To="1" Duration="0:0:0.3"></DoubleAnimation>

@@ -7,26 +7,30 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="600">
     <UserControl.Resources>
-        <Style x:Key="ConfirmBtn" TargetType="Button" BasedOn="{StaticResource PlainBtn}">
+        <Style x:Key="ConfirmBtn" TargetType="local:PlainButton" BasedOn="{StaticResource {x:Type local:PlainButton}}">
             <Setter Property="Margin" Value="8 0 0 0"></Setter>
-            <Setter Property="FontSize" Value="14"></Setter>
             <Setter Property="Height" Value="30"></Setter>
         </Style>
-        <Style x:Key="Text" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="#001D1F"></Setter>
-        </Style>
         <Storyboard x:Key="HighlightBox" TargetName="Mask">
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.1" To="1.02" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.1" To="1.02" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.1" To="1" BeginTime="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.1" To="1" BeginTime="0:0:0.1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                             Duration="0:0:0.1" To="1.02" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                             Duration="0:0:0.1" To="1.02" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                             Duration="0:0:0.1" To="1" BeginTime="0:0:0.1" 
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                             Duration="0:0:0.1" To="1" BeginTime="0:0:0.1" 
+                             EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
         </Storyboard>
     </UserControl.Resources>
-    <local:MaskControl x:Name="Mask" ClickMaskToClose="False" ClickMask="Mask_OnClickMask" RenderTransformOrigin="0.5,0.5">
+    <local:MaskControl x:Name="Mask" ClickMaskToClose="False" 
+                       ClickMask="Mask_OnClickMask" RenderTransformOrigin="0.5,0.5">
         <local:MaskControl.RenderTransform>
             <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
         </local:MaskControl.RenderTransform>
-        <Border Style="{StaticResource Rect}" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border Style="{StaticResource Rect}" 
+                HorizontalAlignment="Center" VerticalAlignment="Center">
             <Grid MinWidth="250" MaxWidth="500">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="40"></RowDefinition>
@@ -34,26 +38,49 @@
                     <RowDefinition Height="50"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Grid>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text}" FontSize="20" Margin="15 8 40 0" VerticalAlignment="Center"></TextBlock>
-                    <Button Width="25" Height="25" Style="{StaticResource PlainBtn}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0 0 6 0" Visibility="{Binding CloseBtnVisibility}">
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text}" 
+                               FontSize="20" Margin="15 8 40 0" 
+                               VerticalAlignment="Center"></TextBlock>
+                    <local:PlainButton Width="25" Height="25" 
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" 
+                                       Margin="0 0 6 0" 
+                                       Visibility="{Binding CloseBtnVisibility}">
                         <TextBlock Text="&#xe90b;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
-                    </Button>
-                    <Border Margin="10 0" Height="1.5" Background="#001D1F" VerticalAlignment="Bottom" CornerRadius="3"></Border>
+                    </local:PlainButton>
+                    <Border Margin="10 0" Height="1.5" 
+                            Background="{DynamicResource SecondaryBrush_2}" 
+                            VerticalAlignment="Bottom" 
+                            CornerRadius="3"></Border>
                 </Grid>
                 <Grid Grid.Row="1">
-                    <TextBlock Text="{Binding Message}" Style="{StaticResource Text}" FontWeight="Normal" TextWrapping="Wrap" Margin="40 20" VerticalAlignment="Center" FontSize="15"></TextBlock>
+                    <TextBlock Text="{Binding Message}" 
+                               FontWeight="Normal" 
+                               TextWrapping="Wrap"
+                               Margin="40 20" 
+                               VerticalAlignment="Center" 
+                               FontSize="15"></TextBlock>
                 </Grid>
                 <Grid Grid.Row="2">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0 0 15 5" Orientation="Horizontal">
-                        <Button Style="{StaticResource ConfirmBtn}" Visibility="{Binding ConfirmBtnVisibility}" Click="Confirm_OnClick">
-                            <TextBlock Text="{Binding ConfirmBtnText}" Margin="10 0"></TextBlock>
-                        </Button>
-                        <Button Style="{StaticResource ConfirmBtn}" Visibility="{Binding CancelBtnVisibility}" Click="Cancel_OnClick">
-                            <TextBlock Text="{Binding CancelBtnText}" Margin="10 0"></TextBlock>
-                        </Button>
-                        <Button Style="{StaticResource ConfirmBtn}" Visibility="{Binding CustomBtnVisibility}" Click="Custom_OnClick">
-                            <TextBlock Text="{Binding CustomBtnText}" Margin="10 0"></TextBlock>
-                        </Button>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" 
+                                Margin="0 0 15 5" Orientation="Horizontal">
+                        <local:PlainButton Style="{StaticResource ConfirmBtn}" 
+                                           Visibility="{Binding ConfirmBtnVisibility}" 
+                                           Click="Confirm_OnClick">
+                            <TextBlock Text="{Binding ConfirmBtnText}" 
+                                       FontSize="14" Margin="10 0"></TextBlock>
+                        </local:PlainButton>
+                        <local:PlainButton Style="{StaticResource ConfirmBtn}" 
+                                           Visibility="{Binding CancelBtnVisibility}" 
+                                           Click="Cancel_OnClick">
+                            <TextBlock Text="{Binding CancelBtnText}" 
+                                       FontSize="14" Margin="10 0"></TextBlock>
+                        </local:PlainButton>
+                        <local:PlainButton Style="{StaticResource ConfirmBtn}" 
+                                           Visibility="{Binding CustomBtnVisibility}" 
+                                           Click="Custom_OnClick">
+                            <TextBlock Text="{Binding CustomBtnText}" 
+                                       FontSize="14" Margin="10 0"></TextBlock>
+                        </local:PlainButton>
                     </StackPanel>
                 </Grid>
             </Grid>

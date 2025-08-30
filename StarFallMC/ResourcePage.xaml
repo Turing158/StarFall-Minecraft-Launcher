@@ -1,0 +1,28 @@
+﻿<Page x:Class="StarFallMC.ResourcePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
+      mc:Ignorable="d"
+      Title="Resource" Height="400" Width="800">
+    <Page.Resources>
+        <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
+    </Page.Resources>
+    <Grid Background="#f1f1f1">
+        <Border Style="{StaticResource SettingAndResourceBg}"></Border>
+        <Border Style="{StaticResource SettingAndResourceNaviBg}">
+            <comp:NavigationBar x:Name="ResourceBar" 
+                                Style="{StaticResource SettingAndResourceNavi}"
+                                ItemsSource="{Binding Navi}"
+                                SelectionChanged="NaviBar_OnSelectionChanged"></comp:NavigationBar>
+        </Border>
+        <Frame Name="PageFrame" 
+               Source="/ResourcePages/DownloadGame.xaml" 
+               Style="{StaticResource SettingAndResourceFrame}">
+            <Frame.RenderTransform>
+                <TranslateTransform Y="0"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
+    </Grid>
+</Page>

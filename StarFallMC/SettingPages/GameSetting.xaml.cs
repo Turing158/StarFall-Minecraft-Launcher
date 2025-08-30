@@ -3,22 +3,19 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using Path = System.IO.Path;
 
 namespace StarFallMC.SettingPages;
 
 public partial class GameSetting : Page {
 
-    private ViewModel viewModel = new ViewModel();
+    private ViewModel viewModel = new ();
     public static Func<ViewModel> GetViewModel;
     public static Action<object,RoutedEventArgs> unloadedAction;
     
@@ -67,8 +64,8 @@ public partial class GameSetting : Page {
         var freeMemory = memoryAllInfo[MinecraftUtil.MemoryName.FreeMemory];
         MemorySlider.Maximum = freeMemory;
         MemorySlider.Minimum = freeMemory*1/9 < 656 ? 656 : freeMemory*1/9;
-        MinMemory.Text = (MemorySlider.Minimum/1024).ToString("F1")+"G";
-        MaxMemory.Text = (MemorySlider.Maximum/1024).ToString("F1")+"G";
+        MemorySlider.MinimumText = (MemorySlider.Minimum/1024).ToString("F1")+"G";
+        MemorySlider.MaximumText = (MemorySlider.Maximum/1024).ToString("F1")+"G";
         if (!viewModel.AutoMemoryDisable || MemorySlider.Value > freeMemory) {
             MemorySlider.Value = freeMemory * 2 / 3;
         }
@@ -148,7 +145,6 @@ public partial class GameSetting : Page {
         }
 
         private string _windowTitle;
-
         public string WindowTitle {
             get { return _windowTitle; }
             set {
@@ -185,7 +181,6 @@ public partial class GameSetting : Page {
         }
         
         private string _gameTailArgs;
-
         public string GameTailArgs {
             get { return _gameTailArgs; }
             set {
@@ -205,10 +200,9 @@ public partial class GameSetting : Page {
         return viewModel;
     }
     
-
-    private void Auto_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        //自动导入java列表
+    private void Auto_OnClick(object sender, RoutedEventArgs routedEventArgs) {
         refreshJavaVersions();
+        MessageTips.Show("自动导入Java版本成功");
     }
     
     private void refreshJavaVersions() {
@@ -218,36 +212,34 @@ public partial class GameSetting : Page {
         JavaList.SelectedIndex = 0;
     }
 
-    private void AddJavaList_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        //添加java列表
+    private async void AddJavaList_OnClick(object sender, RoutedEventArgs routedEventArgs) {
+        MinecraftUtil.GetJavaVersion("E:\\Programmer");
         OpenFileDialog ofd = new OpenFileDialog();
-        ofd.Filter = "Java Executable|javaw.exe";
+        ofd.Filter = "Java Executable|javaw.exe;java.exe";
         ofd.Title = "选择Java可执行文件";
         ofd.InitialDirectory = DirFileUtil.CurrentDirPosition;
         if (ofd.ShowDialog() == true) {
             string selectedPath = ofd.FileName;
-            Console.WriteLine("选择的Java路径：" + selectedPath);
-            //处理java版本和路径
-            
+            string path = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(selectedPath));
+            if (viewModel.JavaVersions.Any(i => i.Path == path)) {
+                MessageTips.Show("该Java已存在",MessageTips.MessageType.Warning);
+                return;
+            }
+            string version = await MinecraftUtil.GetJavaVersion(path).ConfigureAwait(false);
+            if (version != null) {
+                Dispatcher.BeginInvoke(() => {
+                    viewModel.JavaVersions.Add(new JavaItem(Path.GetFileName(path), path, version));
+                    MessageTips.Show("添加Java成功");
+                });
+            }
+            else {
+                MessageTips.Show("添加Java失败",MessageTips.MessageType.Error);
+            }
         }
-    }
-
-    private void Memory_OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        var slider = sender as Slider;
-        if (slider == null) return;
-        Point position = e.GetPosition(slider);
-        double value = 0;
-        if (slider.Orientation == Orientation.Horizontal) {
-            value = (position.X / slider.ActualWidth) * (slider.Maximum - slider.Minimum) + slider.Minimum;
-        }
-        else {
-            value = (position.Y / slider.ActualHeight) * (slider.Maximum - slider.Minimum) + slider.Minimum;
-        }
-        slider.Value = Math.Max(slider.Minimum, Math.Min(slider.Maximum, value));
     }
 
     private void Memory_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
-        CurrentMemory.Text = ((double)viewModel.MemoryValue / 1024).ToString("F1")+"G";
+        MemorySlider.ValueText = ((double)viewModel.MemoryValue / 1024).ToString("F1")+"G";
         MemorySlider.Interval = 100;
     }
 
@@ -261,14 +253,8 @@ public partial class GameSetting : Page {
         }
         RefleshMemory();
     }
-
-    private void IsIsolation_OnMouseDown(object sender, MouseButtonEventArgs e) {
-        //切换隔离模式
-    }
     
-
     private void IsFullScreen_OnClick(object sender, RoutedEventArgs e) {
-        //切换全屏模式
         if (IsFullScreen.IsChecked == true) {
             GameWidth.IsEnabled = false;
             GameHeight.IsEnabled = false;
@@ -325,7 +311,6 @@ public partial class GameSetting : Page {
     }
 
     private void GameWidth_OnPreviewTextInput(object sender, TextCompositionEventArgs e) {
-        //限制输入数字
         if (!char.IsDigit(e.Text, 0)) {
             e.Handled = true;
         }
@@ -333,13 +318,5 @@ public partial class GameSetting : Page {
 
     private void GameSetting_OnUnloaded(object sender, RoutedEventArgs e) {
         PropertiesUtil.SaveGameSettingArgs();
-    }
-
-    private void JavaList_OnDropDownOpened(object? sender, EventArgs e) {
-        ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-    }
-
-    private void JavaList_OnDropDownClosed(object? sender, EventArgs e) {
-        ScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
     }
 }

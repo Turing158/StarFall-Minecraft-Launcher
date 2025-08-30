@@ -3,8 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC"
-      xmlns:component="clr-namespace:StarFallMC.Component"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       KeepAlive="True"
       Title="SelectGame" Height="400" Width="800"
@@ -16,12 +15,14 @@
         <EventTrigger RoutedEvent="Loaded">
             <BeginStoryboard>
                 <Storyboard TargetName="DirSelectBorder" TargetProperty="Width">
-                    <DoubleAnimation From="0" To="305" Duration="0:0:0.5" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                    <DoubleAnimation From="0" To="305" Duration="0:0:0.5" 
+                                     EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
                 </Storyboard>
             </BeginStoryboard>
             <BeginStoryboard>
                 <Storyboard TargetName="GameSelect" TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)">
-                    <DoubleAnimation From="-500" To="0" Duration="0:0:0.5" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                    <DoubleAnimation From="-500" To="0" Duration="0:0:0.5" 
+                                     EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
                 </Storyboard>
             </BeginStoryboard>
         </EventTrigger>
@@ -32,70 +33,62 @@
                 Width="305" 
                 HorizontalAlignment="Left" 
                 Style="{StaticResource Rect}"
-                Margin="20 20 0 15" 
-                Background="#aaD7C6C5">
+                Margin="20 20 0 15" >
             <Grid>
                 <TextBlock 
                     Text="选择文件夹:" 
-                    Foreground="#001D1F"
+                    Foreground="{DynamicResource SecondaryBrush_2}"
                     Margin="15 15"
                     FontSize="15"
                     Height="20" 
                     VerticalAlignment="Top"></TextBlock>
-                <StackPanel Orientation="Horizontal" Height="25" Width="150" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10">
-                    <Button Name="AddDir" Width="25" 
-                            Style="{StaticResource PlainBtn}" 
+                <StackPanel Orientation="Horizontal" Height="25" Width="150" 
+                            HorizontalAlignment="Right" VerticalAlignment="Top" 
+                            Margin="10">
+                    <comp:PlainButton Width="25" 
                             FontSize="18" 
                             ToolTip="添加" Click="AddDir_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe95b;"></TextBlock>
-                    </Button>
-                    <Button Name="DelDir" Width="25" 
-                            Style="{StaticResource PlainBtn}" 
-                            Margin="5 0 2.5 0" 
-                            FontSize="18" 
-                            ToolTip="删除该文件夹" Click="DelDir_OnClick">
+                    </comp:PlainButton>
+                    <comp:PlainButton Width="25" 
+                                      Margin="5 0 2.5 0" 
+                                      FontSize="18" 
+                                      ToolTip="删除该文件夹" Click="DelDir_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe959;"></TextBlock>
-                    </Button>
-                    <Button Name="OpenDir" Width="25" 
-                            Style="{StaticResource PlainBtn}" 
-                            Margin="2.5 0 5 0" 
-                            FontSize="16" 
-                            ToolTip="打开文件夹" Click="OpenDir_OnClick">
+                    </comp:PlainButton>
+                    <comp:PlainButton Width="25" 
+                                      Margin="2.5 0 5 0" 
+                                      FontSize="16" 
+                                      ToolTip="打开文件夹" Click="OpenDir_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe957;"></TextBlock>
-                    </Button>
-                    <Button Name="RefreshDir" Width="25" 
-                            Style="{StaticResource PlainBtn}" FontSize="16" 
-                            ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick">
+                    </comp:PlainButton>
+                    <comp:PlainButton Width="25" 
+                                      FontSize="16" 
+                                      ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick">
                         <TextBlock Text="&#xe60c;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
-                    </Button>
-                    <Button Name="GameInfo" Width="25"
-                            Style="{StaticResource PlainBtn}" 
-                            FontSize="22" 
-                            Margin="5 0 0 0"
-                            ToolTip="查看Minecraft属性" Click="GameInfo_OnClick"
-                            >
+                    </comp:PlainButton>
+                    <comp:PlainButton Width="25"
+                                      FontSize="22" 
+                                      Margin="5 0 0 0"
+                                      ToolTip="查看Minecraft属性" Click="GameInfo_OnClick">
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe7f9;"></TextBlock>
-                    </Button>
+                    </comp:PlainButton>
                 </StackPanel>
                 <Border Margin="10 38"
                         Height="1" 
                         VerticalAlignment="Top" 
-                        Background="#001D1F"></Border>
-                <ScrollViewer 
-                    Width="300"
-                    HorizontalAlignment="Left"
-                    HorizontalScrollBarVisibility="Hidden"
-                    VerticalScrollBarVisibility="Auto"
-                    Margin="0 40 0 6"
-                >
-                    <ListView
-                        Name="DirSelect"
-                        Width="290"
-                        HorizontalAlignment="Left"
-                        ItemsSource="{Binding Dirs}"
-                        ItemContainerStyle="{StaticResource DirSelectStyle}"
-                        SelectionChanged="DirSelect_OnSelectionChanged"
-                    ></ListView>
+                        Background="{DynamicResource SecondaryBrush_2}"></Border>
+                <ScrollViewer Width="300"
+                              HorizontalAlignment="Left"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Auto"
+                              Margin="0 40 0 6">
+                    <ListView Name="DirSelect"
+                              Width="290"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding Dirs}"
+                              ItemContainerStyle="{StaticResource DirSelectStyle}"
+                              SelectionChanged="DirSelect_OnSelectionChanged"></ListView>
                 </ScrollViewer>
             </Grid>
         </Border>
@@ -107,19 +100,15 @@
             <Grid.RenderTransform>
                 <TranslateTransform Y="0"></TranslateTransform>
             </Grid.RenderTransform>
-            <ScrollViewer Name="GameSelectScroll"
-                          HorizontalScrollBarVisibility="Hidden"
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                           VerticalScrollBarVisibility="Auto">
-                <ListView 
-                    Name="GameSelect" 
-                    Width="420" 
-                    HorizontalAlignment="Right" 
-                    ItemsSource="{Binding Games}" 
-                    SelectionChanged="GameSelect_OnSelectionChanged"
-                    VirtualizingStackPanel.IsVirtualizing="False"
-                    
-                    ItemContainerStyle="{StaticResource GameSelectStyle}"
-                >
+                <ListView Name="GameSelect" 
+                          Width="420" 
+                          HorizontalAlignment="Right" 
+                          ItemsSource="{Binding Games}" 
+                          SelectionChanged="GameSelect_OnSelectionChanged"
+                          VirtualizingStackPanel.IsVirtualizing="False"
+                          ItemContainerStyle="{StaticResource GameSelectStyle}">
                     <ListView.RenderTransform>
                         <TranslateTransform></TranslateTransform>
                     </ListView.RenderTransform>
@@ -130,10 +119,10 @@
                            VerticalAlignment="Center" 
                            Text="未找到Minecraft版本"
                            FontSize="25"
-                           Foreground="#001D1F"></TextBlock>
+                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
             </Border>
         </Grid>
-        <component:MaskControl x:Name="GameInfoMaskControl" ToolTip="{Binding CurrentGame.Path}">
+        <comp:MaskControl x:Name="GameInfoMaskControl" ToolTip="{Binding CurrentGame.Path}">
             <Border Width="600" Height="190" Style="{StaticResource Rect}">
                 <StackPanel Orientation="Vertical">
                     <Grid Height="70" VerticalAlignment="Top">
@@ -151,32 +140,37 @@
                                 <EventTrigger RoutedEvent="MouseEnter">
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                                             Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                                             Duration="0:0:0.5" To="1.15" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
                                 <EventTrigger RoutedEvent="MouseLeave">
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" 
+                                                             Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" 
+                                                             Duration="0:0:0.5" To="1" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
                             </Image.Triggers>
                         </Image>
-                        <Border Height="50" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="90 0 20 0" Style="{StaticResource Rect}" Padding="15 0 15 0">
+                        <Border Height="50" HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                Margin="90 0 20 0" 
+                                Style="{StaticResource Rect}" 
+                                Padding="15 0 15 0">
                             <Grid Height="40">
                                 <TextBlock HorizontalAlignment="Left" 
                                            VerticalAlignment="Top" 
                                            FontSize="18"
-                                           Style="{StaticResource TextBlock}"
                                            Margin="0 2 0 0"
                                            Text="{Binding CurrentGame.Name}"></TextBlock>
                                 <TextBlock HorizontalAlignment="Left" 
                                            VerticalAlignment="Bottom" 
-                                           Style="{StaticResource TextBlock}"
                                            TextWrapping="NoWrap"
                                            TextTrimming="WordEllipsis"
                                            FontSize="11"
@@ -184,7 +178,7 @@
                             </Grid>
                         </Border>
                     </Grid>
-                    <Border Width="560" Height="1" Background="#001D1F"></Border>
+                    <Border Width="560" Height="1" Background="{DynamicResource SecondaryBrush_2}"></Border>
                     <Grid Margin="20 10" Height="85">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
@@ -195,40 +189,50 @@
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
                         </Grid.RowDefinitions>
-                        <Button Style="{StaticResource GameInfoBtn}" Content="查看版本文件夹" Click="OpenVersionDir_OnClick"></Button>
-                        <Button Grid.Column="1" Style="{StaticResource GameInfoBtn}" Content="修改版本名称" Click="SettingVersionName_OnClick"></Button>
+                        <comp:PlainButton Style="{StaticResource GameInfoBtn}" 
+                                          Content="查看版本文件夹" Click="OpenVersionDir_OnClick"></comp:PlainButton>
+                        <comp:PlainButton Grid.Column="1" Style="{StaticResource GameInfoBtn}" 
+                                          Content="修改版本名称" Click="SettingVersionName_OnClick"></comp:PlainButton>
                         <StackPanel Orientation="Horizontal" Grid.Column="2" Margin="10 5" >
-                            <Button Width="128" Style="{StaticResource PlainBtn}" FontSize="15" Content="修改版本图标" Click="SettingVersionIcon_OnClick"></Button>
-                            <Button Width="32" Margin="5 0" Style="{StaticResource PlainBtn}" FontSize="18" Content="↺" Click="DefaultVersionIcon_OnClick"></Button>
+                            <comp:PlainButton Width="128" FontSize="15" 
+                                              Content="修改版本图标" Click="SettingVersionIcon_OnClick"></comp:PlainButton>
+                            <comp:PlainButton Width="32" Margin="5 0" FontSize="18" 
+                                              Content="↺" Click="DefaultVersionIcon_OnClick"></comp:PlainButton>
                         </StackPanel>
-                        <Button Grid.Row="1" Style="{StaticResource GameInfoBtn}" Content="查看模组文件夹" Click="OpenModDir_OnClick"></Button>
-                        <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource GameInfoBtn}" Content="查看资源文件夹" Click="OpenResourcesDir_OnClick"></Button>
-                        <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource GameInfoBtn}" Content="删除版本" Click="DelGame_OnClick"></Button>
+                        <comp:PlainButton Grid.Row="1" Style="{StaticResource GameInfoBtn}" 
+                                          Content="查看模组文件夹" Click="OpenModDir_OnClick"></comp:PlainButton>
+                        <comp:PlainButton Grid.Row="1" Grid.Column="1" Style="{StaticResource GameInfoBtn}" 
+                                          Content="查看资源文件夹" Click="OpenResourcesDir_OnClick"></comp:PlainButton>
+                        <comp:PlainButton Grid.Row="1" Grid.Column="2" Style="{StaticResource GameInfoBtn}" 
+                                          Content="删除版本" Click="DelGame_OnClick"></comp:PlainButton>
                     </Grid>
                 </StackPanel>
             </Border>
-        </component:MaskControl>
-        <component:MaskControl x:Name="RenameVersion" OnHidden="RenameVersion_OnOnClose">
+        </comp:MaskControl>
+        <comp:MaskControl x:Name="RenameVersion" OnHidden="RenameVersion_OnOnClose">
             <Border Width="400" Height="100" Style="{StaticResource Rect}">
                 <Grid>
-                    <TextBlock Style="{StaticResource TextBlock}" 
-                               FontSize="18" 
+                    <TextBlock FontSize="18" 
                                Text="请输入新的版本名称[Enter确认]" 
                                Margin="0 15 0 0" 
                                HorizontalAlignment="Center" 
                                VerticalAlignment="Top"></TextBlock>
-                    <TextBox Width="300" Height="30" 
-                             FontSize="16" 
-                             VerticalAlignment="Center"
-                             Margin="0 15 0 0" 
-                             Padding="3 0"
-                             VerticalContentAlignment="Center"
-                             KeyDown="RenameVersion_OnKeyDown" 
-                             MaxLength="48" 
-                             Text="{Binding RenameVersionText}"></TextBox>
-                    <TextBlock Width="300" VerticalAlignment="Center" Foreground="DarkRed" Margin="0 70 0 0" Text="{Binding RenameVersionTips}"></TextBlock>
+                    <comp:TextInput x:Name="RenameVersionInput"
+                                    Width="300" Height="30" 
+                                    FontSize="16" 
+                                    VerticalAlignment="Center"
+                                    Margin="0 15 0 0" 
+                                    Padding="3 0"
+                                    VerticalContentAlignment="Center"
+                                    KeyDown="RenameVersion_OnKeyDown" 
+                                    MaxLength="48" 
+                                    Text="{Binding RenameVersionText}"></comp:TextInput>
+                    <TextBlock Width="300" VerticalAlignment="Center" 
+                               Foreground="DarkRed" 
+                               Margin="0 70 0 0" 
+                               Text="{Binding RenameVersionTips}"></TextBlock>
                 </Grid>
             </Border>
-        </component:MaskControl>
+        </comp:MaskControl>
     </Grid>
 </Page>

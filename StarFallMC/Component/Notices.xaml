@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:StarFallMC.Component"
              mc:Ignorable="d"
              TextOptions.TextFormattingMode="Display"
              TextOptions.TextRenderingMode="ClearType"
@@ -13,7 +12,9 @@
                       Margin="10 5 10 0" 
                       ClipToBounds="False"
                       CanContentScroll="False">
-            <VirtualizingStackPanel Name="NoticesContainer" Margin="0 0 5 0" CanHorizontallyScroll="False"></VirtualizingStackPanel>
+            <VirtualizingStackPanel Name="NoticesContainer" 
+                                    Margin="0 0 5 0" 
+                                    CanHorizontallyScroll="False"></VirtualizingStackPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>

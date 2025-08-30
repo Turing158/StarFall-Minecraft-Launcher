@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
@@ -13,6 +14,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         Warning,
         Error
     }
+    
     public Storyboard ShowAnim { get; private set; }
     private Storyboard HideAnim;
     private Storyboard MouseDownAnim;
@@ -32,7 +34,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         set => SetField(ref _message, value);
     }
 
-    private string _messageColor = "#001D1F";
+    private string _messageColor;
     public string MessageColor {
         get => _messageColor;
         set => SetField(ref _messageColor, value);
@@ -50,56 +52,35 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         
         DataContext = this;
         
-        Message = message;
-        
-        SizeTimer?.Dispose();
-        SizeTimer = new Timer(o => {
-            this.Dispatcher.Invoke(() => {
-                Main.Width = Content.ActualWidth + 30;
-                Main.Height = Content.ActualHeight + 20;
-                SizeTimer?.Dispose();
-            });
-        }, null, 50, 0);
+        initColor();
+        ThemeUtil.updateColor += initColor;
+        Main.Width = 0;
+        Main.Height = 0;
+        SetMessage(message,messageType);
         TextColorChange(messageType);
         Hide();
+    }
+
+    private void initColor() {
+        MessageColor = ThemeUtil.SecondaryBrush_1.Color.ToString();
     }
 
     public void SetMessage(string message, MessageType messageType) {
         ChangeTextAnim.Begin();
         MessageTimer?.Dispose();
-        MessageTimer = new Timer(o => {
-            this.Dispatcher.BeginInvoke(() => {
-                Message = message;
-                TextColorChange(messageType);
-                SizeTimer?.Dispose();
-                SizeTimer = new Timer(s => {
-                    this.Dispatcher.BeginInvoke(() => {
-                        var width = Content.ActualWidth + 30;
-                        var height = Content.ActualHeight + 20;
-                        if (!width.Equals(Main.Width)) {
-                            var widthAnim = new DoubleAnimation(
-                                toValue:width,
-                                duration:new Duration(TimeSpan.FromSeconds(0.1)));
-                            widthAnim.EasingFunction = new CubicEase();
-                            Main.BeginAnimation( WidthProperty, widthAnim);
-                        }
-                        if (!height.Equals(Main.Height)) {
-                            var heightAnim = new DoubleAnimation(
-                                toValue:height,
-                                duration:new Duration(TimeSpan.FromSeconds(0.1)));
-                            heightAnim.EasingFunction = new CubicEase();
-                            Main.BeginAnimation( HeightProperty, heightAnim);
-                        }
-                        SizeTimer?.Dispose();
-                    });
-                }, null, 50, 0);
-                MessageTimer?.Dispose();
-            });
-        }, null, 150, 0);
+        HideContent.Text = message;
+        Dispatcher.BeginInvoke(() => {
+            MessageTimer = new Timer(o => {
+                this.Dispatcher.BeginInvoke(() => {
+                    Message = message;
+                    TextColorChange(messageType);
+                    MessageTimer?.Dispose();
+                });
+            }, null, 120, 0);
+        });
     }
 
     public static void Show(string message, MessageType messageType = MessageType.None) {
-        Console.WriteLine(message);
         var mainWindow = Application.Current.MainWindow;
         if (mainWindow != null && mainWindow.Content is Grid gird) {
             var container = gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageTipContainer")?.Children;
@@ -150,13 +131,13 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
     public void TextColorChange(MessageType messageType) {
         switch (messageType) {
             case MessageType.Warning :
-                MessageColor = "DarkGoldenrod";
+                MessageColor = "#9F7D00";
                 break;
             case MessageType.Error :
                 MessageColor = "DarkRed";
                 break;
             default:
-                MessageColor = "#001D1F";
+                MessageColor = ThemeUtil.SecondaryBrush_1.Color.ToString();
                 break;
         }
     }
@@ -204,5 +185,26 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         field = value;
         OnPropertyChanged(propertyName);
         return true;
+    }
+
+    private void HideContent_OnSizeChanged(object sender, SizeChangedEventArgs e) {
+        var width = HideContent.ActualWidth + 30;
+        var height = HideContent.ActualHeight + 20;
+        if (!width.Equals(Main.Width)) {
+            var widthAnim = new DoubleAnimation {
+                To = width,
+                Duration = new Duration(TimeSpan.FromSeconds(0.1)),
+                EasingFunction = new CubicEase()
+            };
+            Main.BeginAnimation(WidthProperty, widthAnim);
+        }
+        if (!height.Equals(Main.Height)) {
+            var heightAnim = new DoubleAnimation {
+                To = height,
+                Duration = new Duration(TimeSpan.FromSeconds(0.1)),
+                EasingFunction = new CubicEase()
+            };
+            Main.BeginAnimation(HeightProperty, heightAnim);
+        }
     }
 }

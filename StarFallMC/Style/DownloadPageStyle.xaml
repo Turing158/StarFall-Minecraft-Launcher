@@ -1,8 +1,12 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Storyboard x:Key="DownloadingAnim" TargetName="DiamondPickaxe" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)" RepeatBehavior="Forever" FillBehavior="HoldEnd">
-        <DoubleAnimation To="-100" Duration="0:0:0.2" BeginTime="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
-        <DoubleAnimation To="-50" Duration="0:0:1.2" BeginTime="0:0:0.8" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+    <Storyboard x:Key="DownloadingAnim" 
+                TargetName="DiamondPickaxe" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)" 
+                RepeatBehavior="Forever" FillBehavior="HoldEnd">
+        <DoubleAnimation To="-100" Duration="0:0:0.2" BeginTime="0:0:0.2" 
+                         EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+        <DoubleAnimation To="-50" Duration="0:0:1.2" BeginTime="0:0:0.8" 
+                         EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
     </Storyboard>
     
     <Style TargetType="ListViewItem">
@@ -10,14 +14,17 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
                     <Grid IsHitTestVisible="True">
-                        <Border Name="Bg" BorderBrush="#264446" Background="#88C4ABAA" BorderThickness="1" CornerRadius="5" Margin="5 0 0 0" Opacity="0"></Border>
+                        <Border Name="Bg" BorderBrush="{DynamicResource SecondaryBrush_2}" 
+                                Background="{DynamicResource PrimaryBrush_1}" 
+                                BorderThickness="1" CornerRadius="5" 
+                                Margin="5 0 0 0" Opacity="0"></Border>
                         <Grid Height="40" Margin="5 0 0 0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="30"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding FileIcon}" 
-                                       Foreground="#113032"
+                                       Foreground="{DynamicResource SecondaryBrush_1}"
                                        FontSize="23"
                                        FontFamily="{StaticResource IconFontFamily}" 
                                        HorizontalAlignment="Center"
@@ -31,7 +38,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{Binding FileName}" 
                                                FontSize="14" 
-                                               Foreground="#264446"
+                                               Foreground="{DynamicResource SecondaryBrush}"
                                                Margin="2 0" 
                                                TextWrapping="NoWrap" 
                                                MaxWidth="400"
@@ -43,7 +50,9 @@
                                             Margin="2 0 0 0"
                                             Background="{Binding StateColor}"></Border>
                                 </Grid>
-                                <Border Height="6" Background="#957A78" CornerRadius="4" Margin="0 2 0 0"></Border>
+                                <Border Height="6" 
+                                        Background="{DynamicResource PrimaryBrush_3}" 
+                                        CornerRadius="4" Margin="0 2 0 0"></Border>
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -52,7 +61,8 @@
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard TargetName="Bg" TargetProperty="Opacity">
-                                        <DoubleAnimation To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                        <DoubleAnimation To="0.5" Duration="0:0:0.2" 
+                                                         EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -69,6 +79,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
     <Storyboard x:Key="ListScrollViewerChange" TargetName="DownloadList" TargetProperty="Opacity">
         <DoubleAnimation To="0" Duration="0:0:0.2"></DoubleAnimation>
         <DoubleAnimation To="1" Duration="0:0:0.2" BeginTime="0:0:0.2"></DoubleAnimation>

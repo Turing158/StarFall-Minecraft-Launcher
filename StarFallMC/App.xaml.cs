@@ -1,5 +1,4 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
 using StarFallMC.Util;
 
 namespace StarFallMC;
@@ -12,6 +11,6 @@ public partial class App : Application {
         base.OnStartup(e);
         PropertiesUtil.LoadPropertiesJson();
         DownloadUtil.init(15,3);
+        ThemeUtil.init();
     }
-
 }

@@ -15,7 +15,7 @@ using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
-public partial class Notice : UserControl {
+public partial class Notice : UserControl,INotifyPropertyChanged {
     //  需要用到NuGet安装 Markdig
     
     public string Icon {
@@ -23,14 +23,13 @@ public partial class Notice : UserControl {
         set {
             SetValue(IconProperty, value);
             if (string.IsNullOrEmpty(value)) {
-                viewModel.TitleMargin = new Thickness(15,0,0,0);
+                TitleMargin = new Thickness(15,0,0,0);
             }
             else {
-                viewModel.TitleMargin = new Thickness(40,0,0,0);
+                TitleMargin = new Thickness(40,0,0,0);
             }
         }
     }
-    
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(string),
         typeof(Notice), new PropertyMetadata(""));
     
@@ -38,7 +37,6 @@ public partial class Notice : UserControl {
         get => (double)GetValue(IconSizeProperty);
         set => SetValue(IconSizeProperty, value);
     }
-    
     public static readonly DependencyProperty IconSizeProperty = DependencyProperty.Register(nameof(IconSize),
         typeof(double), typeof(Notice), new PropertyMetadata(22.0));
     
@@ -46,7 +44,6 @@ public partial class Notice : UserControl {
         get => (string)GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
     }
-    
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string),
         typeof(Notice), new PropertyMetadata(""));
     
@@ -54,7 +51,6 @@ public partial class Notice : UserControl {
         get => (double)GetValue(TitleFontSizeProperty);
         set => SetValue(TitleFontSizeProperty, value);
     }
-    
     public static readonly DependencyProperty TitleFontSizeProperty = DependencyProperty.Register(nameof(TitleFontSize),
         typeof(double), typeof(Notice), new PropertyMetadata(15.0));
     
@@ -62,8 +58,6 @@ public partial class Notice : UserControl {
         get => (Brush)GetValue(TitleForegroundProperty);
         set => SetValue(TitleForegroundProperty, value);
     }
-    
-
     public static readonly DependencyProperty TitleForegroundProperty = DependencyProperty.Register(nameof(TitleForeground),
         typeof(Brush), typeof(Notice), new PropertyMetadata(new SolidColorBrush((Color)ColorConverter.ConvertFromString("#264446"))));
     
@@ -71,7 +65,6 @@ public partial class Notice : UserControl {
         get => (string)GetValue(ContentTextProperty);
         set => SetValue(ContentTextProperty, value);
     }
-    
     public static readonly DependencyProperty ContentTextProperty = DependencyProperty.Register(nameof(ContentText), typeof(string),
         typeof(Notice), new PropertyMetadata("" ));
     
@@ -79,55 +72,46 @@ public partial class Notice : UserControl {
         get => (Brush)GetValue(ContentForegroundProperty);
         set => SetValue(ContentForegroundProperty, value);
     }
-    
     public static readonly DependencyProperty ContentForegroundProperty = DependencyProperty.Register(nameof(ContentForeground),
         typeof(Brush), typeof(Notice), new PropertyMetadata(new SolidColorBrush((Color)ColorConverter.ConvertFromString("#264446"))));
     
-
-    public ViewModel viewModel = new ViewModel();
+    private Thickness _titleMargin;
+    public Thickness TitleMargin {
+        get => _titleMargin;
+        set => SetField(ref _titleMargin, value);
+    }
+        
+    private MarkdownPipeline _markdownPipeline;
+    public MarkdownPipeline MarkdownPipeline {
+        get => _markdownPipeline;
+        set => SetField(ref _markdownPipeline, value);
+    }
     
     public Notice() {
         InitializeComponent();
-        DataContext = viewModel;
+        DataContext = this;
         
         if (string.IsNullOrEmpty(Icon)) {
-            viewModel.TitleMargin = new Thickness(15,0,0,0);
+            TitleMargin = new Thickness(15,0,0,0);
         }
         else {
-            viewModel.TitleMargin = new Thickness(40,0,0,0);
+            TitleMargin = new Thickness(40,0,0,0);
         }
-        viewModel.MarkdownPipeline = new MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .Use<MarkdownStyleExtension>()
-            .Build();
     }
 
-    public class ViewModel : INotifyPropertyChanged {
+    public override void OnApplyTemplate() {
+        base.OnApplyTemplate();
+        updateColor();
+        ThemeUtil.updateColor += () => {
+            updateColor();
+        };
+    }
 
-        private Thickness _titleMargin;
-        public Thickness TitleMargin {
-            get => _titleMargin;
-            set => SetField(ref _titleMargin, value);
-        }
-        
-        private MarkdownPipeline _markdownPipeline;
-        public MarkdownPipeline MarkdownPipeline {
-            get => _markdownPipeline;
-            set => SetField(ref _markdownPipeline, value);
-        }
-        
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
+    private void updateColor() {
+        MarkdownPipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Use(new MarkdownStyleExtension())
+            .Build();
     }
     
     public class MarkdownStyleExtension : IMarkdownExtension {
@@ -151,6 +135,7 @@ public partial class Notice : UserControl {
         protected override void Write(WpfRenderer renderer, HeadingBlock obj) {
             var paragraph = new Paragraph {
                 FontSize = 20 - obj.Level,
+                Foreground = ThemeUtil.SecondaryBrush,
                 Margin = new Thickness(0,10,0,10),
                 FontWeight = FontWeights.Bold
             };
@@ -164,6 +149,7 @@ public partial class Notice : UserControl {
         protected override void Write(WpfRenderer renderer, ParagraphBlock obj) {
             var paragraph = new Paragraph {
                 FontSize = 14,
+                Foreground = ThemeUtil.SecondaryBrush_1,
                 Margin = new Thickness(0,5,0,5),
             };
             renderer.Push(paragraph);
@@ -176,6 +162,7 @@ public partial class Notice : UserControl {
         protected override void Write(WpfRenderer renderer, CodeBlock obj) {
             var paragraph = new Paragraph {
                 FontSize = 14,
+                Foreground = ThemeUtil.SecondaryBrush_1,
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#66ffffff")),
                 FontFamily = new FontFamily("Consolas"),
                 Padding = new Thickness(10,10,10,0),
@@ -198,7 +185,7 @@ public partial class Notice : UserControl {
             };
             var section = new Section {
                 FontSize = 14,
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#264446")),
+                Foreground = ThemeUtil.SecondaryBrush,
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#22ffffff")),
                 BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#88ffffff")),
                 Padding = new Thickness(5,1,5,1),
@@ -215,7 +202,7 @@ public partial class Notice : UserControl {
         public static Style GetHyperlinkStyle() {
             var hyperlinkStyle = new Style(typeof(Hyperlink));
             hyperlinkStyle.Setters.Add(new Setter(Hyperlink.ForegroundProperty, 
-                new SolidColorBrush((Color)ColorConverter.ConvertFromString("#264446"))));
+                ThemeUtil.SecondaryBrush));
             return hyperlinkStyle;
         }
 
@@ -266,5 +253,17 @@ public partial class Notice : UserControl {
             renderer.Pop();
         }
     }
-    
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }

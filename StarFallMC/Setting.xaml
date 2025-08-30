@@ -3,33 +3,23 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC"
-      UseLayoutRounding="True"
-      SnapsToDevicePixels="True"
-      TextOptions.TextFormattingMode="Display"
-      TextOptions.TextRenderingMode="ClearType"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="Setting" Height="400" Width="800">
     <Page.Resources>
         <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>
-    <Grid Background="#00ffffff">
-        <Border Background="#f1f1f1" CornerRadius="0 0 10 10"></Border>
-        <Border Background="#88D7C6C5" CornerRadius="0 0 10 10"></Border>
-        <Border Width="120" Background="#f1f1f1" HorizontalAlignment="Left" Margin="40 20" CornerRadius="10" ClipToBounds="True">
-            <Grid Margin="0 10">
-                <Border Background="#513938" Height="50" VerticalAlignment="Top">
-                    <Border.RenderTransform>
-                        <TranslateTransform x:Name="ActiveBlock" Y="0"></TranslateTransform>
-                    </Border.RenderTransform>
-                </Border>
-                <ListView Name="SelectChoice" Margin="-1 -1" ItemsSource="{Binding SelectItems}" ItemContainerStyle="{StaticResource SelectChoice}" SelectedIndex="0" SelectionChanged="SelectChoice_OnSelectionChanged">
-                
-                </ListView>
-            </Grid>
+    <Grid Background="#f1f1f1">
+        <Border Style="{StaticResource SettingAndResourceBg}"></Border>
+        <Border Style="{StaticResource SettingAndResourceNaviBg}">
+            <comp:NavigationBar x:Name="SettingBar"
+                                Style="{StaticResource SettingAndResourceNavi}"
+                                ItemsSource="{Binding Navi}"
+                                SelectionChanged="NaviBar_OnSelectionChanged"></comp:NavigationBar>
         </Border>
-        
-        <Frame Name="SettingFrame" HorizontalAlignment="Right" Width="600" Height="380" Source="/SettingPages/GameSetting.xaml" Margin="0 0">
+        <Frame Name="PageFrame"
+               Source="/SettingPages/GameSetting.xaml"
+               Style="{StaticResource SettingAndResourceFrame}">
             <Frame.RenderTransform>
                 <TranslateTransform Y="0"></TranslateTransform>
             </Frame.RenderTransform>

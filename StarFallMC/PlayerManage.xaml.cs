@@ -21,9 +21,7 @@ public partial class PlayerManage : Page {
     private ViewModel viewModel = new ViewModel();
     public static Func<ViewModel> GetViewModel;
     public static Action<object,RoutedEventArgs> unloadedAction;
-    public static Action<int> SetPlayerListIndex;
     public static Action<Player> SetPlayerListItem;
-    
     
     private Storyboard SkinBoxChange;
     private Timer SkinBoxChangeTimer;
@@ -41,13 +39,11 @@ public partial class PlayerManage : Page {
     private Storyboard OnlineLoadingHide;
 
     public static Action<string> SetLoadingText;
-    public static Action<Player> updatePlayerSkin;
     
     private string tmpDeviceCode ="";
     private Timer Logintimer;
     private int retryCount = 0;
     
-     
     public PlayerManage() {
         InitializeComponent();
         DataContext = viewModel;
@@ -60,14 +56,11 @@ public partial class PlayerManage : Page {
         OnlinePageShow = (Storyboard) FindResource("OnlinePageShow");
         OnlinePageHide = (Storyboard) FindResource("OnlinePageHide");
         OnlineLoadingShow = (Storyboard) FindResource("OnlineLoadingShow");
-
-        // viewModel.Players = new ObservableCollection<Player>(players);
+        
         viewModel.VerifyCode = "加载中...";
         GetViewModel = GetViewModelFunc;
         unloadedAction = PlayerManage_OnUnloaded;
         SetLoadingText = setLoadingTextFunc;
-        updatePlayerSkin = updatePlayerSkinFunc;
-        SetPlayerListIndex = setPlayerListIndex;
         SetPlayerListItem = setPlayerListItem;
         
         PropertiesUtil.LoadPlayerManage(ref viewModel);
@@ -77,32 +70,25 @@ public partial class PlayerManage : Page {
     
 
     public class ViewModel : INotifyPropertyChanged {
-        public event PropertyChangedEventHandler? PropertyChanged;
-        
         private string _verifyCode;
         public string VerifyCode {
             get => _verifyCode;
-            set {
-                SetField(ref _verifyCode, value);
-            }
+            set => SetField(ref _verifyCode, value);
         }
         
         private Player _currentPlayer;
         public Player CurrentPlayer {
             get => _currentPlayer;
-            set {
-                SetField(ref _currentPlayer, value);
-            }
+            set => SetField(ref _currentPlayer, value);
         }
         
         private ObservableCollection<Player> _players;
-
         public ObservableCollection<Player> Players {
             get => _players;
-            set {
-                SetField(ref _players,value);
-            }
+            set => SetField(ref _players,value);
         }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -120,16 +106,14 @@ public partial class PlayerManage : Page {
         return viewModel;
     }
     
-    
-    
     private async void LoginBtn_OnClick(object sender, RoutedEventArgs e) {
         OnlinePageShow.Begin();
         GetMicrosoftDeviceCodeAsync();
         viewModel.VerifyCode = "加载中...";
         retryCount = 0;
         loginTimerStart();
-
     }
+    
     private async Task GetMicrosoftDeviceCodeAsync() {
         var result = await LoginUtil.GetMicrosoftDeviceCode().ConfigureAwait(true);
         if (result.IsSuccess) {
@@ -195,7 +179,6 @@ public partial class PlayerManage : Page {
                             }
                         }
                         else {
-                            //提示重新认证
                             MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","登录失败");
                             Console.WriteLine("出现问题，请重新认证");
                         }
@@ -213,13 +196,11 @@ public partial class PlayerManage : Page {
                 }
             });
         }), null, 5000, 3000);
-        
     }
 
     private void OutlineBtn_OnClick(object sender, RoutedEventArgs e) {
         OutlineInput.Text = "";
         OutlinePageShow.Begin();
-        
     }
     
     private void updatePlayerSkinTimer(Player player) {
@@ -241,7 +222,6 @@ public partial class PlayerManage : Page {
             viewModel.CurrentPlayer = player;
             Home.SetPlayer?.Invoke(player);
         }
-        
     }
 
     private void AddPlayer_OnClick(object sender, RoutedEventArgs e) {
@@ -318,7 +298,6 @@ public partial class PlayerManage : Page {
         if (Logintimer != null) {
             Logintimer.DisposeAsync();
         }
-
         Loading.Opacity = 0;
     }
 
@@ -326,7 +305,13 @@ public partial class PlayerManage : Page {
         var code = viewModel.VerifyCode;
         if (code != "加载中") {
             Clipboard.SetText(code);
+            MessageTips.Show("验证码已复制到剪贴板");
         }
+    }
+    
+    private void LinkText_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        Clipboard.SetText("https://www.microsoft.com/link");
+        MessageTips.Show("链接已复制到剪贴板");
     }
 
     private void PlayerListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {

@@ -40,10 +40,14 @@ public partial class DownloadPage : Page {
     public class ViewModel : INotifyPropertyChanged {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        private List<string> _downloadStates = new () {
-            "默认","待下载","下载中","下载完成","下载失败"
+        private ObservableCollection<NavigationItem> _downloadStates = new () {
+            new NavigationItem("默认"),
+            new NavigationItem("待下载"),
+            new NavigationItem("下载中"),
+            new NavigationItem("下载完成"),
+            new NavigationItem("下载失败"),
         };
-        public List<string> DownloadStates {
+        public ObservableCollection<NavigationItem> DownloadStates {
             get => _downloadStates;
             set => SetField(ref _downloadStates, value);
         }

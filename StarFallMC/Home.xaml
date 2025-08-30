@@ -3,8 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC"
-      xmlns:component="clr-namespace:StarFallMC.Component"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="Home" Height="395" Width="800" Background="Transparent"
       Loaded="Home_OnLoaded">
@@ -25,31 +24,34 @@
     
     <Grid Background="Transparent">
         <Border Background="#fff">
-            <Border Background="#D7C6C5" Opacity="0.9"></Border>
+            <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.9"></Border>
         </Border>
         <Border Name="Bg" CornerRadius="0 0 15 11"></Border>
-        
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
                 <RowDefinition Height="80"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Name="TopFrame">
-                <component:Notices HorizontalAlignment="Left" Width="310" ></component:Notices>
-                <Grid  Width="50" Height="50" 
-                       HorizontalAlignment="Right" 
-                       VerticalAlignment="Bottom" 
-                       Margin="10" >
-                    <Button Name="DownloadBtn"
-                            Style="{StaticResource DownloadBtn}" 
+                <comp:Notices HorizontalAlignment="Left" Width="310" ></comp:Notices>
+                <Grid Name="DownloadBtn" Width="50" Height="50" 
+                      HorizontalAlignment="Right" 
+                      VerticalAlignment="Bottom" 
+                      Margin="10" RenderTransformOrigin="0.5,0.5"
+                      PreviewMouseLeftButtonDown="DownloadBtn_OnMouseLeftButtonDown"
+                      MouseLeave="DownloadBtn_OnMouseLeave">
+                    <Grid.RenderTransform>
+                        <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
+                    </Grid.RenderTransform>
+                    <Button Style="{StaticResource DownloadBtn}" 
                             Tag="None" Click="DownloadBtn_OnClick"></Button>
-                    <Border Name="DownloadBorder" BorderBrush="#D7C6C5" BorderThickness="2" CornerRadius="60" Opacity="0"></Border>
+                    <Border Name="DownloadBorder" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="60" Opacity="0"></Border>
                 </Grid>
             </Grid>
             <Grid Row="1" Name="BottomFrame" VerticalAlignment="Bottom" Height="80">
                 <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 15 10" Opacity="0.65"></Border>
                 <Grid Width="200" HorizontalAlignment="Left" Margin="10">
-                    <component:LittleTips x:Name="HomeTips" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <comp:LittleTips x:Name="HomeTips" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
                 <Border Name="CurrentPlayer" 
                         Width="0" Height="0" 
@@ -57,8 +59,7 @@
                         HorizontalAlignment="Left" 
                         RenderTransformOrigin="0.5,0.5"
                         MouseLeftButtonDown="CurrentPlayer_OnMouseLeftButtonDown"
-                        ToolTip="点击查看玩家信息"
-                >
+                        ToolTip="点击查看玩家信息">
                     <Border.RenderTransform>
                         <TranslateTransform X="30"></TranslateTransform>
                     </Border.RenderTransform>
@@ -74,7 +75,7 @@
                                    TextAlignment="Center" 
                                    VerticalAlignment="Center" 
                                    Text="{Binding PlayerName}" 
-                                   Foreground="#113032" 
+                                   Foreground="{DynamicResource SecondaryBrush_1}" 
                                    TextWrapping="Wrap" 
                                    FontWeight="Bold" 
                                    FontSize="15"></TextBlock>
@@ -93,8 +94,7 @@
                          Stretch="UniformToFill" 
                          MouseDown="CurrentPlayer_OnMouseLeftButtonDown" 
                          HorizontalAlignment="Left" 
-                         VerticalAlignment="Center"
-                         >
+                         VerticalAlignment="Center">
                     <Grid ToolTip="点击查看玩家信息">
                         <Canvas Width="45" Height="45" ClipToBounds="True">
                             <Image Width="360"
@@ -111,7 +111,6 @@
                             </Image>
                         </Canvas>
                     </Grid>
-                    
                     <Viewbox.Effect>
                         <DropShadowEffect Color="Black" ShadowDepth="2" BlurRadius="20" Opacity="0.4"></DropShadowEffect>
                     </Viewbox.Effect>
@@ -127,7 +126,6 @@
                         </EventTrigger>
                     </Viewbox.Triggers>
                 </Viewbox>
-                
                 <Border Name="CurrentGame" 
                         Width="0" Height="0" 
                         Style="{StaticResource Rect}" 
@@ -139,7 +137,10 @@
                     </Border.RenderTransform>
                     <StackPanel Orientation="Horizontal">
                         <Border Background="Transparent" Width="45" Height="45" Margin="5"></Border>
-                        <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" Margin="2" TextWrapping="Wrap" Text="未选择版本" Foreground="#113032" FontSize="13"></TextBlock>
+                        <TextBlock Name="GameName" Width="120" VerticalAlignment="Center" TextAlignment="Center" 
+                                   Margin="2" TextWrapping="Wrap" Text="未选择版本" 
+                                   Foreground="{DynamicResource SecondaryBrush_1}" 
+                                   FontSize="13"></TextBlock>
                     </StackPanel>
                     <Border.Triggers>
                         <EventTrigger RoutedEvent="MouseEnter">
@@ -177,9 +178,8 @@
                     </Image.Triggers>
                 </Image>
                 <!-- Width="150" Height="60" -->
-                <Button Name="StartGameBtn" 
+                <comp:Button x:Name="StartGameBtn" 
                         Width="50" Height="50" 
-                        Style="{StaticResource Btn}" 
                         HorizontalAlignment="Right" 
                         Margin="0 0 30 0" 
                         RenderTransformOrigin="0.5,0.5"
@@ -188,7 +188,9 @@
                         <TranslateTransform X="0"></TranslateTransform>
                     </Button.RenderTransform>
                     <Grid>
-                        <TextBlock Name="StartGameBtnTextBlock" Text="开 始 游 戏" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Name="StartGameBtnTextBlock" Text="开 始 游 戏" 
+                                   FontSize="20" Opacity="0" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                         <TextBlock Name="StartGameBtnIcon" Text="&#xea17;" 
                                    FontFamily="{StaticResource IconFontFamily}" 
                                    FontSize="30" TextAlignment="Center"
@@ -206,7 +208,7 @@
                             <BeginStoryboard Storyboard="{StaticResource LaunchLeave}"></BeginStoryboard>
                         </EventTrigger>
                     </Button.Triggers>
-                </Button>
+                </comp:Button>
                 <Border Name="StartingBorder" 
                         Width="400" Height="70" 
                         HorizontalAlignment="Right" 
@@ -214,19 +216,20 @@
                         Opacity="0" 
                         Background="Black"
                         Visibility="Collapsed"></Border>
-                <!-- Width="180" Height="60" -->
-                <Button Name="StartingBtn"
+                <comp:Button x:Name="StartingBtn"
                         Width="0"
                         Height="60"
-                        Style="{StaticResource Btn}"
                         HorizontalAlignment="Right"
                         Margin="0 0 15 0"
                         FontSize="15"
                         RenderTransformOrigin="0,0"
                         Click="StartingBtn_OnClick">
                     <Grid>
-                        <TextBlock Name="StatusText" Text="" FontSize="18" Opacity="1" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                        <TextBlock Name="cancelText" Text="取  消  启  动" FontSize="20" Opacity="0" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Name="StatusText" Text="" 
+                                   FontSize="16" Opacity="1" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <TextBlock Name="cancelText" Text="取  消  启  动" FontSize="20" Opacity="0" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                     </Grid>
                     <Button.Triggers>
                         <EventTrigger RoutedEvent="MouseEnter">
@@ -236,12 +239,13 @@
                             <BeginStoryboard Storyboard="{StaticResource StartingBtnExit}"></BeginStoryboard>
                         </EventTrigger>
                     </Button.Triggers>
-                </Button>
+                </comp:Button>
                 <Grid.Triggers>
                     <EventTrigger RoutedEvent="MouseEnter">
                         <BeginStoryboard>
                             <Storyboard TargetName="BottomFrameBg" TargetProperty="Opacity">
-                                <DoubleAnimation Duration="0:0:0.3" To="0.85" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                <DoubleAnimation Duration="0:0:0.3" To="0.85" 
+                                                 EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                             </Storyboard>
                         </BeginStoryboard>
                     </EventTrigger>

@@ -6,7 +6,7 @@ using System.Windows.Media.Animation;
 
 namespace StarFallMC.Component;
 
-public partial class MessageBox : UserControl {
+public partial class MessageBox : UserControl,INotifyPropertyChanged {
     
     public enum BtnType {
         None,
@@ -24,86 +24,68 @@ public partial class MessageBox : UserControl {
     }
     private Action<Result> _callback;
     
-    private ViewModel viewModel = new ViewModel();
     private Timer HideTimer;
     private Storyboard HighlightBox;
     private TaskCompletionSource<MessageBox> _tcs;
     
-    public MessageBox() {
-        InitializeComponent();
-        DataContext = viewModel;
-        HighlightBox = FindResource("HighlightBox") as Storyboard;
+    private string _title;
+    public string Title {
+        get => _title;
+        set => SetField(ref _title, value);
+    }
+
+    private string _message;
+    public string Message {
+        get => _message;
+        set => SetField(ref _message, value);
+    }
+
+    private Visibility _confirmBtnVisibility;
+    public Visibility ConfirmBtnVisibility {
+        get => _confirmBtnVisibility;
+        set => SetField(ref _confirmBtnVisibility, value);
+    }
+        
+    private Visibility _cancelBtnVisibility;
+    public Visibility CancelBtnVisibility {
+        get => _cancelBtnVisibility;
+        set => SetField(ref _cancelBtnVisibility, value);
+    }
+        
+    private Visibility _closeBtnVisibility;
+    public Visibility CloseBtnVisibility {
+        get => _closeBtnVisibility;
+        set => SetField(ref _closeBtnVisibility, value);
+    }
+
+    private Visibility _customBtnVisibility;
+    public Visibility CustomBtnVisibility {
+        get => _customBtnVisibility;
+        set => SetField(ref _customBtnVisibility, value);
+    }
+        
+    private string _customBtnText;
+    public string CustomBtnText {
+        get => _customBtnText;
+        set => SetField(ref _customBtnText, value);
+    }
+        
+    private string _confirmBtnText;
+    public string ConfirmBtnText {
+        get => _confirmBtnText;
+        set => SetField(ref _confirmBtnText, value);
+    }
+        
+    private string _cancelBtnText;
+    public string CancelBtnText {
+        get => _cancelBtnText;
+        set => SetField(ref _cancelBtnText, value);
     }
     
-    public class ViewModel : INotifyPropertyChanged {
-
-        private string _title;
-        public string Title {
-            get => _title;
-            set => SetField(ref _title, value);
-        }
-
-        private string _message;
-        public string Message {
-            get => _message;
-            set => SetField(ref _message, value);
-        }
-
-        private Visibility _confirmBtnVisibility;
-        public Visibility ConfirmBtnVisibility {
-            get => _confirmBtnVisibility;
-            set => SetField(ref _confirmBtnVisibility, value);
-        }
-        
-        private Visibility _cancelBtnVisibility;
-        public Visibility CancelBtnVisibility {
-            get => _cancelBtnVisibility;
-            set => SetField(ref _cancelBtnVisibility, value);
-        }
-        
-        private Visibility _closeBtnVisibility;
-        public Visibility CloseBtnVisibility {
-            get => _closeBtnVisibility;
-            set => SetField(ref _closeBtnVisibility, value);
-        }
-
-        private Visibility _customBtnVisibility;
-        public Visibility CustomBtnVisibility {
-            get => _customBtnVisibility;
-            set => SetField(ref _customBtnVisibility, value);
-        }
-        
-        private string _customBtnText;
-        public string CustomBtnText {
-            get => _customBtnText;
-            set => SetField(ref _customBtnText, value);
-        }
-        
-        private string _confirmBtnText;
-        public string ConfirmBtnText {
-            get => _confirmBtnText;
-            set => SetField(ref _confirmBtnText, value);
-        }
-        
-        private string _cancelBtnText;
-        public string CancelBtnText {
-            get => _cancelBtnText;
-            set => SetField(ref _cancelBtnText, value);
-        }
-        
-        
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
+    public MessageBox() {
+        InitializeComponent();
+        DataContext = this;
+        HighlightBox = FindResource("HighlightBox") as Storyboard;
     }
 
     // 同步显示消息框,但是不等待用户操作完成
@@ -113,41 +95,39 @@ public partial class MessageBox : UserControl {
         bool showCloseBtn = false) {
         var box = new MessageBox();
         
-        box.viewModel.Message = content;
-        box.viewModel.Title = title;
+        box.Message = content;
+        box.Title = title;
         box._callback = callback;
-        box.viewModel.ConfirmBtnVisibility = 
+        box.ConfirmBtnVisibility = 
             btnType == BtnType.Confirm || 
             btnType == BtnType.ConfirmAndCancel || 
             btnType == BtnType.ConfirmAndCustom || 
             btnType == BtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
-        box.viewModel.CancelBtnVisibility =
+        box.CancelBtnVisibility =
             btnType == BtnType.ConfirmAndCancel || 
             btnType == BtnType.CustomAndCancel || 
             btnType == BtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
-        box.viewModel.CustomBtnVisibility =
+        box.CustomBtnVisibility =
             btnType == BtnType.CustomAndCancel ||
             btnType == BtnType.ConfirmAndCustom ||
             btnType == BtnType.Custom ||
             btnType == BtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
-        box.viewModel.CloseBtnVisibility = showCloseBtn ? Visibility.Visible : Visibility.Collapsed;
-        box.viewModel.ConfirmBtnText = confirmBtnText;
-        box.viewModel.CancelBtnText = cancelBtnText;
-        box.viewModel.CustomBtnText = customBtnText;
-        
+        box.CloseBtnVisibility = showCloseBtn ? Visibility.Visible : Visibility.Collapsed;
+        box.ConfirmBtnText = confirmBtnText;
+        box.CancelBtnText = cancelBtnText;
+        box.CustomBtnText = customBtnText;
         
         var mainWindow = Application.Current.MainWindow;
-        if (mainWindow != null && mainWindow.Content is Grid gird) {
-            gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Add(box);
+        if (mainWindow != null && mainWindow.Content is Grid grid) {
+            grid.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Add(box);
         }
         box.ShowFunc();
         return box; 
     }
     
-    // 异步显示消息框，可选择等待用户操作完成
     public static async Task<MessageBox> ShowAsync(string content, string title = "提示",
         BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
         string customBtnText = "", string confirmBtnText = "确定", string cancelBtnText = "取消",
@@ -200,5 +180,18 @@ public partial class MessageBox : UserControl {
         if (mainWindow != null && mainWindow.Content is Grid gird) {
             gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Remove(box);
         }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }

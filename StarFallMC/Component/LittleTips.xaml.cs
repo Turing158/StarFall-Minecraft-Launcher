@@ -1,7 +1,5 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using System.Windows.Media.Animation;
-
 namespace StarFallMC.Component;
 
 public partial class LittleTips : UserControl {
@@ -22,27 +20,27 @@ public partial class LittleTips : UserControl {
     private double duration = 8.0;
     
     
-    private Storyboard showStoryboard;
-    private Storyboard hideStoryboard;
-    private Storyboard tipsStoryboard;
+    private Storyboard ShowStoryboard;
+    private Storyboard HideStoryboard;
+    private Storyboard TipsStoryboard;
 
     private Timer changeTimer;
     private Timer textTimer;
     
     public LittleTips() {
         InitializeComponent();
-        showStoryboard = (Storyboard)FindResource("Show");
-        hideStoryboard = (Storyboard)FindResource("Hide");
-        tipsStoryboard = (Storyboard)FindResource("TipsChange");
+        ShowStoryboard = (Storyboard)FindResource("Show");
+        HideStoryboard = (Storyboard)FindResource("Hide");
+        TipsStoryboard = (Storyboard)FindResource("TipsChange");
     }
 
     public void Show() {
-        showStoryboard.Begin();
+        ShowStoryboard.Begin();
         getRandomTip();
         int dur = (int)duration*1000;
         changeTimer = new Timer(s => {
             this.Dispatcher.BeginInvoke(() => {
-                tipsStoryboard.Begin();
+                TipsStoryboard.Begin();
                 textTimer = new Timer(s => {
                     this.Dispatcher.BeginInvoke(() => {
                         getRandomTip();
@@ -56,7 +54,7 @@ public partial class LittleTips : UserControl {
     public void Hide() {
         changeTimer?.Dispose();
         textTimer?.Dispose();
-        hideStoryboard.Begin();
+        HideStoryboard.Begin();
     }
     
     private void getRandomTip() {

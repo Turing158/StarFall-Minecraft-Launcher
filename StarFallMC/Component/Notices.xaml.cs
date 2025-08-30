@@ -10,7 +10,6 @@ public partial class Notices : UserControl {
     private string SettingFile = $"{DirFileUtil.LauncherSettingsDir}/Notices.json";
     public Notices() {
         InitializeComponent();
-
         InitNotices();
     }
 
@@ -57,8 +56,6 @@ public partial class Notices : UserControl {
             item.Icon = "pack://application:,,,/;component/assets/ico.ico";
             notices.Add(item);
         }
-        
         return notices;
     }
-    
 }

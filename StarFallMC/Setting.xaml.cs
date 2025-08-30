@@ -1,50 +1,36 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
+using StarFallMC.Entity;
 
 namespace StarFallMC;
-
-
 
 public partial class Setting : Page {
 
     private ViewModel viewModel = new ViewModel();
+    
+    private Storyboard NaviBarChangeAnim;
 
-    private Storyboard ActiveMove;
-    private Storyboard GameListChangeAnim;
-
-    private Timer GameListChangeTimer;
+    private Timer NaviBarChangeTimer;
     
     public Setting() {
         InitializeComponent();
         DataContext = viewModel;
-        viewModel.ActiveY = 0;
-        viewModel.SelectItems = new ObservableCollection<SettingItem>() {
-            new SettingItem("游戏设置","/GameSetting.xaml"),
-            new SettingItem("关于","/About.xaml"),
-        };
-        ActiveMove = (Storyboard) FindResource("ActiveMove");
-        GameListChangeAnim = (Storyboard) FindResource("GameListChangeAnim");
+        NaviBarChangeAnim = (Storyboard) FindResource("NaviBarChangeAnim");
     }
     
     public class ViewModel : INotifyPropertyChanged {
-        private ObservableCollection<SettingItem> _selectItems;
-        public ObservableCollection<SettingItem> SelectItems {
-            get=> _selectItems;
-            set => SetField(ref _selectItems, value);
+        private ObservableCollection<NavigationItem> _navi = new () {
+            new NavigationItem("游戏设置","GameSetting"),
+            new NavigationItem("启动器设置","LauncherSetting"),
+            new NavigationItem("关于","About"),
+        };
+        public ObservableCollection<NavigationItem> Navi {
+            get=> _navi;
+            set => SetField(ref _navi, value);
         }
-        
-        private int _activeY;
-
-        public int ActiveY {
-            get => _activeY;
-            set => SetField(ref _activeY, value);
-        }
-        
         
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -59,31 +45,14 @@ public partial class Setting : Page {
             return true;
         }
     }
-    
-    public class SettingItem {
-        public string Name { get; set; }
-        public string Path { get; set; }
-
-        public SettingItem(string name, string path) {
-            Name = name;
-            Path = path;
-        }
-    }
-
-    private void SelectChoice_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
-        ((DoubleAnimation)ActiveMove.Children[0]).To = SelectChoice.SelectedIndex * 50;
-        ActiveMove.Begin();
-        GameListChangeAnim.Begin();
-        var index = (SettingItem)SelectChoice.SelectedItem;
-        if (GameListChangeTimer != null) {
-            GameListChangeTimer.Dispose();
-        }
-        GameListChangeTimer = new Timer(new TimerCallback(state => {
+    private void NaviBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        NaviBarChangeAnim.Begin();
+        NaviBarChangeTimer?.Dispose();
+        NaviBarChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {
-                SettingFrame.Navigate(new Uri("/SettingPages" + index.Path, UriKind.Relative));
-                GameListChangeTimer.Dispose();
+                PageFrame.Navigate(new Uri($"/SettingPages/{SettingBar.CurrentItem.Path}.xaml", UriKind.Relative));
+                NaviBarChangeTimer.Dispose();
             });
-        }), null, 300, 0);
-        
+        }, null, 300, 0);
     }
 }

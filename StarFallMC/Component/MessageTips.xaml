@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:StarFallMC.Component"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -49,7 +48,7 @@
         </Storyboard>
     </UserControl.Resources>
     <Grid>
-        <Border Name="Main" Style="{StaticResource Rect}" 
+        <Border Name="Main" Style="{StaticResource NoAnimRect}" 
                 HorizontalAlignment="Center" VerticalAlignment="Top" 
                 Opacity="0" 
                 RenderTransformOrigin="0.5,1"
@@ -63,9 +62,14 @@
                     <ScaleTransform ScaleX="1" ScaleY="1" CenterY="80"></ScaleTransform>
                 </TransformGroup>
             </Border.RenderTransform>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Name="Content" Text="{Binding Message}" Foreground="{Binding MessageColor}" FontSize="16" MaxWidth="400" TextWrapping="Wrap" TextAlignment="Center"></TextBlock>
-            </StackPanel>
+            <Grid>
+                <StackPanel Name="Content" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Message}" Foreground="{Binding MessageColor}" FontSize="16" MaxWidth="400" TextWrapping="Wrap" TextAlignment="Center"></TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" SizeChanged="HideContent_OnSizeChanged">
+                    <TextBlock Name="HideContent" FontSize="16" MaxWidth="400" TextWrapping="Wrap" TextAlignment="Center"></TextBlock>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:StarFallMC"
+        xmlns:comp="clr-namespace:StarFallMC.Component"
         mc:Ignorable="d"
         Title="StarFall Minecraft Launcher" Height="450" Width="800"
         WindowStartupLocation="CenterScreen"
@@ -18,14 +18,11 @@
         >
     <Window.Resources>
         <ResourceDictionary Source="/Style/MainWindowStyle.xaml"></ResourceDictionary>
-        
     </Window.Resources>
     
     <Window.Triggers>
         <EventTrigger RoutedEvent="Window.Loaded">
-            <BeginStoryboard Storyboard="{StaticResource InitTopFrame}">
-                
-            </BeginStoryboard>
+            <BeginStoryboard Storyboard="{StaticResource InitTopFrame}"></BeginStoryboard>
         </EventTrigger>
     </Window.Triggers>
     <Grid>
@@ -40,9 +37,14 @@
                 <TranslateTransform X="0"></TranslateTransform>
             </Frame.RenderTransform>
         </Frame>
-        <Frame Name="SettingFrame" VerticalAlignment="Bottom" Source="Setting.xaml" Opacity="0" IsEnabledChanged="SettingFrame_OnIsEnabledChanged">
+        <Frame Name="SettingFrame" VerticalAlignment="Bottom" Source="Setting.xaml" Opacity="0">
             <Frame.RenderTransform>
                 <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
+            </Frame.RenderTransform>
+        </Frame>
+        <Frame Name="DownloadGameFrame" VerticalAlignment="Bottom" Source="ResourcePage.xaml" Opacity="0">
+            <Frame.RenderTransform>
+                <TranslateTransform X="{Binding ElementName=DownloadGameFrame,Path=ActualWidth}"></TranslateTransform>
             </Frame.RenderTransform>
         </Frame>
         <Frame Name="SubFrame" VerticalAlignment="Bottom" Source="SelectGame.xaml" Opacity="0">
@@ -55,9 +57,13 @@
                 <TranslateTransform Y="-50"></TranslateTransform>
             </Frame.RenderTransform>
         </Frame>
-        <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" Background="#957A78" VerticalAlignment="Top" MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
+        <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" 
+                Background="{DynamicResource PrimaryBrush_3}" 
+                VerticalAlignment="Top" 
+                MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
             <Grid>
-                <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
+                <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" 
+                        Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
                     <TextBlock Text="&#xea18;" FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
                     <Button.RenderTransform>
                         <TranslateTransform X="-50"></TranslateTransform>
@@ -68,7 +74,9 @@
                         <TranslateTransform X="0"></TranslateTransform>
                     </Image.RenderTransform>
                 </Image>
-                <TextBlock Name="LauncherName" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="#001D1F" FontSize="20" Margin="60 0 0 0" Text="SFMCL">
+                <TextBlock Name="LauncherName" VerticalAlignment="Center" HorizontalAlignment="Left" 
+                           Foreground="{DynamicResource SecondaryBrush_2}" 
+                           FontSize="20" Margin="60 0 0 0" Text="SFMCL">
                     <TextBlock.RenderTransform>
                         <TranslateTransform></TranslateTransform>
                     </TextBlock.RenderTransform>
@@ -81,30 +89,22 @@
                         <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe90b;"></TextBlock>
                     </Button>
                 </StackPanel>
-                <TextBlock Name="Title" TextAlignment="Center" FontSize="20" Foreground="#001D1F" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold" Text="Title">
+                <TextBlock Name="Title" TextAlignment="Center" FontSize="20" 
+                           Foreground="{DynamicResource SecondaryBrush_2}" 
+                           VerticalAlignment="Center" HorizontalAlignment="Center" 
+                           FontWeight="Bold" Text="Title">
                     <TextBlock.RenderTransform>
                         <TranslateTransform Y="-55"></TranslateTransform>
                     </TextBlock.RenderTransform>
                 </TextBlock>
-                <Grid Name="OperateGrid" HorizontalAlignment="Center" Width="180">
-                    <Grid.RenderTransform>
+                <comp:NavigationBar x:Name="OperateGrid" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                    ItemPadding="15 5" ItemMargin="10 0" 
+                                    ItemsSource="{Binding Tabs}" SelectedIndex="0"
+                                    SelectionChanged="OperateGrid_OnSelectionChanged">
+                    <comp:NavigationBar.RenderTransform>
                         <TranslateTransform></TranslateTransform>
-                    </Grid.RenderTransform>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition></ColumnDefinition>
-                        <ColumnDefinition></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Rectangle Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
-                    <Rectangle Grid.Column="1" Width="70" Height="35" Style="{StaticResource TabBlock}" Fill="#22D7C6C5"></Rectangle>
-                    <Rectangle Name="Active" Width="70" Height="35" Style="{StaticResource TabBlock}">
-                        <Rectangle.RenderTransform>
-                            <TranslateTransform x:Name="ActiveTF"></TranslateTransform>
-                        </Rectangle.RenderTransform>
-                    </Rectangle>
-                    <Button Name="HomeBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="主 页" Foreground="#D7C6C5" Click="HomeBtn_OnClick"></Button>
-                    <Button Grid.Column="1" Name="SettingBtn" Width="70" Height="35" Style="{StaticResource TabBtn}" Content="设 置" Click="SettingBtn_OnClick"></Button>
-                </Grid>
-                
+                    </comp:NavigationBar.RenderTransform>
+                </comp:NavigationBar>
             </Grid>
         </Border>
         <Grid Name="MessageBoxContainer"></Grid>

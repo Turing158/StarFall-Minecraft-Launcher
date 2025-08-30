@@ -1,16 +1,20 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:component="clr-namespace:StarFallMC.Component">
     
     <Style TargetType="Image">
         <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"></Setter>
     </Style>
     
-    <Style x:Key="LoginBtn" TargetType="Button" BasedOn="{StaticResource PlainBtn}">
+    <Style x:Key="LoginBtn" TargetType="component:PlainButton" 
+           BasedOn="{StaticResource {x:Type component:PlainButton}}">
         <Setter Property="Height" Value="55"></Setter>
         <Setter Property="VerticalAlignment" Value="Top"></Setter>
         <Setter Property="FontSize" Value="25"></Setter>
     </Style>
-    <Style x:Key="PlayerList" TargetType="ListViewItem">
+    
+    <Style x:Key="PlayerList" TargetType="ListViewItem" 
+           BasedOn="{StaticResource {x:Type ListViewItem}}">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -25,35 +29,57 @@
                             CornerRadius="5"
                             BorderThickness="1"
                             Opacity="0"
-                            BorderBrush="#001D1F">
+                            BorderBrush="{DynamicResource SecondaryBrush_2}">
                         </Border>
                         <Grid>
-                            <Border Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"></Border>
-                            <TextBlock Name="GameName" Foreground="#001D1F" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
+                            <Border Width="40" Height="40" 
+                                    HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                    Margin="5"></Border>
+                            <TextBlock Name="GameName" Foreground="{DynamicResource SecondaryBrush_2}" 
+                                       HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                       FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
                         </Grid>
                         <Border
                             Name="Active"
                             Width="{TemplateBinding Width}" 
                             Height="{TemplateBinding Height}" 
-                            Background="#113032"
+                            Background="{DynamicResource SecondaryBrush_1}"
                             CornerRadius="5"
                             BorderThickness="1"
-                            BorderBrush="#001D1F"
+                            BorderBrush="{DynamicResource SecondaryBrush_2}"
                             Opacity="0">
                             <Grid>
-                                <Border Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"></Border>
-                                <TextBlock Foreground="#d1d1d1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
+                                <Border Width="40" Height="40" 
+                                        HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                        Margin="5"></Border>
+                                <TextBlock Foreground="#d1d1d1" 
+                                           HorizontalAlignment="Left" VerticalAlignment="Center" 
+                                           FontSize="15" 
+                                           Text="{Binding Name}"
+                                           Margin="60 0"></TextBlock>
                             </Grid>
                         </Border>
-                        <Border Width="50" Height="22" CornerRadius="5" Background="#D7C6C5" HorizontalAlignment="Right" Margin="10 0">
-                            <TextBlock Foreground="#001D1F" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13">
-                                <Run Text="&#xe61e;" FontFamily="{StaticResource IconFontFamily}"></Run>
+                        <Border Width="50" Height="23" CornerRadius="5" 
+                                Background="{DynamicResource PrimaryBrush}" 
+                                HorizontalAlignment="Right" Margin="10 0">
+                            <TextBlock Foreground="{DynamicResource SecondaryBrush_2}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontSize="13">
+                                <Run Text="&#xe61e;" 
+                                     FontFamily="{StaticResource IconFontFamily}"
+                                     FontSize="14"></Run>
                                 <Run Text="离线"></Run>
                             </TextBlock>
                         </Border>
-                        <Border Width="50" Height="22" CornerRadius="3" Background="#264446" HorizontalAlignment="Right" Margin="10 0" Visibility="{Binding OnlineLable}">
-                            <TextBlock Foreground="#D7C6C5" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 2 0 0">
-                                <Run Text="&#xe98b;" FontFamily="{StaticResource IconFontFamily}"></Run>
+                        <Border Width="50" Height="25" CornerRadius="3" 
+                                Background="{DynamicResource SecondaryBrush}" 
+                                HorizontalAlignment="Right" Margin="10 0" 
+                                Visibility="{Binding OnlineLable}">
+                            <TextBlock Foreground="{DynamicResource PrimaryBrush}" 
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                       FontSize="13">
+                                <Run Text="&#xe98b;" 
+                                     FontFamily="{StaticResource IconFontFamily}"></Run>
                                 <Run Text="正版"></Run>
                             </TextBlock>
                         </Border>
@@ -64,7 +90,8 @@
                                  VerticalAlignment="Center"
                                  Margin="8 0 4 0">
                             <Viewbox.Effect>
-                                <DropShadowEffect Color="Black" ShadowDepth="4" BlurRadius="20" Opacity="0.4"></DropShadowEffect>
+                                <DropShadowEffect Color="Black" ShadowDepth="4" 
+                                                  BlurRadius="20" Opacity="0.4"></DropShadowEffect>
                             </Viewbox.Effect>
                             <Grid>
                                 <Canvas Width="35" Height="35" VerticalAlignment="Bottom" ClipToBounds="True">
@@ -84,20 +111,22 @@
                             </Grid>
                         </Viewbox>
                     </Grid>
-                    
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Trigger.EnterActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" 
+                                                         To="1" Duration="0:0:0.2" 
+                                                         EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
                             <Trigger.ExitActions>
                                 <BeginStoryboard>
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.15"></DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Border" Storyboard.TargetProperty="Opacity" 
+                                                         To="0" Duration="0:0:0.15"></DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
@@ -124,9 +153,8 @@
         </Setter>
     </Style>
     
-    
-    
-    <Style x:Key="BackBtn" TargetType="Button" BasedOn="{StaticResource PlainBtn}">
+    <Style x:Key="BackBtn" TargetType="component:PlainButton" 
+           BasedOn="{StaticResource {x:Type component:PlainButton}}">
         <Setter Property="Width" Value="50"></Setter>
         <Setter Property="Height" Value="30"></Setter>
         <Setter Property="HorizontalAlignment" Value="Left"></Setter>
@@ -135,7 +163,6 @@
         <Setter Property="Content" Value="←"></Setter>
         <Setter Property="FontSize" Value="20"></Setter>
     </Style>
-    
     
     <Storyboard x:Key="SkinBoxChange" TargetName="SkinBox" TargetProperty="Opacity">
         <DoubleAnimation To="0" Duration="0:0:0.15"></DoubleAnimation>
@@ -148,6 +175,7 @@
                          To="0" Duration="0:0:0.5" 
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="LoginPageHide" TargetName="Login">
         <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
@@ -161,6 +189,7 @@
                          To="0" Duration="0:0:0.5" 
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="OutlinePageHide" TargetName="OutlineLogin">
         <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 
@@ -174,6 +203,7 @@
                          To="0" Duration="0:0:0.5" 
                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
     </Storyboard>
+    
     <Storyboard x:Key="OnlinePageHide" TargetName="OnlineLogin">
         <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)" 

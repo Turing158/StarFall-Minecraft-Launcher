@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -51,43 +52,32 @@ public partial class Home : Page {
     }
     
     public class ViewModel : INotifyPropertyChanged {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
+        
         private string _playerName;
-        private MinecraftItem _currentGame;
-        private Player _currentPlayer;
-        private bool _isDownloading;
-
         public string PlayerName {
             get => _playerName;
-            set {
-                SetField(ref _playerName, value);
-            }
+            set => SetField(ref _playerName, value);
         }
 
+        private MinecraftItem _currentGame;
         public MinecraftItem CurrentGame {
             get => _currentGame;
-            set {
-                SetField(ref _currentGame, value);
-            }
+            set => SetField(ref _currentGame, value);
         }
         
+        private Player _currentPlayer;
         public Player CurrentPlayer {
             get => _currentPlayer;
-            set {
-                SetField(ref _currentPlayer, value);
-            }
+            set => SetField(ref _currentPlayer, value);
         }
-
+        
+        private bool _isDownloading;
         public bool IsDownloading {
             get => _isDownloading;
-            set {
-                SetField(ref _isDownloading, value);
-            }
+            set => SetField(ref _isDownloading, value);
         }
         
-        
-        
+        public event PropertyChangedEventHandler? PropertyChanged;
         
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -203,7 +193,7 @@ public partial class Home : Page {
     }
 
     private void hideLaunching(bool isStop = false) {
-        this.Dispatcher.Invoke(() => {
+        Dispatcher.Invoke(() => {
             try {
                 GameStarting = false;
                 StartingBorder.Visibility = Visibility.Collapsed;
@@ -221,7 +211,7 @@ public partial class Home : Page {
     }
 
     private void errorLaunch(MinecraftItem item) {
-        this.Dispatcher.Invoke(() => {
+        Dispatcher.Invoke(() => {
             MessageBox.Show(
                 content:
                 $"当前版本：{item.Name} 出现游戏崩溃！无法正常运行，崩溃可能由多种原因引起，以下为常见解决方案：\n    1.检查Minecraft内存分配是否合理\n    2.检查Java版本是否能够当前Minecraft的启动\n    3.检查Minecraft模组中是否存在模组冲突\n    4.查看崩溃日志文件，若有需要，建议保存",
@@ -238,6 +228,8 @@ public partial class Home : Page {
 
     private void DownloadBtn_OnClick(object sender, RoutedEventArgs e) {
         MainWindow.DownloadPageShow?.Invoke();
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
     }
 
     private void downloadState(bool isDownloading) {
@@ -251,7 +243,7 @@ public partial class Home : Page {
     }
 
     private void startingState(string state) {
-        this.Dispatcher.BeginInvoke(() => {
+        Dispatcher.BeginInvoke(() => {
             StatusText.Text = state;
         });
     }
@@ -285,5 +277,25 @@ public partial class Home : Page {
             bgImage.EndInit();
             Bg.Background = new ImageBrush(bgImage);
         }
+    }
+    
+    private DoubleAnimation mouseDownAnimation = new() {
+        To = 0.9,
+        Duration = TimeSpan.FromMilliseconds(200),
+        EasingFunction = new CubicEase()
+    };
+    private DoubleAnimation mouseUpAnimation = new() {
+        To = 1,
+        Duration = TimeSpan.FromMilliseconds(200),
+        EasingFunction = new CubicEase()
+    };
+    private void DownloadBtn_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseDownAnimation);
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseDownAnimation);
+    }
+
+    private void DownloadBtn_OnMouseLeave(object sender, MouseEventArgs e) {
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
+        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
     }
 }

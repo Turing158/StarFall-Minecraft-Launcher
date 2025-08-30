@@ -1,7 +1,13 @@
-﻿using System.Windows;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using StarFallMC.Component;
+using StarFallMC.Entity;
 using StarFallMC.Util;
 
 namespace StarFallMC;
@@ -11,10 +17,12 @@ namespace StarFallMC;
 /// </summary>
 public partial class MainWindow : Window {
     
-    private Storyboard HomeBtnEnter;
-    private Storyboard SettingBtnEnter;
+    private Storyboard SettingEnter;
+    private Storyboard SettingLeave;
+    private Storyboard DownloadGameEnter;
+    private Storyboard DownloadGameLeave;
     private Timer SettingFrameTimer;
-
+    private Timer DownloadGameFrameTimer;
     
     private Storyboard SubFrameShow;
     private Storyboard SubFrameHide;
@@ -29,12 +37,18 @@ public partial class MainWindow : Window {
     public static Action<string,string> SubFrameNavigate;
     public static Action<string,Action> ReloadSubFrame;
     public static Action DownloadPageShow;
+    
+    private ViewModel viewModel = new ViewModel();
     public MainWindow() {
         
         InitializeComponent();
+
+        DataContext = viewModel;
         
-        HomeBtnEnter = (Storyboard)FindResource("HomeBtnEnter");
-        SettingBtnEnter = (Storyboard)FindResource("SettingBtnEnter");
+        SettingEnter = (Storyboard)FindResource("SettingEnter");
+        SettingLeave = (Storyboard)FindResource("SettingLeave");
+        DownloadGameEnter = (Storyboard)FindResource("DownloadGameEnter");
+        DownloadGameLeave = (Storyboard)FindResource("DownloadGameLeave");
         
         SubFrameShow = (Storyboard)FindResource("SubFrameShow");
         SubFrameHide = (Storyboard)FindResource("SubFrameHide");
@@ -46,34 +60,80 @@ public partial class MainWindow : Window {
         SubFrameNavigate = SubFrameNavigateFunc;
         ReloadSubFrame = reloadSubFrame;
         DownloadPageShow = downloadPageShow;
-
     }
+    
+    public class ViewModel : INotifyPropertyChanged{
+        private ObservableCollection<NavigationItem> _tabs = new () {
+            new NavigationItem("主 页"),
+            new NavigationItem("下 载"),
+            new NavigationItem("设 置"),
+        };
+        public ObservableCollection<NavigationItem> Tabs {
+            get => _tabs;
+            set => SetField(ref _tabs, value);
+        }
+        
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-    private void HomeBtn_OnClick(object sender, RoutedEventArgs e) {
-        if (SettingFrame.RenderTransform.Value.OffsetX == 0) {
-            HomeBtnEnter.Begin();
-            SettingBtnEnter.Stop();
-            SettingFrameTimer = new Timer(new TimerCallback((state => {
-                this.Dispatcher.BeginInvoke(new Action(() => {
-                    SettingFrame.RenderTransform = new TranslateTransform(SettingFrame.ActualWidth+10, 0);
-                }));
-                SettingFrameTimer.Dispose();
-            })),null,200,0);
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
+            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
         }
     }
 
-    private void SettingBtn_OnClick(object sender, RoutedEventArgs e) {
+    private void ToHome() {
+        HideSetting();
+        HideDownloadGame();
+    }
+
+    private void ToSetting() {
         if (Home.GameStarting) {
-            Console.WriteLine("游戏正在启动中，无法进入设置");
+            MessageTips.Show("游戏正在启动中，无法进入设置！", MessageTips.MessageType.Error);
+            OperateGrid.SelectedIndex = 0;
             return;
         }
-        if (SettingFrame.RenderTransform.Value.OffsetX != 0) {
-            HomeBtnEnter.Stop();
-            SettingBtnEnter.Begin();
-            if (SettingFrameTimer != null) {
-                SettingFrameTimer.Dispose();
-            }
-        }
+
+        SettingFrameTimer?.Dispose();
+        SettingLeave.Stop();
+        SettingEnter.Begin();
+        HideDownloadGame();
+    }
+
+    private void ToDownloadGame() {
+        DownloadGameFrameTimer?.Dispose();
+        DownloadGameLeave.Stop();
+        DownloadGameEnter.Begin();
+        HideSetting();
+    }
+
+    private void HideSetting() {
+        SettingEnter.Stop();
+        SettingLeave.Begin();
+        SettingFrameTimer?.Dispose();
+        SettingFrameTimer = new Timer(new TimerCallback((state => {
+            Dispatcher.BeginInvoke(new Action(() => {
+                SettingFrame.RenderTransform = new TranslateTransform(SettingFrame.ActualWidth+10, 0);
+            }));
+            SettingFrameTimer.Dispose();
+        })),null,200,0);
+    }
+
+    private void HideDownloadGame() {
+        DownloadGameEnter.Stop();
+        DownloadGameLeave.Begin();
+        DownloadGameFrameTimer?.Dispose();
+        DownloadGameFrameTimer = new Timer(new TimerCallback((state => {
+            Dispatcher.BeginInvoke(new Action(() => {
+                DownloadGameFrame.RenderTransform = new TranslateTransform(DownloadGameFrame.ActualWidth+10, 0);
+            }));
+            DownloadGameFrameTimer.Dispose();
+        })),null,200,0);
     }
     
     private void MiniBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -129,11 +189,6 @@ public partial class MainWindow : Window {
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
         DragMove();
     }
-    
-
-    private void SettingFrame_OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
-        
-    }
 
     private void reloadSubFrame(string pageName,Action action) {
         SubFrame.Navigate(new Uri("Blank.xaml", UriKind.Relative));
@@ -143,5 +198,19 @@ public partial class MainWindow : Window {
                 action();
             }
         });
+    }
+
+    private void OperateGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        switch (OperateGrid.SelectedIndex) {
+            case 0:
+                ToHome();
+                break;
+            case 1:
+                ToDownloadGame();
+                break;
+            case 2:
+                ToSetting();
+                break;
+        }
     }
 }
