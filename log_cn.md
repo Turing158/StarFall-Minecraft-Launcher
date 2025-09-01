@@ -284,3 +284,12 @@
    - Setting界面新增LauncherSetting界面（启动器设置）
 
 ---
+
+## NavigationBar支持二级菜单-2025-9-1
+
+1. NavigationBar更新支持垂直方向二级菜单
+2. 更新关于**资源**页面的内容和设计
+3. 更改了一些样式
+
+---
+
