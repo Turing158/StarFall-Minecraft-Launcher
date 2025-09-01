@@ -129,7 +129,7 @@ public partial class NavigationBar : ScrollViewer {
         set => SetValue(ItemPaddingProperty, value);
     }
     public static readonly DependencyProperty ItemPaddingProperty =
-        DependencyProperty.Register(nameof(ItemPadding), typeof(Thickness), typeof(NavigationBar), new PropertyMetadata(new Thickness(15, 5, 15, 5)));
+        DependencyProperty.Register(nameof(ItemPadding), typeof(Thickness), typeof(NavigationBar), new PropertyMetadata(new Thickness(15, 8, 15, 8)));
     
     public Orientation Orientation {
         get => (Orientation)GetValue(OrientationProperty);
@@ -137,6 +137,8 @@ public partial class NavigationBar : ScrollViewer {
     }
     public static readonly DependencyProperty OrientationProperty =
         DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(NavigationBar), new PropertyMetadata(Orientation.Horizontal));
+    
+    public string NaviIndexPath { get; private set; }
     
     private EasingFunctionBase _animationFunction;
     
@@ -169,7 +171,7 @@ public partial class NavigationBar : ScrollViewer {
                 break;
         }
     }
-
+    
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         SelectionChangedEventArgs args = new SelectionChangedEventArgs(SelectionChangedEvent, e.RemovedItems, e.AddedItems);
         args.Source = this;
@@ -178,47 +180,91 @@ public partial class NavigationBar : ScrollViewer {
         var listView = sender as ListView;
         var item = listView.ItemContainerGenerator.ContainerFromIndex(listView.SelectedIndex) as ListViewItem;
         if (item != null) {
-            UpdateActiveBlock(item, listView);
+            UpdateActiveBlock(item);
+            var secondMenu = item.Template.FindName("SecondMenu", item) as NavigationBar;
+            NaviIndexPath = $"{listView.SelectedIndex+1}";
+            if (secondMenu.Visibility == Visibility.Visible) {
+                NaviIndexPath = $"{listView.SelectedIndex+1},{secondMenu.SelectedIndex+1}";
+            }
         }
     }
 
     private void ListView_OnLoaded(object sender, RoutedEventArgs e) {
-        if (ItemsSource.Count > 0) {
+        if (ItemsSource != null && ItemsSource.Count > 0) {
             if (SelectedIndex == -1) {
                 SelectedIndex = 0;
             }
-            var listView = sender as ListView;
-            var item = listView.ItemContainerGenerator.ContainerFromIndex(listView.SelectedIndex) as ListViewItem;
+            var item = ListView.ItemContainerGenerator.ContainerFromIndex(ListView.SelectedIndex) as ListViewItem;
             if (item != null) {
                 ActiveBlock.Width = item.ActualWidth;
                 ActiveBlock.Height = item.ActualHeight;
-                Point itemPoint = item.TranslatePoint(new Point(0, 0), listView);
+                Point itemPoint = item.TranslatePoint(new Point(0, 0), ListView);
                 ActiveBlock.RenderTransform = new TranslateTransform(itemPoint.X, itemPoint.Y);
             }
         }
     }
 
-    private void UpdateActiveBlock(ListViewItem item, ListView listView) {
-        Point itemPoint = item.TranslatePoint(new Point(0, 0), listView);
-        var moveAnim = new DoubleAnimation {
-            To = Orientation == Orientation.Horizontal ? itemPoint.X : itemPoint.Y,
-            Duration = TimeSpan.FromMilliseconds(Animation == AnimationType.Elastic || Animation == AnimationType.Cubic ? 500 : 200),
-            EasingFunction = _animationFunction
-        };
-        var sizeAnim = new DoubleAnimation {
-            To = Orientation == Orientation.Horizontal ? item.ActualWidth : item.ActualHeight,
-            Duration = TimeSpan.FromMilliseconds(200),
-            EasingFunction = new CubicEase()
-        };
-        ActiveBlock.RenderTransform.BeginAnimation(
-            Orientation == Orientation.Horizontal ? 
-                TranslateTransform.XProperty : 
-                TranslateTransform.YProperty,
-            moveAnim);
-        ActiveBlock.BeginAnimation(
-            Orientation == Orientation.Horizontal ? 
-                WidthProperty : 
-                HeightProperty,
-            sizeAnim);
+    private void UpdateActiveBlock(ListViewItem item) {
+        Dispatcher.BeginInvoke(() => {
+            Point itemPoint = item.TranslatePoint(new Point(0, 0), ListView);
+            var moveAnim = new DoubleAnimation {
+                To = Orientation == Orientation.Horizontal ? itemPoint.X : itemPoint.Y,
+                Duration = TimeSpan.FromMilliseconds(Animation == AnimationType.Elastic || Animation == AnimationType.Cubic ? 500 : 200),
+                EasingFunction = _animationFunction
+            };
+            ActiveBlock.RenderTransform.BeginAnimation(
+                Orientation == Orientation.Horizontal ? 
+                    TranslateTransform.XProperty : 
+                    TranslateTransform.YProperty,
+                moveAnim);
+            var itemMain = item.Template.FindName("Main", item) as Grid;
+            var sizeAnim = new DoubleAnimation {
+                To = Orientation == Orientation.Horizontal ? itemMain.ActualWidth : itemMain.ActualHeight,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new CubicEase()
+            };
+            ActiveBlock.BeginAnimation(
+                Orientation == Orientation.Horizontal ? WidthProperty : HeightProperty,
+                sizeAnim);
+        });
+    }
+
+    private void UpdateSecondMenu(ListViewItem item,bool isSelect) {
+        Dispatcher.BeginInvoke(() => {
+            var secondMenu = item.Template.FindName("SecondMenu", item) as NavigationBar;
+            if (secondMenu.Visibility == Visibility.Visible) {
+                var border = item.Template.FindName("SecondMenuGrid", item) as Border;
+                var sizeValue = Orientation == Orientation.Horizontal
+                    ? secondMenu.ActualWidth
+                    : secondMenu.ActualHeight;
+                var sizeAnim = new DoubleAnimation {
+                    To = isSelect ? sizeValue : 0,
+                    Duration = TimeSpan.FromMilliseconds(100),
+                    EasingFunction = new CubicEase()
+                };
+                if (!isSelect) {
+                    sizeAnim.Completed += (s, e) => {
+                        UpdateActiveBlock(ListView.ItemContainerGenerator.ContainerFromIndex(ListView.SelectedIndex) as ListViewItem);
+                    };
+                }
+                border.BeginAnimation(
+                    Orientation == Orientation.Horizontal ? WidthProperty : HeightProperty,
+                    sizeAnim);
+            }
+        });
+    }
+
+    private void NavigationBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        var secondMenu = sender as NavigationBar;
+        
+    }
+
+    private void ListViewItemUnSelected_OnHandler(object sender, RoutedEventArgs e) {
+        UpdateSecondMenu(sender as ListViewItem, false);
+       
+    }
+
+    private void ListViewItemSelected_OnHandler(object sender, RoutedEventArgs e) {
+        UpdateSecondMenu(sender as ListViewItem, true);
     }
 }

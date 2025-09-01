@@ -7,34 +7,103 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300" 
              Background="#00ffffff"
-             BorderThickness="0" Margin="0" VerticalScrollBarVisibility="Hidden">
+             BorderThickness="0" 
+             Margin="0" 
+             VerticalScrollBarVisibility="Hidden" 
+             HorizontalScrollBarVisibility="Hidden">
     <ScrollViewer.Resources>
+        <local:ListToVisibilityConverter x:Key="ListToVisibilityConverter"/>
+        <local:NaviItemTextBlockFontSizeConverter x:Key="NaviItemTextBlockFontSizeConverter"/>
+        <local:NaviSecondMenuWidthConverter x:Key="NaviSecondMenuWidthConverter"/>
+        <local:NaviSecondMenuHeightConverter x:Key="NaviSecondMenuHeightConverter"/>
+        
+        
+        <Style x:Key="NaviItemTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Text" Value="{Binding Name}"></Setter>
+            <Setter Property="Margin" Value="{Binding ItemPadding, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"></Setter>
+            <Setter Property="FontFamily" Value="{StaticResource IconFontFamily}"></Setter>
+            <Setter Property="FontSize">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource NaviItemTextBlockFontSizeConverter}">
+                        <Binding Path="ItemFontSize" RelativeSource="{RelativeSource AncestorType=local:NavigationBar}"/>
+                        <Binding Path="FontSize"/>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="Padding" Value="0"></Setter>
             <Setter Property="Margin" Value="{Binding ItemMargin, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"></Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <Grid Name="Main"
-                              RenderTransformOrigin="0.5,0.5"
-                              Width="{Binding ItemWidth, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                              Height="{Binding ItemHeight, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}">
-                            <Border Name="Bg" 
-                                    CornerRadius="{Binding ItemRadius, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}" 
-                                    Background="{Binding ItemBackground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                    Opacity="0.1"></Border>
-                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Name}"
-                                           Margin="{Binding ItemPadding, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                           FontSize="{Binding ItemFontSize, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                           Foreground="{Binding ItemForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"/>
-                                <TextBlock Name="ActiveText"
-                                           Text="{Binding Name}"
-                                           Margin="{Binding ItemPadding, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                           FontSize="{Binding ItemFontSize, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                           Foreground="{Binding ActiveForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
-                                           Opacity="0"/>
+                        <StackPanel>
+                            <Grid Name="Main"
+                                  RenderTransformOrigin="0.5,0.5"
+                                  Width="{Binding ItemWidth, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                  Height="{Binding ItemHeight, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}">
+                                <Border Name="Bg" 
+                                        CornerRadius="{Binding ItemRadius, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}" 
+                                        Background="{Binding ItemBackground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                        Opacity="0.1"></Border>
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Style="{StaticResource NaviItemTextBlock}"
+                                               Foreground="{Binding ItemForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"/>
+                                    <TextBlock Name="ActiveText"
+                                               Style="{StaticResource NaviItemTextBlock}"
+                                               Foreground="{Binding ActiveForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                               Opacity="0"/>
+                                </Grid>
                             </Grid>
-                        </Grid>
+                            <Border Name="SecondMenuGrid" ClipToBounds="True" MinWidth="0" MinHeight="0">
+                                <Border.Width>
+                                    <MultiBinding Converter="{StaticResource NaviSecondMenuHeightConverter}">
+                                        <Binding Path="Orientation" RelativeSource="{RelativeSource AncestorType=local:NavigationBar}"/>
+                                        <Binding Path="MinWidth" RelativeSource="{RelativeSource Self}"/>
+                                    </MultiBinding>
+                                </Border.Width>
+                                <Border.Height>
+                                    <MultiBinding Converter="{StaticResource NaviSecondMenuWidthConverter}">
+                                        <Binding Path="Orientation" RelativeSource="{RelativeSource AncestorType=local:NavigationBar}"/>
+                                        <Binding Path="MinHeight" RelativeSource="{RelativeSource Self}"/>
+                                    </MultiBinding>
+                                </Border.Height>
+                                <Canvas>
+                                    <local:NavigationBar Name="SecondMenu" 
+                                                         ItemsSource="{Binding Children}" 
+                                                         HorizontalAlignment="Left"
+                                                         VerticalAlignment="Top"
+                                                         SelectedIndex="{Binding ChildrenIndex,Mode=TwoWay}" 
+                                                         Orientation="{Binding Orientation, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemBackground="{Binding ItemBackground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemForeground="{Binding ItemForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ActiveForeground="{Binding ActiveForeground, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ActiveBlockColor="{Binding ActiveBlockColor, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemWidth="{Binding ItemWidth, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemHeight="{Binding ItemHeight, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemMargin="{Binding ItemMargin, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemPadding="{Binding ItemPadding, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemRadius="{Binding ItemRadius, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         ItemFontSize="{Binding ItemFontSize, RelativeSource={RelativeSource AncestorType=local:NavigationBar}}"
+                                                         SelectionChanged="NavigationBar_OnSelectionChanged"
+                                                         Visibility="{Binding Children, Converter={StaticResource ListToVisibilityConverter}}">
+                                        <local:NavigationBar.Width>
+                                            <MultiBinding Converter="{StaticResource NaviSecondMenuWidthConverter}">
+                                                <Binding Path="Orientation" RelativeSource="{RelativeSource AncestorType=local:NavigationBar}"/>
+                                                <Binding Path="ActualWidth" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                            </MultiBinding>
+                                        </local:NavigationBar.Width>
+                                        <local:NavigationBar.Height>
+                                            <MultiBinding Converter="{StaticResource NaviSecondMenuHeightConverter}">
+                                                <Binding Path="Orientation" RelativeSource="{RelativeSource AncestorType=local:NavigationBar}"/>
+                                                <Binding Path="ActualHeight" RelativeSource="{RelativeSource TemplatedParent}"/>
+                                            </MultiBinding>
+                                        </local:NavigationBar.Height>
+                                    </local:NavigationBar>
+                                </Canvas>
+                            </Border>
+                        </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Trigger.EnterActions>
@@ -74,6 +143,8 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <EventSetter Event="Selected" Handler="ListViewItemSelected_OnHandler"></EventSetter>
+            <EventSetter Event="Unselected" Handler="ListViewItemUnSelected_OnHandler"></EventSetter>
         </Style>
     </ScrollViewer.Resources>
     <Grid Margin="0">

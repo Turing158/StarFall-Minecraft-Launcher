@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace StarFallMC.Component;
@@ -42,6 +43,65 @@ public class ComboBoxTitleContentMarginConverter : IValueConverter {
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        return null;
+    }
+}
+
+public class ListToVisibilityConverter : IValueConverter {
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        if (value is IList list) {
+            return list.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        return null;
+    }
+}
+
+public class NaviItemTextBlockFontSizeConverter : IMultiValueConverter {
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+        if (values[0] is double CompFontSize && values[1] is double EntityFontSize) {
+            if (EntityFontSize > 0) {
+                return EntityFontSize;
+            }
+            return CompFontSize;
+        }
+        return 14;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+        return null;
+    }
+}
+
+public class NaviSecondMenuWidthConverter : IMultiValueConverter {
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+        if (values[0] is Orientation orientation && values[1] is double width) {
+            if (orientation == Orientation.Vertical) {
+                return width;
+            }
+        }
+        return double.NaN;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+        return null;
+    }
+}
+
+public class NaviSecondMenuHeightConverter : IMultiValueConverter {
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+        if (values[0] is Orientation orientation && values[1] is double height) {
+            if (orientation == Orientation.Horizontal) {
+                return height;
+            }
+        }
+        return double.NaN;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
         return null;
     }
 }
