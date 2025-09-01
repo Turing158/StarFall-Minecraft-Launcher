@@ -27,8 +27,14 @@ public partial class ResourcePage : Page {
     public class ViewModel : INotifyPropertyChanged {
         
         private ObservableCollection<NavigationItem> _navi = new () {
-            new NavigationItem("Minecraft","DownloadGame"),
-            new NavigationItem("社区资源","CommunityResource"),
+            new ("\ue7f9",20,
+                0,new ObservableCollection<NavigationItem> {
+                    new ("材质包","TexturePacksPage"),
+                    new ("地图","SavesPage"),
+                    new ("模组","ModsPage"),
+                }),
+            new ("Minecraft","DownloadGame"),
+            new ("社区资源","CommunityResource"),
         };
         public ObservableCollection<NavigationItem> Navi {
             get=> _navi;
@@ -48,13 +54,20 @@ public partial class ResourcePage : Page {
             return true;
         }
     }
-    
+    private int test;
     private void NaviBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         NaviBarChangeAnim.Begin();
         NaviBarChangeTimer?.Dispose();
         NaviBarChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {
-                PageFrame.Navigate(new Uri($"/ResourcePages/{ResourceBar.CurrentItem.Path}.xaml", UriKind.Relative));
+                var item = ResourceBar.CurrentItem;
+                string path = item.Path;
+                if (item.Children != null) {
+                    path = (item.Children[item.ChildrenIndex] as NavigationItem).Path;
+                }
+                if (!string.IsNullOrEmpty(path)) {
+                    PageFrame.Navigate(new Uri($"/ResourcePages/{path}.xaml", UriKind.Relative));
+                }
                 NaviBarChangeTimer.Dispose();
             });
         }, null, 300, 0);

@@ -65,7 +65,7 @@ public partial class MainWindow : Window {
     public class ViewModel : INotifyPropertyChanged{
         private ObservableCollection<NavigationItem> _tabs = new () {
             new NavigationItem("主 页"),
-            new NavigationItem("下 载"),
+            new NavigationItem("资 源"),
             new NavigationItem("设 置"),
         };
         public ObservableCollection<NavigationItem> Tabs {
