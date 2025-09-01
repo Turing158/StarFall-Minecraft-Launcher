@@ -13,7 +13,7 @@
     <SolidColorBrush x:Key="SecondaryBrush_1" Color="#fff"></SolidColorBrush>
     <SolidColorBrush x:Key="SecondaryBrush_2" Color="#fff"></SolidColorBrush>
     
-    <FontFamily x:Key="IconFontFamily">/StarFallMC;Component/assets/icon/#iconfont,Time now romans</FontFamily>
+    <FontFamily x:Key="IconFontFamily">/StarFallMC;Component/assets/icon/#iconfont,微软雅黑</FontFamily>
     
     <ElasticEase x:Key="ElasticEaseOut" Oscillations="1" Springiness="10" EasingMode="EaseOut"></ElasticEase>
     <ElasticEase x:Key="ElasticEaseIn" Oscillations="1" Springiness="10" EasingMode="EaseIn"></ElasticEase>
@@ -31,7 +31,6 @@
     </Style>
     
     <Style TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Time now romans"></Setter>
         <Setter Property="FontWeight" Value="Bold"></Setter>
         <Setter Property="FontFamily" Value="微软雅黑"></Setter>
         <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush_2}"></Setter>
@@ -189,10 +188,6 @@
         <Setter Property="CanContentScroll" Value="True"></Setter>
         <Setter Property="extension:ScrollViewerExtensions.SmoothScroll" Value="True"></Setter>
         <Setter Property="extension:ScrollViewerBehavior.VerticalOffset" Value="{Binding VerticalOffset, Mode=TwoWay}"></Setter>
-        <Setter Property="UseLayoutRounding" Value="True"></Setter>
-        <Setter Property="SnapsToDevicePixels" Value="True"></Setter>
-        <Setter Property="TextOptions.TextFormattingMode" Value="Display"></Setter>
-        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"></Setter>
     </Style>
     
     <Style TargetType="Thumb">

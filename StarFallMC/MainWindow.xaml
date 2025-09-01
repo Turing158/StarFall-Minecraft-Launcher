@@ -98,7 +98,7 @@
                     </TextBlock.RenderTransform>
                 </TextBlock>
                 <comp:NavigationBar x:Name="OperateGrid" VerticalAlignment="Center" HorizontalAlignment="Center" 
-                                    ItemPadding="15 5" ItemMargin="10 0" 
+                                    ItemMargin="10 0" 
                                     ItemsSource="{Binding Tabs}" SelectedIndex="0"
                                     SelectionChanged="OperateGrid_OnSelectionChanged">
                     <comp:NavigationBar.RenderTransform>
