@@ -114,6 +114,13 @@
         <Setter Property="Margin" Value="20 10"/>
     </Style>
     
+    <Style x:Key="RectTitle" TargetType="TextBlock" 
+           BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="FontSize" Value="15"></Setter>
+        <Setter Property="Margin" Value="10"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush_1}"></Setter>
+    </Style>
+    
     <Style TargetType="{x:Type comp:Button}">
         <Setter Property="FontSize" Value="14"></Setter>
         <Setter Property="FontWeight" Value="Bold"></Setter>
