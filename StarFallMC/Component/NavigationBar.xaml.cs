@@ -180,7 +180,12 @@ public partial class NavigationBar : ScrollViewer {
         var listView = sender as ListView;
         var item = listView.ItemContainerGenerator.ContainerFromIndex(listView.SelectedIndex) as ListViewItem;
         if (item != null) {
-            UpdateActiveBlock(item);
+            if (e.RemovedItems.Count > 0) {
+                var pre = e.RemovedItems[0] as NavigationItem;
+                if (pre.Children == null || pre.Children.Count == 0) {
+                    UpdateActiveBlock(item);
+                }
+            }
             var secondMenu = item.Template.FindName("SecondMenu", item) as NavigationBar;
             NaviIndexPath = $"{listView.SelectedIndex+1}";
             if (secondMenu.Visibility == Visibility.Visible) {
