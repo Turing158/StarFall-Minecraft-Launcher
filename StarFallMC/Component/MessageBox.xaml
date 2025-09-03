@@ -38,7 +38,7 @@
                     <RowDefinition Height="50"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Grid>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text}" 
+                    <TextBlock Text="{Binding Title}"
                                FontSize="20" Margin="15 8 40 0" 
                                VerticalAlignment="Center"></TextBlock>
                     <local:PlainButton Width="25" Height="25" 

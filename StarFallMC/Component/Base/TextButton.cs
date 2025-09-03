@@ -7,7 +7,7 @@ using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
-public class TextButton : System.Windows.Controls.Button{
+public class TextButton : ButtonBase {
     public Brush HoverForeground {
         get { return (Brush)GetValue(HoverForegroundProperty); }
         set { SetValue(HoverForegroundProperty, value); }
@@ -25,7 +25,6 @@ public class TextButton : System.Windows.Controls.Button{
     
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
-        RenderTransform = new ScaleTransform();
         _textContent = Template.FindName("TextContent", this) as TextBlock;
         _textContent.Foreground = ThemeUtil.PrimaryBrush_4.Clone();
         initAnimation();
@@ -43,18 +42,6 @@ public class TextButton : System.Windows.Controls.Button{
             To = ThemeUtil.PrimaryBrush_4.Color,
             Duration = TimeSpan.FromMilliseconds(200)
         };
-        if (PressAnimation == null) {
-            PressAnimation = new DoubleAnimation {
-                To = 0.95,
-                Duration = TimeSpan.FromMilliseconds(150)
-            };
-        }
-        if (UnpressAnimation == null) {
-            UnpressAnimation = new DoubleAnimation {
-                To = 1,
-                Duration = TimeSpan.FromMilliseconds(150)
-            };
-        }
     }
 
     protected override void OnMouseEnter(MouseEventArgs e) {
@@ -65,17 +52,5 @@ public class TextButton : System.Windows.Controls.Button{
     protected override void OnMouseLeave(MouseEventArgs e) {
         base.OnMouseLeave(e);
         _textContent.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, UnhoverAnimation);
-    }
-
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e) {
-        base.OnMouseLeftButtonDown(e);
-        RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, PressAnimation);
-        RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, PressAnimation);
-    }
-
-    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e) {
-        base.OnMouseLeftButtonUp(e);
-        RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, UnpressAnimation);
-        RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, UnpressAnimation);
     }
 }

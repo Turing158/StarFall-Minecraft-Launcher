@@ -29,10 +29,21 @@ public class TextInput : TextBox {
         DependencyProperty.RegisterAttached(nameof(AutoLostFocus), typeof(bool), typeof(TextInput),
             new PropertyMetadata(true));
 
-    private Border border;
+    public string PlaceholderText {
+        get => (string)GetValue(PlaceholderTextProperty);
+        set => SetValue(PlaceholderTextProperty, value);
+    }
+    public static readonly DependencyProperty PlaceholderTextProperty =
+        DependencyProperty.RegisterAttached(nameof(PlaceholderText), typeof(string), typeof(TextInput),
+            new PropertyMetadata(string.Empty));
+
+    private Border _border;
+    private TextBlock _placeholder;
 
     private ColorAnimation EnterAnim;
     private ColorAnimation LeaveAnim;
+    private DoubleAnimation PlaceholderFadeInAnim;
+    private DoubleAnimation PlaceholderFadeOutAnim;
 
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
@@ -47,7 +58,9 @@ public class TextInput : TextBox {
             AcceptsReturn = true;
             Padding = new Thickness(2);
         }
-        border = Template.FindName("Border", this) as Border;
+        _border = Template.FindName("Border", this) as Border;
+        _placeholder = Template.FindName("Placeholder", this) as TextBlock;
+        updatePlaceholderVisibility();
         initColor();
         initAnimation();
         ThemeUtil.updateColor += () => {
@@ -59,8 +72,8 @@ public class TextInput : TextBox {
     }
 
     private void initColor() {
-        border.BorderBrush = ThemeUtil.SecondaryBrush.Clone();
-        border.Background = ThemeUtil.ToSolidColorBrush("#f1f1f1");
+        _border.BorderBrush = ThemeUtil.SecondaryBrush.Clone();
+        _border.Background = ThemeUtil.ToSolidColorBrush("#f1f1f1");
     }
 
     private void initAnimation() {
@@ -76,17 +89,31 @@ public class TextInput : TextBox {
             EasingFunction = new CubicEase(),
             FillBehavior = FillBehavior.HoldEnd
         };
+        if (PlaceholderFadeInAnim == null || PlaceholderFadeOutAnim == null) {
+            PlaceholderFadeInAnim = new() {
+                To = 1,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new CubicEase(),
+                FillBehavior = FillBehavior.HoldEnd
+            };
+            PlaceholderFadeOutAnim = new() {
+                To = 0,
+                Duration = TimeSpan.FromMilliseconds(200),
+                EasingFunction = new CubicEase(),
+                FillBehavior = FillBehavior.HoldEnd
+            };
+        }
     }
     
     protected override void OnMouseEnter(MouseEventArgs e) {
         base.OnMouseEnter(e);
-        border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty,EnterAnim);
+        _border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty,EnterAnim);
     }
 
     protected override void OnMouseLeave(MouseEventArgs e) {
         base.OnMouseLeave(e);
         if (!IsFocused) {
-            border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty,LeaveAnim);
+            _border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty,LeaveAnim);
         }
     }
 
@@ -105,7 +132,7 @@ public class TextInput : TextBox {
                 window.PreviewMouseDown -= WindowPreviewMouseDown;
             }
         }
-        border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty, LeaveAnim);
+        _border.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty, LeaveAnim);
     }
     
     private static void WindowPreviewMouseDown(object sender, MouseButtonEventArgs e) {
@@ -130,5 +157,25 @@ public class TextInput : TextBox {
         }
         catch (Exception e){ }
         return false;
+    }
+
+    protected override void OnTextChanged(TextChangedEventArgs e) {
+        base.OnTextChanged(e);
+        if (_placeholder != null) {
+            updatePlaceholderVisibility();
+        }
+    }
+
+    private void updatePlaceholderVisibility() {
+        Dispatcher.BeginInvoke(() => {
+            if (string.IsNullOrEmpty(Text)) {
+                _placeholder.BeginAnimation(OpacityProperty, PlaceholderFadeInAnim);
+            }
+            else {
+                if (_placeholder.Opacity > 0) {
+                    _placeholder.BeginAnimation(OpacityProperty, PlaceholderFadeOutAnim);
+                }
+            }
+        });
     }
 }

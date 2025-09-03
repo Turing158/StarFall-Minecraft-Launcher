@@ -285,13 +285,15 @@
                                           HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
                                           VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"
                                           Foreground="{DynamicResource SecondaryBrush}"/>
-                            <TextBlock 
-                                Text="{TemplateBinding Tag}" 
-                                Background="Transparent"
-                                Foreground="#888"
-                                Padding="4,0"
-                                Visibility="Collapsed"
-                                VerticalAlignment="Center"/>
+                            <TextBlock Name="Placeholder"
+                                       Text="{Binding PlaceholderText,RelativeSource={RelativeSource AncestorType=comp:TextInput}}" 
+                                       Background="Transparent"
+                                       Foreground="#888"
+                                       HorizontalAlignment="Left"
+                                       Margin="5 0 0 0"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"></TextBlock>
+                            
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>

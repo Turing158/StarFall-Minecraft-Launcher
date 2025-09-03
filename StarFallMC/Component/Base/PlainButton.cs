@@ -8,7 +8,7 @@ using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
-public class PlainButton : System.Windows.Controls.Button {
+public class PlainButton : ButtonBase{
     
     private Border _container;
     private ContentPresenter _contentPresenter;
@@ -33,7 +33,6 @@ public class PlainButton : System.Windows.Controls.Button {
 
     public void InitElement() {
         _container = (Border)Template.FindName("Container", this);
-        _container.RenderTransform = new ScaleTransform();
         _contentPresenter = (ContentPresenter)Template.FindName("ContentPresenter", this);
         if (Content is string or TextBlock) {
             TextBlock textBlock;
@@ -44,7 +43,6 @@ public class PlainButton : System.Windows.Controls.Button {
             }
             else {
                 textBlock = (TextBlock)Content;
-                
             }
             Binding forceBinding = new () {
                 Path = new PropertyPath("Foreground"),
@@ -52,6 +50,10 @@ public class PlainButton : System.Windows.Controls.Button {
             };
             BindingOperations.SetBinding(textBlock, TextBlock.ForegroundProperty, forceBinding);
             _contentPresenter.Content = textBlock;
+        }
+        else {
+            Console.WriteLine(Content);
+            _contentPresenter.Content = Content;
         }
     }
     
@@ -69,16 +71,6 @@ public class PlainButton : System.Windows.Controls.Button {
             To = ThemeUtil.ToColor("#f1f1f1"),
             Duration = TimeSpan.FromMilliseconds(150)
         };
-        DownAnim = new () {
-            To = 0.95,
-            Duration = TimeSpan.FromMilliseconds(200),
-            EasingFunction = new CubicEase()
-        };
-        UpAnim = new () {
-            To = 1.0,
-            Duration = TimeSpan.FromMilliseconds(200),
-            EasingFunction = new CubicEase()
-        };
     }
     
     protected override void OnMouseEnter(MouseEventArgs e) {
@@ -91,17 +83,5 @@ public class PlainButton : System.Windows.Controls.Button {
         Foreground = ThemeUtil.SecondaryBrush_2;
         _container.Background.BeginAnimation(SolidColorBrush.ColorProperty, LeaveAnim);
         base.OnMouseLeave(e);
-    }
-    
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e) {
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, DownAnim);
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, DownAnim);
-        base.OnMouseLeftButtonDown(e);
-    }
-
-    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e) {
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, UpAnim);
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, UpAnim);
-        base.OnMouseLeftButtonUp(e);
     }
 }

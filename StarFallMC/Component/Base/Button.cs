@@ -30,7 +30,6 @@ public class Button : System.Windows.Controls.Button {
 
     public void InitElement() {
         _container = (Border)Template.FindName("Container", this);
-        _container.RenderTransform = new ScaleTransform();
     }
     
     public void InitColor() {
@@ -46,16 +45,6 @@ public class Button : System.Windows.Controls.Button {
             To = ThemeUtil.SecondaryBrush.Color,
             Duration = TimeSpan.FromMilliseconds(150)
         };
-        DownAnim = new () {
-            To = 0.95,
-            Duration = TimeSpan.FromMilliseconds(200),
-            EasingFunction = new CubicEase()
-        };
-        UpAnim = new () {
-            To = 1.0,
-            Duration = TimeSpan.FromMilliseconds(200),
-            EasingFunction = new CubicEase()
-        };
     }
     
     protected override void OnMouseEnter(MouseEventArgs e) {
@@ -68,17 +57,5 @@ public class Button : System.Windows.Controls.Button {
         _container.Background.BeginAnimation(SolidColorBrush.ColorProperty, LeaveAnim);
         
         base.OnMouseLeave(e);
-    }
-    
-    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e) {
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, DownAnim);
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, DownAnim);
-        base.OnMouseLeftButtonDown(e);
-    }
-
-    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e) {
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, UpAnim);
-        _container.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, UpAnim);
-        base.OnMouseLeftButtonUp(e);
     }
 }
