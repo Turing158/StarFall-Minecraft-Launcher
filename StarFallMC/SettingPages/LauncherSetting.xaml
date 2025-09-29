@@ -4,8 +4,12 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC.SettingPages"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="LauncherSetting" Height="380" Width="600">
+    <Page.Resources>
+        <ResourceDictionary Source="Style/LauncherSettingStyle.xaml"></ResourceDictionary>
+    </Page.Resources>
     <Grid>
         <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
         <ScrollViewer Margin="0 5 10 5"
@@ -13,8 +17,114 @@
                       VerticalScrollBarVisibility="Auto"
                       CanContentScroll="False">
             <StackPanel>
-                <Border Height="100" Style="{StaticResource RectByMargin}">
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="启动器设置"></TextBlock>
+                <Border Style="{StaticResource RectByMargin}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource RectTitle}" Text="主题"></TextBlock>
+                        <StackPanel Orientation="Horizontal" Margin="40 0 40 10">
+                            <Button Style="{StaticResource ColorBtn}" 
+                                    Background="#513938"
+                                    Tag="红棕" Click="ColorBtn_OnClick">
+                                <Border Style="{StaticResource ColorBorder}"
+                                        Background="#264446"></Border>
+                            </Button>
+                            <Button Style="{StaticResource ColorBtn}" 
+                                    Background="#555D50"
+                                    Tag="乌木灰" Click="ColorBtn_OnClick">
+                                <Border Style="{StaticResource ColorBorder}"
+                                        Background="#385A80"></Border>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource RectByMargin}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource RectTitle}" Text="背景"></TextBlock>
+                        <comp:NavigationBar x:Name="BgSelectNavi" 
+                                            ItemBackground="{DynamicResource PrimaryBrush}"
+                                            ItemForeground="{DynamicResource SecondaryBrush_1}"
+                                            ActiveForeground="{DynamicResource PrimaryBrush}"
+                                            ActiveBlockColor="{DynamicResource SecondaryBrush_1}"
+                                            ItemRadius="5" 
+                                            ItemsSource="{Binding BgOptions}" 
+                                            SelectionChanged="NavigationBar_OnSelectionChanged"></comp:NavigationBar>
+                        <TextBlock Name="NoImageBg" 
+                                   Style="{StaticResource RectTitle}" 
+                                   Text="无：不使用图片背景，显示纯色背景" 
+                                   Margin="10 10 0 10"></TextBlock>
+                        <Grid Name="DefaultImageBg" ToolTip="如果图片加载不出来，点击刷新">
+                            <TextBlock Width="450" Style="{StaticResource RectTitle}" 
+                                       HorizontalAlignment="Left"
+                                       TextWrapping="Wrap"
+                                       Margin="10 0 0 10"
+                                       Text="默认：使用默认背景，将图片放置启动器'/SFMCL'目录下，并命名为bg，仅兼容jpg和png格式"></TextBlock>
+                            <comp:Button Width="60" Height="30" 
+                                         Content="刷新" 
+                                         Click="DefaultBg_OnClick"
+                                         HorizontalAlignment="Right" 
+                                         Margin="0 0 10 0"></comp:Button>
+                        </Grid>
+                        <StackPanel Name="LocalImageBg" Margin="0 0 0 10">
+                            <TextBlock Style="{StaticResource RectTitle}" Text="本地图片：选择使用本地图片作为背景，仅兼容jpg和png格式"></TextBlock>
+                            <Grid Margin="10 0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="60"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <comp:TextInput x:Name="LocalBgPath" Height="30"
+                                                Text=""
+                                                PlaceholderText="请输入图片路径或点击选择"
+                                                VerticalContentAlignment="Center"
+                                                IsEnabled="False"
+                                                FontSize="14"
+                                                Margin="0 0 10 0"
+                                                LostFocus="LocalBg_OnLostFocus"></comp:TextInput>
+                                <comp:Button Grid.Column="1" Width="60" Height="30" 
+                                             Content="选择" 
+                                             Click="LocalBg_OnClick"
+                                             HorizontalAlignment="Right" ></comp:Button>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Name="NetworkImageBg" Margin="0 0 0 10">
+                            <TextBlock Style="{StaticResource RectTitle}" Text="网络图片：选择使用网络图片作为背景，仅兼容jpg和png格式"></TextBlock>
+                            <comp:TextInput x:Name="NetworkBgPath" Height="30"
+                                            PlaceholderText="请输入图片链接"
+                                            VerticalContentAlignment="Center"
+                                            FontSize="14"
+                                            MaxWidth="500"
+                                            Margin="10 0"
+                                            LostFocus="NetworkBg_OnLostFocus"></comp:TextInput>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource RectByMargin}">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource RectTitle}" Text="其他设置"></TextBlock>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"></RowDefinition>
+                                <RowDefinition Height="30"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Grid>
+                                <TextBlock FontSize="14" 
+                                           Margin="10 0 0 0"
+                                           HorizontalAlignment="Left" 
+                                           VerticalAlignment="Center" 
+                                           Text="硬件加速"></TextBlock>
+                                <comp:ToggleButton Width="80" Click="HardwareAcceleration_OnClick">
+                                    <comp:ToggleButton.LeftContent>
+                                        <TextBlock Text="开启"></TextBlock>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <TextBlock Text="关闭"></TextBlock>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>

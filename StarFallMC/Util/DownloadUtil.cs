@@ -189,13 +189,13 @@ public class DownloadUtil {
     
     
     private static readonly HttpClient httpClient = new HttpClient();
-    public static async Task SingalDownload(DownloadFile downloadFile) {
+    public static async Task<bool> SingalDownload(DownloadFile downloadFile) {
         var dir = Path.GetDirectoryName(downloadFile.FilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
             Directory.CreateDirectory(dir);
         }
-        if (downloadFile.UrlPaths.Count != 0 && string.IsNullOrEmpty(downloadFile.UrlPath)) {
-            return;
+        if (string.IsNullOrEmpty(downloadFile.UrlPath)) {
+            return false;
         }
         for (int i = 0; i < RetryCount * 2; i++) {
             try {
@@ -204,7 +204,7 @@ public class DownloadUtil {
                 download.EnsureSuccessStatusCode();
                 using var fileStream = new FileStream(downloadFile.FilePath, FileMode.Create);
                 await download.Content.CopyToAsync(fileStream);
-                return;
+                return true;
             }
             catch (Exception e){
                 if (i == RetryCount) {
@@ -212,10 +212,12 @@ public class DownloadUtil {
                         downloadFile.UrlPath = downloadFile.UrlPaths[downloadFile.UrlPaths.IndexOf(downloadFile.UrlPath)];
                         continue;
                     }
-                    return;
+                    downloadFile.ErrorMessage = e.Message;
+                    return false;
                 }
             }
         }
+        return false;
     }
     
     public class ThreadDownloader {

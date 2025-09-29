@@ -11,14 +11,14 @@
     </Page.Resources>
     <Grid Background="#f1f1f1">
         <Border Style="{StaticResource SettingAndResourceBg}"></Border>
-        <Border Style="{StaticResource SettingAndResourceNaviBg}">
+        <Border Style="{StaticResource SettingAndResourceNaviBg}" Margin="25 20">
             <comp:NavigationBar x:Name="ResourceBar" 
                                 Style="{StaticResource SettingAndResourceNavi}"
                                 ItemsSource="{Binding Navi}"
                                 SelectionChanged="NaviBar_OnSelectionChanged"></comp:NavigationBar>
         </Border>
         <Frame Name="PageFrame" 
-               Source="/ResourcePages/DownloadGame.xaml" 
+               Source="Blank.xaml" 
                Style="{StaticResource SettingAndResourceFrame}">
             <Frame.RenderTransform>
                 <TranslateTransform Y="0"></TranslateTransform>

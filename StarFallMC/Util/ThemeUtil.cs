@@ -53,8 +53,16 @@ public class ThemeUtil {
         return (Color)ColorConverter.ConvertFromString(colorHex);
     }
 
-    public static void ChangeColor() {
+    public static void ChangeColor(ThemeType type) {
         ThemeColor color = ebony;
+        switch (type) {
+            case ThemeType.Puce:
+                color = puce;
+                break;
+            case ThemeType.Ebony:
+                color = ebony;
+                break;
+        }
         ColorChange(ref PrimaryBrush, nameof(PrimaryBrush), color.Primary);
         ColorChange(ref PrimaryBrush_1, nameof(PrimaryBrush_1), color.Primary_1);
         ColorChange(ref PrimaryBrush_2, nameof(PrimaryBrush_2), color.Primary_2);

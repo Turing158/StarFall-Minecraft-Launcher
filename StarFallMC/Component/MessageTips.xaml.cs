@@ -81,23 +81,26 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
     }
 
     public static void Show(string message, MessageType messageType = MessageType.None) {
-        var mainWindow = Application.Current.MainWindow;
-        if (mainWindow != null && mainWindow.Content is Grid gird) {
-            var container = gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageTipContainer")?.Children;
-            var first = container.OfType<MessageTips>().FirstOrDefault();
-            if (container.Count == 1 && !first.isClosing) {
-                first.Hide();
-                if (first.Message != message) {
-                    first.SetMessage(message,messageType);
+        Application.Current.Dispatcher.BeginInvoke(() => {
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow != null && mainWindow.Content is Grid gird) {
+                var container = gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageTipContainer")
+                    ?.Children;
+                var first = container.OfType<MessageTips>().FirstOrDefault();
+                if (container.Count == 1 && !first.isClosing) {
+                    first.Hide();
+                    if (first.Message != message) {
+                        first.SetMessage(message, messageType);
+                    }
+                }
+                else if (container.Count == 0 ||
+                         (container.Count == 1 && container.OfType<MessageTips>().FirstOrDefault().isClosing)) {
+                    var messageTips = new MessageTips(message, messageType);
+                    container.Add(messageTips);
+                    messageTips.ShowAnim.Begin();
                 }
             }
-            else if (container.Count == 0 || (container.Count == 1 && container.OfType<MessageTips>().FirstOrDefault().isClosing)) {
-                var messageTips = new MessageTips(message,messageType);
-                container.Add(messageTips);
-                messageTips.ShowAnim.Begin();
-            }
-            
-        }
+        });
     }
 
     public void Hide() {

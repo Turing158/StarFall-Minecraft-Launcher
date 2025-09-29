@@ -28,6 +28,8 @@ public partial class Home : Page {
     public static Action<MinecraftItem> ErrorLaunch;
     public static Action<bool> DownloadState;
     public static Action<string> StartingState;
+    public static Action SettingBackground;
+    public static Func<ViewModel> GetViewModel;
     public static bool GameStarting = false;
     
     public Home() {
@@ -44,11 +46,14 @@ public partial class Home : Page {
         ErrorLaunch = errorLaunch;
         DownloadState = downloadState;
         StartingState = startingState;
+        SettingBackground = settingBackground;
+        GetViewModel = getViewModel;
         
         Downloading = (Storyboard)FindResource("Downloading");
         
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
+        settingBackground();
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -90,6 +95,10 @@ public partial class Home : Page {
             return true;
         }
     }
+
+    private ViewModel getViewModel() {
+        return viewModel;
+    }
     
 
     private void CurrentGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
@@ -106,8 +115,6 @@ public partial class Home : Page {
         if (item == null) {
             GameName.Text = "未选择版本";
             viewModel.CurrentGame = new MinecraftItem("未选择版本","","","/assets/DefaultGameIcon/unknowGame.png");
-            
-
         } else {
             GameName.Text = item.Name;
             iconPath = item.Icon;
@@ -116,6 +123,9 @@ public partial class Home : Page {
         if (!iconPath.Contains(":")) {
             iconPath = "pack://application:,,,/;component"+iconPath;
         }
+        ResourceUtil.ClearLocalResources();
+        ResourcePage.ChangeVersionAction?.Invoke();
+        
         updateBitmapImage( "CurrentGameIcon",iconPath);
         Console.WriteLine(item);
     }
@@ -249,19 +259,17 @@ public partial class Home : Page {
     }
 
     private void Home_OnLoaded(object sender, RoutedEventArgs e) {
-        var bg = PropertiesUtil.launcherArgs.Bg;
-        bool defaultBgPath = true;
+        settingBackground();
+    }
+
+    private void settingBackground() {
+        var bgPath = PropertiesUtil.launcherArgs.BgPath;
+        var bgType = PropertiesUtil.launcherArgs.BgType;
         BitmapImage bgImage = new BitmapImage();
         bgImage.BeginInit();
-        if (!string.IsNullOrEmpty(bg)) {
-            if (File.Exists(bg)) {
-                bgImage.UriSource = new Uri(bg, UriKind.RelativeOrAbsolute);
-                defaultBgPath = false;
-            }
-        }
-        string[] bgSuffix = { ".jpg", ".jpeg", ".png" };
-        string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg";
-        if (defaultBgPath) {
+        if (bgType == "default") {
+            string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg";
+            string[] bgSuffix = { ".jpg", ".jpeg", ".png" };
             foreach (var i in bgSuffix) {
                 string path = $"{defaultPath}{i}";
                 if (File.Exists(path)) {
@@ -270,12 +278,25 @@ public partial class Home : Page {
                 }
             }
         }
-
+        else if (bgType == "local") {
+            if (File.Exists(bgPath)) {
+                bgImage.UriSource = new Uri(bgPath, UriKind.RelativeOrAbsolute);
+            }
+        }
+        else if (bgType == "network") {
+            if (!string.IsNullOrEmpty(bgPath)) {
+                bgImage.UriSource = new Uri(bgPath, UriKind.RelativeOrAbsolute);
+            }
+        }
+        
         if (bgImage.UriSource != null) {
             bgImage.CacheOption = BitmapCacheOption.OnLoad;
             bgImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             bgImage.EndInit();
             Bg.Background = new ImageBrush(bgImage);
+        }
+        else {
+            Bg.Background = null;
         }
     }
     

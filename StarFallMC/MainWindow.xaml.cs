@@ -106,7 +106,14 @@ public partial class MainWindow : Window {
     }
 
     private void ToDownloadGame() {
+        if (Home.GameStarting) {
+            MessageTips.Show("游戏正在启动中，无法进入资源！", MessageTips.MessageType.Error);
+            OperateGrid.SelectedIndex = 0;
+            return;
+        }
+        
         DownloadGameFrameTimer?.Dispose();
+        ResourcePage.LoadTempPage?.Invoke();
         DownloadGameLeave.Stop();
         DownloadGameEnter.Begin();
         HideSetting();
@@ -142,7 +149,14 @@ public partial class MainWindow : Window {
 
     private void CloseBtn_OnClick(object sender, RoutedEventArgs e) {
         PropertiesUtil.Save();
-        Close();
+        DoubleAnimation closeAnimation = new DoubleAnimation {
+            From = 1,
+            To = 0,
+            Duration = TimeSpan.FromSeconds(0.2),
+            EasingFunction = new CubicEase()
+        };
+        closeAnimation.Completed += (s, e) => Close();
+        MainWindowPage.BeginAnimation(OpacityProperty, closeAnimation);
     }
     
     public void SubFrameNavigateFunc(string pageName,string pageTitle) {

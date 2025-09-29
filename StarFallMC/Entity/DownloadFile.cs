@@ -16,6 +16,7 @@ public class DownloadFile : INotifyPropertyChanged {
     public string FilePath { get; set; }
     public string UrlPath { get; set; }
     public List<string> UrlPaths { get; set; }
+    public string FileDate { get; set; }
     public int RetryCount { get; set; } = 0;
     public string ErrorMessage { get; set; } = string.Empty;
     public long Size { get; set; } = 1;

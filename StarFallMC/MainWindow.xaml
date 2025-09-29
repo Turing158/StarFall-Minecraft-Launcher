@@ -14,15 +14,18 @@
         SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
-        Icon="assets/ico.ico"
-        >
+        RenderOptions.ClearTypeHint="Enabled"
+        Name="MainWindowPage"
+        Opacity="0"
+        Icon="assets/ico.ico">
+    
     <Window.Resources>
         <ResourceDictionary Source="/Style/MainWindowStyle.xaml"></ResourceDictionary>
     </Window.Resources>
     
     <Window.Triggers>
         <EventTrigger RoutedEvent="Window.Loaded">
-            <BeginStoryboard Storyboard="{StaticResource InitTopFrame}"></BeginStoryboard>
+            <BeginStoryboard Storyboard="{StaticResource InitMainWindow}"></BeginStoryboard>
         </EventTrigger>
     </Window.Triggers>
     <Grid>

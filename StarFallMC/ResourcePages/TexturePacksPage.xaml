@@ -4,19 +4,209 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC.ResourcePages"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="TexturePacksPage" Height="380" Width="600">
+      Title="TexturePacksPage" Height="380" Width="640"
+      Loaded="TexturePacksPage_OnLoaded"
+      Unloaded="TexturePacksPage_OnUnloaded">
+    <Page.Resources>
+        <Style x:Key="ListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Grid Height="40" Margin="10 0">
+                            <Border Background="{DynamicResource PrimaryBrush}"></Border>
+                            <Border Name="Bg" 
+                                    CornerRadius="5" 
+                                    BorderBrush="{DynamicResource SecondaryBrush}" 
+                                    BorderThickness="1" Opacity="0">
+                            </Border>
+                            <Border Name="Active" CornerRadius="5"
+                                    BorderBrush="{DynamicResource SecondaryBrush}" 
+                                    BorderThickness="1" Opacity="0" ></Border>
+                            <Grid>
+                                <Border Width="30" Height="30"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0"
+                                        CornerRadius="5"
+                                        Background="{DynamicResource PrimaryBrush_2}">
+                                    <TextBlock Text="&#xe61d;"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               FontSize="16"
+                                               FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                                </Border>
+                                <Border Width="30" Height="30"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0"
+                                        Background="{DynamicResource PrimaryBrush}">
+                                    <Image Width="30" Height="30"
+                                           Source="{Binding Icon}">
+                                    </Image>
+                                </Border>
+                                <TextBlock Text="{Binding Name}"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top"
+                                           Margin="40 2 0 0"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                <TextBlock Name="description"
+                                           MaxWidth="520"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Bottom"
+                                           Margin="40 0 0 2"
+                                           FontSize="11"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="WordEllipsis"
+                                           Foreground="{DynamicResource SecondaryBrush_1}"
+                                           Opacity="0.6"
+                                           Text="{Binding Description}">
+                                </TextBlock>
+                                <TextBlock Name="descriptionLimit"
+                                           MaxWidth="430"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Bottom"
+                                           Margin="40 0 0 2"
+                                           FontSize="11"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="WordEllipsis"
+                                           Foreground="{DynamicResource SecondaryBrush_1}"
+                                           Opacity="0"
+                                           Text="{Binding Description}">
+                                </TextBlock>
+                                <Grid Name="Operate" Width="50"
+                                      HorizontalAlignment="Right" 
+                                      VerticalAlignment="Center" 
+                                      Opacity="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <comp:TextButton 
+                                                     FontFamily="{StaticResource IconFontFamily}" 
+                                                     Content="&#xe957;"
+                                                     Tag="{Binding Path}"
+                                                     FontSize="16" Click="PackPosition_OnClick"
+                                                     ToolTip="打开所在文件夹">
+                                    </comp:TextButton>
+                                    <comp:TextButton Grid.Column="1"
+                                                     FontFamily="{StaticResource IconFontFamily}" 
+                                                     Content="&#xe926;"
+                                                     Tag="{Binding }"
+                                                     FontSize="16" Click="PackDelete_OnClick"
+                                                     ToolTip="删除材质包">
+                                    </comp:TextButton>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="Operate" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                            <DoubleAnimation Storyboard.TargetName="Operate" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="description" Property="Opacity" Value="0"/>
+                                <Setter TargetName="descriptionLimit" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="False">
+                                <Setter TargetName="description" Property="Opacity" Value="0.6"/>
+                                <Setter TargetName="descriptionLimit" Property="Opacity" Value="0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
     <Grid>
-        <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
-        <ScrollViewer Margin="0 5 10 5"
+        <Border Background="#f1f1f1" CornerRadius="10" Width="620" HorizontalAlignment="Left"></Border>
+        <ScrollViewer Name="MainScrollViewer" Margin="0 5 10 5"
                       HorizontalScrollBarVisibility="Hidden"
                       VerticalScrollBarVisibility="Auto"
-                      CanContentScroll="False">
+                      CanContentScroll="False"
+                      Opacity="0">
             <StackPanel>
                 <Border Height="100" Style="{StaticResource RectByMargin}">
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="材质包管理"></TextBlock>
+                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
+                </Border>
+                <Border Style="{StaticResource NoAnimRect}" Margin="20 5">
+                    <Grid>
+                        <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
+                            <TextBlock HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"
+                                       FontSize="16" Text="暂无模组资源"
+                                       Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                        </Grid>
+                        <Grid>
+                            <ListView Name="ListView" 
+                                      ItemContainerStyle="{StaticResource ListViewStyle}"
+                                      ItemsSource="{Binding TexturePacks}" Width="580"
+                                      VirtualizingStackPanel.IsVirtualizing="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                      VirtualizingPanel.IsContainerVirtualizable="True"
+                                      VirtualizingPanel.ScrollUnit="Pixel"
+                                      ScrollViewer.IsDeferredScrollingEnabled="True"
+                                      ScrollViewer.CanContentScroll="True"
+                                      Margin="0 10">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel VirtualizationMode="Recycling"/>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
+                        </Grid>
+                    </Grid>
                 </Border>
             </StackPanel>
         </ScrollViewer>
+        <Border Name="LoadingBorder" 
+                Style="{StaticResource Rect}" 
+                Width="150" Height="100" 
+                Margin="25 20" Opacity="0">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="&#xe679;" 
+                           FontSize="30" 
+                           HorizontalAlignment="Center"
+                           FontFamily="{StaticResource IconFontFamily}"
+                           RenderTransformOrigin="0.5,0.5" Foreground="{DynamicResource SecondaryBrush}">
+                    <TextBlock.RenderTransform>
+                        <RotateTransform Angle="0"></RotateTransform>
+                    </TextBlock.RenderTransform>
+                    <TextBlock.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                    <DoubleAnimation By="360" Duration="0:0:1.2" RepeatBehavior="Forever"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </TextBlock.Triggers>
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" 
+                           FontSize="14" 
+                           Text="{Binding PercentText}" 
+                           Margin="0 10" 
+                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+            </StackPanel>
+        </Border>
     </Grid>
 </Page>

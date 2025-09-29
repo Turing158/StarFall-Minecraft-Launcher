@@ -40,13 +40,16 @@ public static class ScrollViewerExtensions {
             AnimateScroll(scrollViewer, targetOffset);
         }
     }
-    
-    private static void AnimateScroll(ScrollViewer scrollViewer, double targetOffset){
+
+    private static void AnimateScroll(ScrollViewer scrollViewer, double targetOffset, Action onCompleted = null) {
         DoubleAnimation animation = new DoubleAnimation {
             To = targetOffset,
             Duration = TimeSpan.FromSeconds(0.15),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
         };
+        if (onCompleted != null) {
+            animation.Completed += (s, e) => onCompleted();
+        }
         scrollViewer.BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, animation);
     }
 }

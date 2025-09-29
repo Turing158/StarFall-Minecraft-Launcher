@@ -29,6 +29,7 @@ public class PropertiesUtil {
         PlayerManage.unloadedAction?.Invoke(null,null);
         SelectGame.unloadedAction?.Invoke(null,null);
         GameSetting.unloadedAction?.Invoke(null,null);
+        SaveLauncherArgs();
         if (!Directory.Exists(Path.GetDirectoryName(jsonPath))) {
             Directory.CreateDirectory(Path.GetDirectoryName(jsonPath));
         }
@@ -50,18 +51,23 @@ public class PropertiesUtil {
         SelectGame.ViewModel selectGameVm = SelectGame.GetViewModel?.Invoke();
         loadJson["game"] = SelectGameArgs(selectGameVm);
     }
+    
+    public static void SaveLauncherArgs() {
+        loadJson["launcher"] = LauncherArgsArgs();
+    }
 
     private static JObject GameSettingArgs(GameSetting.ViewModel vm) {
         JObject GameArgs = new JObject();
         JObject Java = new JObject();
         Java["index"] = vm.CurrentJavaVersionIndex;
+        ObservableCollection<JavaItem> VmJavaList = vm.JavaVersions;
         List<JavaItem> JavaList;
-        if (vm.JavaVersions == null || vm.JavaVersions.Count == 0) {
+        if (VmJavaList == null || VmJavaList.Count == 0) {
             JavaList = new List<JavaItem>();
         }
         else {
-            vm.JavaVersions.RemoveAt(0);
-            JavaList = vm.JavaVersions.ToList();
+            var list = VmJavaList.ToList();
+            JavaList = list.Skip(1).ToList();
         }
         Java["list"] = JArray.FromObject(JavaList);
         GameArgs["java"] = Java;
@@ -106,7 +112,17 @@ public class PropertiesUtil {
         SelectArgs["dirs"] = JArray.FromObject(vm.Dirs == null || vm.Dirs.Count == 0 ? new List<DirItem>() : vm.Dirs);
         return SelectArgs;
     }
-
+    
+    private static JObject LauncherArgsArgs() {
+        JObject LauncherArgs = new JObject();
+        var bg = new JObject();
+        bg["type"] = launcherArgs.BgType;
+        bg["path"] = launcherArgs.BgPath;
+        LauncherArgs["bg"] = bg;
+        LauncherArgs["hardwareAcceleration"] = launcherArgs.HardwareAcceleration;
+        LauncherArgs["enableNotice"] = launcherArgs.EnableNotice;
+        return LauncherArgs;
+    }
 
     public static void LoadGameSettingArgs(ref GameSetting.ViewModel vm) {
         if (loadJson == null) {
@@ -329,7 +345,10 @@ public class PropertiesUtil {
     }
     
     public class LauncherArgs {
-        public string Bg { get; set; } = "";
+        public string BgType { get; set; } = "";
+        public string BgPath { get; set; } = "";
+
+        public bool HardwareAcceleration { get; set; } = true;
         public bool EnableNotice { get; set; } = true;
     }
     
@@ -338,14 +357,47 @@ public class PropertiesUtil {
     public static void LoadLauncherArgs() {
         var launcher = loadJson["launcher"];
         if (launcher != null) {
-            try {
-                launcherArgs.Bg = launcher["bg"].Value<string>();
-            }
-            catch (Exception e) {
-                launcherArgs.Bg = "";
-                launcher["bg"] = "";
-            }
+            var bg = launcher["bg"] as JObject;
+            if (bg != null) {
+                try {
+                    var bgType = bg["type"];
+                    if (bgType != null) {
+                        launcherArgs.BgType = bgType.Value<string>();
+                    }
+                    else {
+                        launcherArgs.BgType = "none";
+                        bg["type"] = "none";
+                    }
+                }
+                catch (Exception e) {
+                    
+                    launcherArgs.BgType = "none";
+                    launcher["bg"]["type"] = "none";
+                }
+                try {
+                    launcherArgs.BgPath = bg["path"]?.Value<string>() ?? "";
+                }
+                catch (Exception e) {
+                    launcherArgs.BgPath = "";
+                    launcher["bg"]["path"] = "";
+                }
 
+                if (launcherArgs.BgType == "local" && launcherArgs.BgPath.StartsWith("http")) {
+                    launcherArgs.BgPath = "";
+                    bg["path"] = "";
+                }
+                else if (launcherArgs.BgType == "network" && !NetworkUtil.IsValidUrl(launcherArgs.BgPath)) {
+                    launcherArgs.BgPath = "";
+                    bg["path"] = "";
+                }
+            }
+            else {
+                bg = new JObject();
+                launcherArgs.BgType = "none";
+                bg["type"] = "none";
+                launcherArgs.BgPath = "";
+                bg["path"] = "";
+            }
             try {
                 launcherArgs.EnableNotice = launcher["EnableNotice"].Value<bool>();
             }
@@ -353,11 +405,24 @@ public class PropertiesUtil {
                 launcherArgs.EnableNotice = true;
                 launcher["EnableNotice"] = true;
             }
+
+            try {
+                launcherArgs.HardwareAcceleration = launcher["HardwareAcceleration"].Value<bool>();
+            }
+            catch (Exception e) {
+                launcherArgs.HardwareAcceleration = true;
+                launcher["HardwareAcceleration"] = true;
+            }
         }
         else {
             launcher = new JObject();
-            launcher["bg"] = "";
+            var bg = new JObject();
+            bg["type"] = "none";
+            bg["path"] = "";
+            
+            launcher["bg"] = bg;
             launcher["EnableNotice"] = true;
+            launcher["HardwareAcceleration"] = true;
             loadJson["launcher"] = launcher;
         }
     }

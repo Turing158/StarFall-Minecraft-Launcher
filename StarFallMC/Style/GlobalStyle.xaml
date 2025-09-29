@@ -117,7 +117,7 @@
     <Style x:Key="RectTitle" TargetType="TextBlock" 
            BasedOn="{StaticResource {x:Type TextBlock}}">
         <Setter Property="FontSize" Value="15"></Setter>
-        <Setter Property="Margin" Value="10"></Setter>
+        <Setter Property="Margin" Value="10 10 0 0"></Setter>
         <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush_1}"></Setter>
     </Style>
     
@@ -154,7 +154,7 @@
     <Style TargetType="{x:Type comp:PlainButton}">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">
+                <ControlTemplate TargetType="{x:Type comp:PlainButton}">
                     <Border CornerRadius="5" Opacity="1">
                         <Border Name="Container" BorderBrush="{DynamicResource SecondaryBrush_2}"
                                 BorderThickness="1" CornerRadius="5" 
@@ -162,6 +162,18 @@
                             <ContentPresenter Name="ContentPresenter" 
                                               HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
                         </Border>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="{x:Type comp:ButtonBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type comp:ButtonBase}">
+                    <Border Background="{DynamicResource PrimaryBrush}">
+                        <ContentPresenter></ContentPresenter>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -262,6 +274,7 @@
     <Style TargetType="ListView">
         <Setter Property="Background" Value="Transparent"></Setter>
         <Setter Property="BorderThickness" Value="0"></Setter>
+        <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"></Setter>
     </Style>
     
     <Style TargetType="ListViewItem">

@@ -6,7 +6,7 @@ using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
-public class Button : System.Windows.Controls.Button {
+public class Button : ButtonBase {
     
     private Border _container;
 

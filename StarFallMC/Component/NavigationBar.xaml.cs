@@ -201,8 +201,10 @@ public partial class NavigationBar : ScrollViewer {
             }
             var item = ListView.ItemContainerGenerator.ContainerFromIndex(ListView.SelectedIndex) as ListViewItem;
             if (item != null) {
-                ActiveBlock.Width = item.ActualWidth;
-                ActiveBlock.Height = item.ActualHeight;
+                //这里可能需要解决方块大小的问题，有二级菜单会有问题(有问题找这里)
+                Grid main = item.Template.FindName("Main",item) as Grid;
+                ActiveBlock.Width = main.ActualWidth;
+                ActiveBlock.Height = main.ActualHeight;
                 Point itemPoint = item.TranslatePoint(new Point(0, 0), ListView);
                 ActiveBlock.RenderTransform = new TranslateTransform(itemPoint.X, itemPoint.Y);
             }
@@ -249,7 +251,11 @@ public partial class NavigationBar : ScrollViewer {
                 };
                 if (!isSelect) {
                     sizeAnim.Completed += (s, e) => {
-                        UpdateActiveBlock(ListView.ItemContainerGenerator.ContainerFromIndex(ListView.SelectedIndex) as ListViewItem);
+                        Dispatcher.BeginInvoke(() => {
+                            UpdateActiveBlock(
+                                ListView.ItemContainerGenerator.ContainerFromIndex(ListView.SelectedIndex) as
+                                    ListViewItem);
+                        });
                     };
                 }
                 border.BeginAnimation(

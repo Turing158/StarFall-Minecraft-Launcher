@@ -11,6 +11,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     public enum BtnType {
         None,
         Confirm,
+        Cancel,
         ConfirmAndCancel,
         Custom,
         ConfirmAndCustom,
@@ -105,6 +106,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
             btnType == BtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
         box.CancelBtnVisibility =
+            btnType == BtnType.Cancel ||
             btnType == BtnType.ConfirmAndCancel || 
             btnType == BtnType.CustomAndCancel || 
             btnType == BtnType.ConfirmAndCancelAndCustom 

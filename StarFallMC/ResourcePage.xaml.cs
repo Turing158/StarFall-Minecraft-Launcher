@@ -17,11 +17,18 @@ public partial class ResourcePage : Page {
     private Storyboard NaviBarChangeAnim;
 
     private Timer NaviBarChangeTimer;
+
+    public static Action ChangeVersionAction;
+    public static Action LoadTempPage;
+    
+    private string tempPagePath = "ResourcePages/TexturePacksPage.xaml";
     
     public ResourcePage() {
         InitializeComponent();
         DataContext = viewModel;
         NaviBarChangeAnim = (Storyboard)FindResource("NaviBarChangeAnim");
+        ChangeVersionAction = changeVersionAction;
+        LoadTempPage = loadTempPage;
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -54,7 +61,6 @@ public partial class ResourcePage : Page {
             return true;
         }
     }
-    private int test;
     private void NaviBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         NaviBarChangeAnim.Begin();
         NaviBarChangeTimer?.Dispose();
@@ -65,11 +71,38 @@ public partial class ResourcePage : Page {
                 if (item.Children != null) {
                     path = (item.Children[item.ChildrenIndex] as NavigationItem).Path;
                 }
-                if (!string.IsNullOrEmpty(path)) {
-                    PageFrame.Navigate(new Uri($"/ResourcePages/{path}.xaml", UriKind.Relative));
-                }
+                NavigetePage($"/ResourcePages/{path}.xaml");
                 NaviBarChangeTimer.Dispose();
             });
         }, null, 300, 0);
+    }
+
+    private bool isFirst = true;
+    private void NavigetePage(string path) {
+        if (isFirst) {
+            isFirst = false;
+            return;
+        }
+        if (!string.IsNullOrEmpty(path)) {
+            PageFrame.Navigate(new Uri(path, UriKind.Relative));
+        }
+    }
+    private string[] needReloadPage = {"ModsPage","SavesPage","TexturePacksPage"};
+    private void changeVersionAction() {
+        if (!PageFrame.Source.ToString().Contains("Blank.xaml")) {
+            if (needReloadPage.Contains(PageFrame.Source.ToString().Replace("ResourcePages/", "").Replace(".xaml", ""))) {
+                Console.WriteLine("切换版本，清空页面，需要重新加载");
+                tempPagePath = PageFrame.Source.ToString();
+                NavigetePage("Blank.xaml");
+            }
+        }
+    }
+    
+    private void loadTempPage() {
+        if (!string.IsNullOrEmpty(tempPagePath)) {
+            Console.WriteLine("存在切换版本，加载临时页面");
+            NavigetePage(tempPagePath);
+            tempPagePath = "";
+        }
     }
 }

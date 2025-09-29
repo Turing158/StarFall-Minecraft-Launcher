@@ -59,9 +59,10 @@
         </Style.Triggers>
     </Style>
     
-    <Storyboard x:Key="InitTopFrame" TargetName="TopFrame" TargetProperty="Height">
-        <DoubleAnimation From="0" To="55" Duration="0:0:0.5" 
-                         EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+    <Storyboard x:Key="InitMainWindow">
+        <DoubleAnimation Storyboard.TargetName="TopFrame" Storyboard.TargetProperty="Height" From="0" To="55" Duration="0:0:0.5" 
+                          EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+        <DoubleAnimation Storyboard.TargetName="MainWindowPage" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3"></DoubleAnimation>
     </Storyboard>
     
     <Storyboard x:Key="SettingEnter">

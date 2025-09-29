@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using StarFallMC.Component;
 
 namespace StarFallMC.Util;
 
@@ -12,7 +13,8 @@ public class DirFileUtil {
     //通过资源管理器打开文件夹
     public static bool openDirByExplorer(string path) {
         if (!Directory.Exists(path)) {
-            //提示
+            //提示用户目录不存在
+            MessageTips.Show($"目录不存在:{path}");
             return false;
         }
         try {
@@ -25,6 +27,27 @@ public class DirFileUtil {
         } catch (Exception e) {
             Console.WriteLine(e);
             return false;
+        }
+    }
+    
+    public static void OpenContainingFolder(string path) {
+        if (string.IsNullOrEmpty(path))
+            return;
+        
+        if (!File.Exists(path) && !Directory.Exists(path)) {
+            string directory = Path.GetDirectoryName(path);
+            if (Directory.Exists(directory)) {
+                Process.Start("explorer.exe", directory);
+            }
+            return;
+        }
+        
+        try {
+            Process.Start("explorer.exe", $"/select,\"{path}\"");
+        }
+        catch (Exception ex) {
+            string directory = Path.GetDirectoryName(path);
+            Process.Start("explorer.exe", directory);
         }
     }
 
@@ -132,4 +155,31 @@ public class DirFileUtil {
                IsValidFileName(Path.GetFileNameWithoutExtension(filePath));
 
     }
+    
+    public static void CopyDirAndFiles(string sourceDirName, string destDirName, bool copySubDirs = true) {
+        DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+        
+        if (!dir.Exists) {
+            throw new DirectoryNotFoundException($"源目录不存在或无法找到: {sourceDirName}");
+        }
+        
+        if (!Directory.Exists(destDirName)) {
+            Directory.CreateDirectory(destDirName);
+        }
+        
+        FileInfo[] files = dir.GetFiles();
+        foreach (FileInfo file in files) {
+            string tempPath = Path.Combine(destDirName, file.Name);
+            file.CopyTo(tempPath, false);
+        }
+        
+        if (copySubDirs) {
+            DirectoryInfo[] subDirs = dir.GetDirectories();
+            foreach (DirectoryInfo subDir in subDirs) {
+                string tempPath = Path.Combine(destDirName, subDir.Name);
+                CopyDirAndFiles(subDir.FullName, tempPath, copySubDirs);
+            }
+        }
+    }
+    
 }

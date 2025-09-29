@@ -36,7 +36,7 @@
 
     <Style x:Key="SettingAndResourceFrame" TargetType="Frame">
         <Setter Property="HorizontalAlignment" Value="Right"></Setter>
-        <Setter Property="Width" Value="600"></Setter>
+        <Setter Property="Width" Value="640"></Setter>
         <Setter Property="Height" Value="380"></Setter>
         <Setter Property="Margin" Value="0 0"></Setter>
     </Style>
