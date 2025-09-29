@@ -293,3 +293,45 @@
 
 ---
 
+## 小更新-2025-9-4
+
+1. 优化NavigationBar的ActiveBlock的移动方式
+2. 去除多余样式
+
+---
+
+## 众多内容更新-2025-9-29
+
+### [已解决]
+
+1. 解决NavigationBar的ActiveBlock的大小问题，以及主题色切换的问题
+2. 解决自定义Button没有动画的问题
+3. 解决程序初始化时，会加载二级菜单下的TexturePacksPage的问题
+4. 解决游戏启动能够进入资源界面修改的问题
+5. 解决DownloadUtil下载出现的问题
+
+### [更新]
+
+1. 更新ModsPage、SavesPage和TextruePacksPage，能够显示该版本的资源
+2. 更新About页面，可显示启动器的更新和鸣谢
+3. 更新LauncherSetting页面，可切换主题、更改背景和其他关于启动器的设置
+4. 更新ListViewItem的扩展方法，添加点击动画
+5. 更新图标文件
+6. 更新程序启动时的动画
+7. 更新MessageBox，添加单独取消按钮
+8. 更新NetworkUtil，增加验证Url是否合法的方法
+9. 更新PropertiesUtil，添加更多的启动参数
+10. 更新ScrollViewerExtensions，使滚动完毕后，执行方法
+11. 更新ThemeUtil，可以使用ChangeColor来切换主题颜色
+12. 更新DirFileUtil，添加OpenContainingFolder方法(打开文件夹后选中路径中的文件)，添加CopyDirAndFiles方法(复制指定文件夹，包括里面的所有内容)
+13. 优化ListView，更新样式
+14. 更新Home页面的设置背景方法
+
+### [新增]
+
+1. 添加ModInfo页面和SaveInfo页面，用于查看Mods和Saves资源的详细信息
+2. 添加PageConverter文件，用于存储xaml的Converter的方法
+3. 添加ResourcePageExtension用于ModsPage页面、SavesPage页面和TexturePacksPage页面方便调用共同方法
+4. 添加ResourceUtil工具类，用于资源页面的数据获取
+5. 添加fNbt组件，用于解析 .dat 文件
+
