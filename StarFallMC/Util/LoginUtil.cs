@@ -4,14 +4,13 @@ using StarFallMC.Entity;
 namespace StarFallMC.Util;
 
 public class LoginUtil {
-    private readonly static string clientId = "11c8deff-d17f-44ae-b8cf-068200d155a8";
         
     
         //获取Microsoft Device Code
         public static async Task<HttpResult> GetMicrosoftDeviceCode() {
             Console.WriteLine("获取Microsoft Device Code");
             Dictionary<string,Object> args = new () {
-                {"client_id",clientId},
+                {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
                 {"scope","XboxLive.signin offline_access"}
             };
             return await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode",args,null,HttpRequestUtil.RequestDataType.Form).ConfigureAwait(true);
@@ -21,7 +20,7 @@ public class LoginUtil {
         public static async Task<HttpResult> GetMicrosoftToken(string deviceCode) {
             Console.WriteLine("获取Microsoft Token");
             Dictionary<string,Object> args = new () {
-                {"client_id",clientId},
+                {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
                 {"device_code",deviceCode},
                 {"grant_type","urn:ietf:params:oauth:grant-type:device_code"}
             };
@@ -32,7 +31,7 @@ public class LoginUtil {
         public static async Task<Player> RefreshMicrosoftToken(Player player) {
             Console.WriteLine("刷新Microsoft Token");
             Dictionary<string,Object> args = new () {
-                {"client_id",clientId},
+                {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
                 {"refresh_token",player.RefreshToken},
                 {"grant_type","refresh_token"},
                 {"scope","XboxLive.signin offline_access"}

@@ -502,12 +502,12 @@ public class ResourceUtil {
     
     private static async Task<List<ModResource>> GetCurseForgeArgs(List<ModResource> resources,IProgress<int> progress,int start,int end) {
         //POST https://api.curseforge.com/v1/fingerprints/432
-        //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6 
+        //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6[示例，已废弃]
         //body {"fingerprints" :[CurseForgeSha1,...]}
         int progressCount = 0;
         int progressFirstEnd = start + (int)((end - start) /2);
         Dictionary<string,string> header = new () {
-            {"X-API-KEY","$2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6"}
+            {"X-API-KEY",KeyUtil.CURSEFORGE_API_KEY}
         };
         List<uint> curseForgeSha1s = resources.Select(i => i.CurseForgeSha1).ToList();
         Dictionary<string,Object> curseForgeIdJsonBody = new () {
@@ -538,7 +538,7 @@ public class ResourceUtil {
         }
         progress.Report(progressFirstEnd);
         //POST https://api.curseforge.com/v1/mods
-        //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6 
+        //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6[示例，已废弃]
         //body {"modIds":[上一个请求的id,...]}
         Dictionary<string,Object> curseForgeModJsonBody = new () {
             {"modIds",curseForgeHashAndId.Values}
