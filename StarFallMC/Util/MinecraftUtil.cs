@@ -1077,13 +1077,17 @@ public class MinecraftUtil {
             cancellationToken.ThrowIfCancellationRequested();
             Home.StartingState?.Invoke("MC准备启动...");
             var (java, memory) = JavaArgs(json);
+            var platform = 
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" :
+                RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux" : 
+                RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "osx" : "windows";
             string jvmArgs = JvmArgs(json, new JvmArg(
                 currentDir: currentDir,
                 versionName: minecraft.Name,
                 launcherName: "StarFallMC",
                 launcherVersion: "1.0.0",
                 classpath: GetClassPaths(libs, currentDir, minecraft.Name)
-            ));
+            ),platform,RuntimeInformation.ProcessArchitecture.ToString().ToLower());
             string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
                 username: player.Name,
                 version: minecraft.Name,
