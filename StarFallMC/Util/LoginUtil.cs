@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 
 namespace StarFallMC.Util;
@@ -41,18 +42,20 @@ public class LoginUtil {
                 JObject jo = JObject.Parse(r.Content);
                 var refreshToken = jo["refresh_token"].ToString();
                 var result = await GetXboxLiveToken(jo["access_token"].ToString()).ConfigureAwait(true);
-                var jo2 = JObject.Parse(result);
-                if (string.IsNullOrEmpty(result) || jo2["error"] == null) {
-                    var newPlayer = new Player(
-                        jo2["name"].ToString(), 
-                        jo2["skins"][0]["url"].ToString(), 
-                        true, 
-                        jo2["id"].ToString()
-                    );
-                    newPlayer.RefreshToken = refreshToken;
-                    newPlayer.AccessToken = jo2["access_token"].ToString();
-                    RefreshPlayer(newPlayer);
-                    return newPlayer;
+                if (!string.IsNullOrEmpty(result)) {
+                    var jo2 = JObject.Parse(result);
+                    if (jo2["error"] == null) {
+                        var newPlayer = new Player(
+                            jo2["name"].ToString(), 
+                            jo2["skins"][0]["url"].ToString(), 
+                            true, 
+                            jo2["id"].ToString()
+                        );
+                        newPlayer.RefreshToken = refreshToken;
+                        newPlayer.AccessToken = jo2["access_token"].ToString();
+                        RefreshPlayer(newPlayer);
+                        return newPlayer;
+                    }
                 }
             }
             Console.WriteLine(r.ErrorMessage);
@@ -76,7 +79,7 @@ public class LoginUtil {
                 if (index != -1) {
                     objs[index] = player;
                 }
-                PropertiesUtil.loadJson["player"]["players"] = JObject.FromObject(objs);
+                PropertiesUtil.loadJson["player"]["players"] = JArray.FromObject(objs);
                 Home.SetPlayer?.Invoke(player);
             }
         }
@@ -137,7 +140,10 @@ public class LoginUtil {
                 JObject jo = JObject.Parse(r.Content);
                 return await GetMinecraftInfo(jo["access_token"].ToString()).ConfigureAwait(true);
             }
-            Console.WriteLine(r.ErrorMessage);
+            else {
+                MessageTips.Show("获取Minecraft Token失败");
+            }
+            Console.WriteLine($"获取Minecraft Token失败：{r.ErrorMessage}");
             return "";
         }
 
@@ -154,7 +160,7 @@ public class LoginUtil {
                 jo["access_token"] = accessToken;
                 return jo.ToString();
             }
-            Console.WriteLine(r.ErrorMessage);
+            Console.WriteLine($"获取Minecraft用户信息失败：{r.ErrorMessage}");
             return "";
         }
     }

@@ -126,6 +126,7 @@ public partial class PlayerManage : Page {
             Clipboard.SetText(user_code);
         }
         else {
+            MessageTips.Show("获取设备码失败",MessageTips.MessageType.Error);
             Console.WriteLine(result.ErrorMessage);
         }
     }
@@ -370,12 +371,12 @@ public partial class PlayerManage : Page {
         if (result != null) {
             Console.WriteLine(result);
             MessageTips.Show($"刷新 {result.Name} 玩家信息成功！");
-            MessageBox.Show(
+            await MessageBox.ShowAsync(
                 content:$"刷新完成！ {result.Name} 在启动器中的档案已更新",
                 title:"刷新玩家信息",
                 confirmBtnText:"确定",
                 callback: r => {
-                    MessageBox.Delete(box);
+                    
                 });
             
         }
@@ -383,6 +384,7 @@ public partial class PlayerManage : Page {
             MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。\n    2.前往Minecraft官网使用Microsoft重新登录一下。\n    3.请检查网络后再试！","认证失败");
             Console.WriteLine("出现问题，请重新认证");
         }
+        MessageBox.Delete(box);
     }
 
     public void setPlayerListIndex(int index) {

@@ -230,18 +230,26 @@
                         Style="{StaticResource BackBtn}"
                         Click="LoginBackBtn_OnClick"></comp:PlainButton>
                 <Grid Name="SelectLogin" Width="300" Height="120">
-                    <comp:PlainButton Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
+                    <comp:Button Style="{StaticResource LoginBtn}" Click="LoginBtn_OnClick">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe98b; " FontSize="30"></TextBlock>
-                            <TextBlock Text="在线登录"></TextBlock>
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" 
+                                       Text="&#xe98b; "
+                                       FontSize="30" 
+                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                            <TextBlock Text="在线登录"
+                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
                         </StackPanel>
-                    </comp:PlainButton>
-                    <comp:PlainButton VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
+                    </comp:Button>
+                    <comp:Button VerticalAlignment="Bottom" Style="{StaticResource LoginBtn}" Click="OutlineBtn_OnClick">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe61e; " FontSize="30"></TextBlock>
-                            <TextBlock Text="离线登录"></TextBlock>
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" 
+                                       Text="&#xe61e; " 
+                                       FontSize="30" 
+                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                            <TextBlock Text="离线登录"  
+                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
                         </StackPanel>
-                    </comp:PlainButton>
+                    </comp:Button>
                 </Grid>
             </Grid>
             <Grid Name="OutlineLogin" Opacity="0">

@@ -6,8 +6,8 @@
         <Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"></Setter>
     </Style>
     
-    <Style x:Key="LoginBtn" TargetType="component:PlainButton" 
-           BasedOn="{StaticResource {x:Type component:PlainButton}}">
+    <Style x:Key="LoginBtn" TargetType="component:Button" 
+           BasedOn="{StaticResource {x:Type component:Button}}">
         <Setter Property="Height" Value="55"></Setter>
         <Setter Property="VerticalAlignment" Value="Top"></Setter>
         <Setter Property="FontSize" Value="25"></Setter>
