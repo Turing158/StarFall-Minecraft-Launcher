@@ -51,10 +51,15 @@ public partial class Notices : UserControl {
         }
 
         if (notices.Count == 0) {
-            var item = new NoticeItem("一个 Minecraft 启动器",
-                "- 目前启动器还在开发阶段 -\n目前启动器支持的功能\n   ● 支持正版登录\n   ● 支持多版本管理\n   ● 支持资源文件补全\n   ● 支持修改版本属性\n   ● 支持自定义启动器背景\n   ● 支持自定义公告\n   ● 支持多文件并行下载\n");
+            var item = new NoticeItem("一个 Minecraft 启动器");
+            item.Content =
+                "- 目前启动器还在开发阶段 \n- 目前启动器支持的功能\n\n   ● 支持正版登录\n\n   ● 支持多版本管理\n\n   ● 支持资源文件补全\n\n   ● 支持修改版本属性\n\n   ● 支持自定义启动器背景\n\n   ● 支持自定义公告\n\n   ● 支持多文件并行下载\n";
             item.Icon = "pack://application:,,,/;component/assets/ico.ico";
             notices.Add(item);
+        }
+
+        foreach (var i in notices) {
+            Console.WriteLine($"公告：{i.Title}");
         }
         return notices;
     }
