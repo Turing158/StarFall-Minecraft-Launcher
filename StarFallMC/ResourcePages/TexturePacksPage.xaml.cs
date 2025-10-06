@@ -34,7 +34,7 @@ public partial class TexturePacksPage : Page {
                     
                 }
                 if (percent == 100) {
-                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalTexturePackResources);
+                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalTexturePackResources == null || ResourceUtil.LocalTexturePackResources.Count == 0);
                     viewModel.PercentText = "加载完成";
                     MessageTips.Show($"获取到{viewModel.TexturePacks.Count}个材质包文件");
                 }
@@ -51,7 +51,7 @@ public partial class TexturePacksPage : Page {
         }
         else {
             viewModel.TexturePacks = new ObservableCollection<TexturePackResource>(ResourceUtil.LocalTexturePackResources);
-            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalTexturePackResources);
+            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalTexturePackResources == null || ResourceUtil.LocalTexturePackResources.Count == 0);
         }
     }
     

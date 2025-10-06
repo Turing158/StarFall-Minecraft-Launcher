@@ -36,7 +36,7 @@ public partial class SavesPage : Page {
                     viewModel.Saves = new ObservableCollection<SavesResource>(ResourceUtil.LocalSavesResources ?? new List<SavesResource>());
                 }
                 if (percent == 100) {
-                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources);
+                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
                     viewModel.PercentText = "加载完成";
                     MessageTips.Show($"获取到{viewModel.Saves.Count}个地图文件");
                 }
@@ -53,7 +53,7 @@ public partial class SavesPage : Page {
         }
         else {
             viewModel.Saves = new ObservableCollection<SavesResource>(ResourceUtil.LocalSavesResources);
-            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources);
+            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
         }
     }
     

@@ -25,14 +25,14 @@ public class ResourcePageExtension{
         NotExist.Visibility = Visibility.Collapsed;
     }
     
-    public static void AlreadyModLoaded<T>(Page page,ScrollViewer MainScrollViewer,Border LoadingBorder,Grid NotExist,List<T> resource) {
+    public static void AlreadyModLoaded(Page page,ScrollViewer MainScrollViewer,Border LoadingBorder,Grid NotExist,bool resourceEmpty) {
         Console.WriteLine("加载完成");
         page.Dispatcher.BeginInvoke(() => {
             MainScrollViewer.BeginAnimation(Page.OpacityProperty, ValueTo1);
             MainScrollViewer.IsHitTestVisible = true;
             LoadingBorder.BeginAnimation(Page.OpacityProperty, ValueTo0);
             LoadingBorder.IsHitTestVisible = false;
-            if (resource == null || resource.Count == 0) {
+            if (resourceEmpty) {
                 NotExist.Visibility = Visibility.Visible;
             }
             else {
