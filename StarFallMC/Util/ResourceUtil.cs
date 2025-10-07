@@ -275,7 +275,7 @@ public class ResourceUtil {
     }
 
     private static async Task<ModResource> GetModResource(string filePath,SHA1 sha1) {
-        var file = File.OpenRead(filePath);
+        using FileStream file = File.OpenRead(filePath);
         ModResource resource = new ModResource();
         FileInfo fileInfo = new FileInfo(filePath);
         resource.FilePath = filePath;

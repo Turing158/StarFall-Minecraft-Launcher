@@ -147,24 +147,30 @@ public partial class ModsPage : Page {
         }
 
         string disabledFilePath = Path.Combine(disabledDirPath, item.FileName);
-        File.Move(item.FilePath, disabledFilePath, true);
-        item.FilePath = disabledFilePath;
-        item.Disabled = true;
-        
-        MessageTips.Show($"模组已禁用:{item.DisplayName}");
-        int index = -1;
-        if (_modIndexCache.TryGetValue(item.ModrinthSha1,out index)) {
-            if (index >= 0) {
-                ResourceUtil.LocalModResources[index] = item;
-                viewModel.Mods[index] = item;
-                Dispatcher.BeginInvoke(() => {
-                    var parent = textButton.TemplatedParent as ListViewItem;
-                    (parent.Template.FindName("Disabled", parent) as Border)?.RenderTransform.BeginAnimation(
-                        ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
-                    (parent.Template.FindName("DisabledBg", parent) as Border)?.RenderTransform.BeginAnimation(
-                        ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
-                },DispatcherPriority.Render);
+        try {
+            File.Move(item.FilePath, disabledFilePath, true);
+            item.FilePath = disabledFilePath;
+            item.Disabled = true;
+
+            MessageTips.Show($"模组已禁用:{item.DisplayName}");
+            int index = -1;
+            if (_modIndexCache.TryGetValue(item.ModrinthSha1, out index)) {
+                if (index >= 0) {
+                    ResourceUtil.LocalModResources[index] = item;
+                    viewModel.Mods[index] = item;
+                    Dispatcher.BeginInvoke(() => {
+                        var parent = textButton.TemplatedParent as ListViewItem;
+                        (parent.Template.FindName("Disabled", parent) as Border)?.RenderTransform.BeginAnimation(
+                            ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
+                        (parent.Template.FindName("DisabledBg", parent) as Border)?.RenderTransform.BeginAnimation(
+                            ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
+                    }, DispatcherPriority.Render);
+                }
             }
+        }
+        catch (Exception exception){
+            MessageTips.Show($"模组禁用失败:{item.DisplayName}");
+            Console.WriteLine(exception);
         }
         
     }
@@ -188,19 +194,26 @@ public partial class ModsPage : Page {
             return;
         }
         
-        File.Move(item.FilePath, enabledFilePath,true);
-        item.FilePath = enabledFilePath;
-        item.Disabled = false;
-        MessageTips.Show($"模组已启用:{item.DisplayName}");
-        int index = ResourceUtil.LocalModResources.FindIndex(i => item.DisplayName == i.DisplayName);
-        if (index >= 0) {
-            ResourceUtil.LocalModResources[index] = item;
-            viewModel.Mods[index] = item;
-            var parent = textButton.TemplatedParent as ListViewItem;
-            var border = parent.Template.FindName("Disabled", parent) as Border;
-            var disabledBg = parent.Template.FindName("DisabledBg", parent) as Border;
-            border.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo0);
-            disabledBg.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo0);
+        try {
+            File.Move(item.FilePath, enabledFilePath, true);
+            item.FilePath = enabledFilePath;
+            item.Disabled = false;
+            MessageTips.Show($"模组已启用:{item.DisplayName}");
+            int index = ResourceUtil.LocalModResources.FindIndex(i => item.DisplayName == i.DisplayName);
+            if (index >= 0) {
+                ResourceUtil.LocalModResources[index] = item;
+                viewModel.Mods[index] = item;
+                var parent = textButton.TemplatedParent as ListViewItem;
+                var border = parent.Template.FindName("Disabled", parent) as Border;
+                var disabledBg = parent.Template.FindName("DisabledBg", parent) as Border;
+                border.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo0);
+                disabledBg.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,
+                    ResourcePageExtension.ValueTo0);
+            }
+        }
+        catch (Exception exception){
+            MessageTips.Show($"模组启用失败:{item.DisplayName}");
+            Console.WriteLine(exception);
         }
     }
 
