@@ -149,13 +149,14 @@ public partial class SavesPage : Page {
         MessageTips.Show($"正在备份地图文件 {resource.WorldName} ({resource.DirName})");
         var copyResource = new SavesResource(resource.nbt,resource.DirName,resource.Path,resource.RefreshDate);
         var copyDirPath = Path.GetDirectoryName(resource.Path);
-        var copyPath = Path.Combine(copyDirPath,$"{resource.DirName}_备份");
-        if (Directory.Exists(copyPath)) {
-            MessageTips.Show($"备份失败，目标目录已存在 {copyPath}");
-            return;
+        var copyName = $"{resource.DirName}_备份";
+        var copyPath = Path.Combine(copyDirPath,copyName);
+        while (Directory.Exists(copyPath)) {
+            copyName += "_备份";
+            copyPath = Path.Combine(copyDirPath,copyName);
         }
         copyResource.Path = copyPath;
-        copyResource.DirName = $"{resource.DirName}_备份";
+        copyResource.DirName = copyName;
         DirFileUtil.CopyDirAndFiles(resource.Path,copyPath);
         int index = ResourceUtil.LocalSavesResources.FindIndex(r => r.Path == resource.Path);
         if (index >= 0) {

@@ -239,5 +239,6 @@
             </ScrollViewer>
             <Border Width="10"></Border>
         </StackPanel>
+        <comp:TopButton BindingScrollViewer="{Binding ElementName=ScrollViewer}"></comp:TopButton>
     </Grid>
 </Page>

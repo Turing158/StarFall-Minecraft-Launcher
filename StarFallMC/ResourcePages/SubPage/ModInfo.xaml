@@ -185,5 +185,6 @@
                 </Border>
             </StackPanel>
         </ScrollViewer>
+        <component:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=ScrollViewer}"></component:TopButton>
     </Grid>
 </Page>

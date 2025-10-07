@@ -266,5 +266,6 @@
                            Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
             </StackPanel>
         </Border>
+        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
     </Grid>
 </Page>
