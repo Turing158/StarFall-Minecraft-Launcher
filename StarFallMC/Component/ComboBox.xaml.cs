@@ -49,6 +49,15 @@ public partial class ComboBox : UserControl {
     public static readonly DependencyProperty ChoiceTemplateProperty = DependencyProperty.Register(
         nameof(ChoiceTemplate), typeof(DataTemplate), typeof(ComboBox), new PropertyMetadata(null));
 
+    public Object CustomTitleContent {
+        get => GetValue(CustomTitleContentProperty);
+        set => SetValue(CustomTitleContentProperty, value);
+    }
+    public static readonly DependencyProperty CustomTitleContentProperty = DependencyProperty.Register(
+        nameof(CustomTitleContent), typeof(Object), typeof(ComboBox), new PropertyMetadata(default(Object)));
+    
+    
+    
     public Object ItemsSource {
         get => GetValue(ItemsSourceProperty);
         set => SetValue(ItemsSourceProperty, value);

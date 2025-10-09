@@ -16,6 +16,7 @@
         <local:ComboBoxChoiceMarginAnimationConverter x:Key="ComboBoxChoiceMarginAnimationConverter"/>
         <local:ComboBoxTitleContentMarginConverter x:Key="ComboBoxTitleContentMarginConverter"/>
         <local:ListEmptyToVisibilityConverter x:Key="ListEmptyToVisibilityConverter"/>
+        <local:ObjectEmptyToCollapsedConverter x:Key="ObjectEmptyToCollapsedConverter"/>
         <Style x:Key="DefaultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="{Binding IsAnimatedOnSelection,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></Setter>
@@ -119,11 +120,14 @@
     <local:CollapsePanel x:Name="ComboBoxPanel" MainHeight="40" Background="{DynamicResource PrimaryBrush_1}">
         <local:CollapsePanel.TitleContent>
             <Grid Margin="{Binding ClearButtonVisibility,RelativeSource={RelativeSource AncestorType=local:ComboBox},Converter={StaticResource ComboBoxTitleContentMarginConverter}}">
+                <ContentControl Content="{Binding CustomTitleContent, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
                 <ContentControl Name="NoSelect" 
                                 Content="{Binding NoSelectText, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
                                 ContentTemplate="{Binding NoSelectTemplate, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
+                
                 <ContentControl Content="{Binding CurrentItem, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
-                                ContentTemplate="{Binding CurrentChoiceTemplate, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
+                                ContentTemplate="{Binding CurrentChoiceTemplate, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                                Visibility="{Binding CurrentItem, RelativeSource={RelativeSource AncestorType=local:ComboBox},Converter={StaticResource ObjectEmptyToCollapsedConverter}}"></ContentControl>
             </Grid>
         </local:CollapsePanel.TitleContent>
         <local:CollapsePanel.TitleOperateContent>
@@ -138,7 +142,7 @@
         </local:CollapsePanel.TitleOperateContent>
         <local:CollapsePanel.Content>
             <Grid>
-                <TextBlock Name="NoChoice" Text="空" HorizontalAlignment="Center" VerticalAlignment="Top" 
+                <TextBlock Text="空" HorizontalAlignment="Center" VerticalAlignment="Top" 
                            FontSize="16" Foreground="{DynamicResource SecondaryBrush}"
                            Margin="0 10" 
                            Visibility="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ListEmptyToVisibilityConverter}}"></TextBlock>
