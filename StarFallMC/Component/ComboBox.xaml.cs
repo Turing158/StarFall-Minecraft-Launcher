@@ -125,6 +125,13 @@ public partial class ComboBox : UserControl {
     }
     public static readonly DependencyProperty ForbiddenDeleteFirstLengthChoiceProperty = DependencyProperty.Register(
         nameof(ForbiddenDeleteFirstLengthChoice), typeof(int), typeof(ComboBox), new PropertyMetadata(0));
+
+    public bool IsAnimatedOnSelection {
+        get => (bool)GetValue(IsAnimatedOnSelectionProperty);
+        set => SetValue(IsAnimatedOnSelectionProperty, value);
+    }
+    public static readonly DependencyProperty IsAnimatedOnSelectionProperty = DependencyProperty.Register(
+        nameof(IsAnimatedOnSelection), typeof(bool), typeof(ComboBox), new PropertyMetadata(true));
     
     public event SelectionChangedEventHandler SelectionChanged {
         add => AddHandler(SelectionChangedEvent, value);
