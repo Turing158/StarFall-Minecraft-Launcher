@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using StarFallMC.Component;
-using StarFallMC.Entity;
+using StarFallMC.Entity.Resource;
 using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
 using Path = System.IO.Path;

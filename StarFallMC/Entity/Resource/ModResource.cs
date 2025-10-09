@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace StarFallMC.Entity;
+namespace StarFallMC.Entity.Resource;
 
 public class ModResource : INotifyPropertyChanged{
     public string DisplayName { get; set; }

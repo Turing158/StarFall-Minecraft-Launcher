@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Windows.Media.Imaging;
 
-namespace StarFallMC.Entity;
+namespace StarFallMC.Entity.Resource;
 
 public class TexturePackResource {
     public string Name { get; set; }

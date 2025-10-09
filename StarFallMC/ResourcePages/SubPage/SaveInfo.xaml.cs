@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using fNbt;
 using StarFallMC.Component;
-using StarFallMC.Entity;
+using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
 using Button = StarFallMC.Component.Button;
 

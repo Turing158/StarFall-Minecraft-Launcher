@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 using fNbt;
 
-namespace StarFallMC.Entity;
+namespace StarFallMC.Entity.Resource;
 
 public class SavesResource : INotifyPropertyChanged {
     public NbtCompound nbt { get; set; }

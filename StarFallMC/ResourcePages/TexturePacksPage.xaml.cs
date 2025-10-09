@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using StarFallMC.Component;
-using StarFallMC.Entity;
+using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
 

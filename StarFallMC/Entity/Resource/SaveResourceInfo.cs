@@ -1,6 +1,6 @@
 ﻿using fNbt;
 
-namespace StarFallMC.Entity;
+namespace StarFallMC.Entity.Resource;
 
 public class SaveResourceInfo : SavesResource{
             public SaveResourceInfo(NbtCompound nbt, string dirName, string path, string refreshDate) 

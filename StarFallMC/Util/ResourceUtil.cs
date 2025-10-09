@@ -6,6 +6,7 @@ using fNbt;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Resource;
 using StarFallMC.SettingPages;
 
 namespace StarFallMC.Util;
