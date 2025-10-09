@@ -171,16 +171,6 @@ public partial class ComboBox : UserControl {
     }
     
     private void ListView_OnLoaded(object sender, RoutedEventArgs e) {
-        AdjustListView();
-    }
-    
-    public void AdjustListView() {
-        if (ItemsSource == null || (ItemsSource as IList).Count == 0) {
-            NoChoice.Visibility = Visibility.Visible;
-        }
-        else {
-            NoChoice.Visibility = Visibility.Collapsed;
-        }
         SelectedIndexChange();
     }
     
@@ -230,7 +220,7 @@ public partial class ComboBox : UserControl {
         var item = ((sender as TextButton).TemplatedParent as ListViewItem).Content;
         (ItemsSource as IList).Remove(item);
         AdjustSelectIndex();
-        AdjustListView();
+        SelectedIndexChange();
     }
 
     private void ClearCurrentChoice_OnClick(object sender, RoutedEventArgs e) {

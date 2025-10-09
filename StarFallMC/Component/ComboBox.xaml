@@ -15,7 +15,7 @@
         <local:ComboBoxChoiceVisibleConverter x:Key="ComboBoxChoiceVisibleConverter"/>
         <local:ComboBoxChoiceMarginAnimationConverter x:Key="ComboBoxChoiceMarginAnimationConverter"/>
         <local:ComboBoxTitleContentMarginConverter x:Key="ComboBoxTitleContentMarginConverter"/>
-        
+        <local:ListEmptyToVisibilityConverter x:Key="ListEmptyToVisibilityConverter"/>
         <Style x:Key="DefaultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="{Binding IsAnimatedOnSelection,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></Setter>
@@ -140,7 +140,8 @@
             <Grid>
                 <TextBlock Name="NoChoice" Text="空" HorizontalAlignment="Center" VerticalAlignment="Top" 
                            FontSize="16" Foreground="{DynamicResource SecondaryBrush}"
-                           Margin="0 10"></TextBlock>
+                           Margin="0 10" 
+                           Visibility="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ListEmptyToVisibilityConverter}}"></TextBlock>
                 <ScrollViewer Name="ScrollViewer" MaxHeight="{Binding MaxDropDownHeight,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
                               VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
