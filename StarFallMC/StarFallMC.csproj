@@ -72,6 +72,10 @@
       <Resource Include="assets\element\diamond_pickaxe.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="assets\DefaultGameIcon\quiltmc.png" />
+      <Resource Include="assets\DefaultGameIcon\quiltmc.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
     <ItemGroup>

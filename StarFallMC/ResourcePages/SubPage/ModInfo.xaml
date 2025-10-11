@@ -84,7 +84,7 @@
     </Page.Resources>
     <Grid>
         <Border Style="{StaticResource FrameBg}" Opacity="1"></Border>
-        <ScrollViewer>
+        <ScrollViewer Name="ScrollViewer" CanContentScroll="False">
             <StackPanel Margin="0 10">
                 <Border Style="{StaticResource RectByMargin}">
                     <StackPanel>

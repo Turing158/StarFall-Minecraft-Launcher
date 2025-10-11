@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
 using Button = StarFallMC.Component.Button;
 using MessageBox = StarFallMC.Component.MessageBox;

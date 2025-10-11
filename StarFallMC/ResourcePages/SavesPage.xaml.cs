@@ -29,14 +29,14 @@ public partial class SavesPage : Page {
         VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
         VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
         if (ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0) {
-            ResourcePageExtension.ReloadModList(MainScrollViewer,LoadingBorder,NotExist);
+            ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder,NotExist);
             var progress = new Progress<int>(percent => {
                 viewModel.PercentText = $"加载中... {percent}%";
                 if (percent >= 99) {
                     viewModel.Saves = new ObservableCollection<SavesResource>(ResourceUtil.LocalSavesResources ?? new List<SavesResource>());
                 }
                 if (percent == 100) {
-                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
+                    ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
                     viewModel.PercentText = "加载完成";
                     MessageTips.Show($"获取到{viewModel.Saves.Count}个地图文件");
                 }
@@ -53,7 +53,7 @@ public partial class SavesPage : Page {
         }
         else {
             viewModel.Saves = new ObservableCollection<SavesResource>(ResourceUtil.LocalSavesResources);
-            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
+            ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalSavesResources == null || ResourceUtil.LocalSavesResources.Count == 0);
         }
     }
     

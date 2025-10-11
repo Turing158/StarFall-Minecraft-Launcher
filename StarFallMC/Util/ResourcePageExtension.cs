@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using StarFallMC.Component;
 
 namespace StarFallMC.Util;
 
@@ -17,26 +18,29 @@ public class ResourcePageExtension{
         EasingFunction = new CubicEase()
     };
     
-    public static void ReloadModList(ScrollViewer MainScrollViewer,Border LoadingBorder,Grid NotExist) {
+    public static void ReloadList(ScrollViewer MainScrollViewer,Loading LoadingBorder,Grid NotExist = null) {
         MainScrollViewer.BeginAnimation(Page.OpacityProperty,ValueTo0);
         MainScrollViewer.IsHitTestVisible = false;
         LoadingBorder.BeginAnimation(Page.OpacityProperty,ValueTo1);
         MainScrollViewer.IsHitTestVisible = true;
-        NotExist.Visibility = Visibility.Collapsed;
+        if (NotExist != null) {
+            NotExist.Visibility = Visibility.Collapsed;
+        }
     }
     
-    public static void AlreadyModLoaded(Page page,ScrollViewer MainScrollViewer,Border LoadingBorder,Grid NotExist,bool resourceEmpty) {
-        Console.WriteLine("加载完成");
+    public static void AlreadyLoaded(Page page,ScrollViewer MainScrollViewer,Loading LoadingBorder,Grid NotExist = null,bool resourceEmpty = true) {
         page.Dispatcher.BeginInvoke(() => {
             MainScrollViewer.BeginAnimation(Page.OpacityProperty, ValueTo1);
             MainScrollViewer.IsHitTestVisible = true;
             LoadingBorder.BeginAnimation(Page.OpacityProperty, ValueTo0);
             LoadingBorder.IsHitTestVisible = false;
-            if (resourceEmpty) {
-                NotExist.Visibility = Visibility.Visible;
-            }
-            else {
-                NotExist.Visibility = Visibility.Collapsed;
+            if (NotExist != null) {
+                if (resourceEmpty) {
+                    NotExist.Visibility = Visibility.Visible;
+                }
+                else {
+                    NotExist.Visibility = Visibility.Collapsed;
+                }
             }
         });
     }

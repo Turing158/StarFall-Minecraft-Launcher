@@ -32,7 +32,7 @@ public partial class ModsPage : Page {
         VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
         VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
         if (ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0) {
-            ResourcePageExtension.ReloadModList(MainScrollViewer,LoadingBorder,NotExist);
+            ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder,NotExist);
             var progress = new Progress<int>(percent => {
                 viewModel.PercentText = $"加载Mod列表... {percent}%";
                 if (percent >= 99) {
@@ -43,7 +43,7 @@ public partial class ModsPage : Page {
                     }
                 }
                 if (percent == 100) {
-                    ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
+                    ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
                     viewModel.PercentText = "加载完成";
                     MessageTips.Show($"获取到{viewModel.Mods.Count}个Mods资源");
                 }
@@ -67,7 +67,7 @@ public partial class ModsPage : Page {
             for (int i = 0; i < viewModel.Mods.Count; i++) {
                 _modIndexCache[viewModel.Mods[i].ModrinthSha1] = i;
             }
-            ResourcePageExtension.AlreadyModLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
+            ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
         }
     }
 

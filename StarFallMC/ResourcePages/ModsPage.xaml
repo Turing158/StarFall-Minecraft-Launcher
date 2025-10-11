@@ -235,37 +235,7 @@
                 </Border>
             </StackPanel>
         </ScrollViewer>
-        <Border Name="LoadingBorder" 
-                Style="{StaticResource Rect}" 
-                Width="150" Height="100" 
-                Margin="25 20" Opacity="0">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="&#xe679;" 
-                           FontSize="30" 
-                           HorizontalAlignment="Center"
-                           FontFamily="{StaticResource IconFontFamily}"
-                           RenderTransformOrigin="0.5,0.5" Foreground="{DynamicResource SecondaryBrush}">
-                    <TextBlock.RenderTransform>
-                        <RotateTransform Angle="0"></RotateTransform>
-                    </TextBlock.RenderTransform>
-                    <TextBlock.Triggers>
-                        <EventTrigger RoutedEvent="Loaded">
-                            <BeginStoryboard>
-                                <Storyboard TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
-                                    <DoubleAnimation By="360" Duration="0:0:1.2" RepeatBehavior="Forever"></DoubleAnimation>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </TextBlock.Triggers>
-                </TextBlock>
-                <TextBlock HorizontalAlignment="Center" 
-                           VerticalAlignment="Center" 
-                           FontSize="14" 
-                           Text="{Binding PercentText}" 
-                           Margin="0 10" 
-                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-            </StackPanel>
-        </Border>
+        <comp:Loading x:Name="LoadingBorder" PercentText="{Binding PercentText}"></comp:Loading>
         <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
     </Grid>
 </Page>
