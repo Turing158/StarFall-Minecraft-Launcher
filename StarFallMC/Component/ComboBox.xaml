@@ -116,8 +116,17 @@
                        FontSize="15" 
                        Margin="20 0"></TextBlock>
         </DataTemplate>
+        
+        <ContentControl x:Key="DefaultDisabledContent" >
+            <Border CornerRadius="10" 
+                    Background="#131313" 
+                    Opacity="0.2"></Border>
+        </ContentControl>
     </UserControl.Resources>
-    <local:CollapsePanel x:Name="ComboBoxPanel" MainHeight="40" Background="{DynamicResource PrimaryBrush_1}">
+    <local:CollapsePanel x:Name="ComboBoxPanel" 
+                         MainHeight="40" 
+                         Background="{DynamicResource PrimaryBrush_1}"
+                         DisabledContent="{Binding DisabledContent, RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
         <local:CollapsePanel.TitleContent>
             <Grid Margin="{Binding ClearButtonVisibility,RelativeSource={RelativeSource AncestorType=local:ComboBox},Converter={StaticResource ComboBoxTitleContentMarginConverter}}">
                 <ContentControl Content="{Binding CustomTitleContent, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></ContentControl>
@@ -142,7 +151,9 @@
         </local:CollapsePanel.TitleOperateContent>
         <local:CollapsePanel.Content>
             <Grid>
-                <TextBlock Text="空" HorizontalAlignment="Center" VerticalAlignment="Top" 
+                <TextBlock Text="{Binding SourceEmptyText, RelativeSource={RelativeSource AncestorType=local:ComboBox}}" 
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Top" 
                            FontSize="16" Foreground="{DynamicResource SecondaryBrush}"
                            Margin="0 10" 
                            Visibility="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ListEmptyToVisibilityConverter}}"></TextBlock>

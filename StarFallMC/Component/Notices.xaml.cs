@@ -57,10 +57,6 @@ public partial class Notices : UserControl {
             item.Icon = "pack://application:,,,/;component/assets/ico.ico";
             notices.Add(item);
         }
-
-        foreach (var i in notices) {
-            Console.WriteLine($"公告：{i.Title}");
-        }
         return notices;
     }
 }

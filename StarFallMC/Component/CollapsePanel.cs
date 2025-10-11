@@ -35,6 +35,12 @@ public class CollapsePanel : UserControl{
     public static readonly DependencyProperty NeedDividerProperty = DependencyProperty.Register(nameof(NeedDivider),
         typeof(Visibility), typeof(CollapsePanel), new PropertyMetadata(Visibility.Visible));
 
+    public Object DisabledContent {
+        get => GetValue(DisabledContentProperty);
+        set => SetValue(DisabledContentProperty, value);
+    }
+    public static readonly DependencyProperty DisabledContentProperty = DependencyProperty.Register(nameof(DisabledContent), typeof(Object),
+        typeof(CollapsePanel), new PropertyMetadata(null));
     
     public bool IsOpen {
         get => (bool)GetValue(IsOpenProperty);
@@ -79,8 +85,13 @@ public class CollapsePanel : UserControl{
     
     public CollapsePanel() {
         Loaded += CollapsePanel_OnLoaded;
+        IsEnabledChanged += OnIsEnabledChanged;
     }
-    
+
+    private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
+        Hide();
+    }
+
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
         _main = (Border)Template.FindName("Main",this);
@@ -174,4 +185,5 @@ public class CollapsePanel : UserControl{
             });
         }
     }
+    
 }

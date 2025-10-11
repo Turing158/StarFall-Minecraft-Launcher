@@ -274,7 +274,11 @@
     <Style TargetType="ListView">
         <Setter Property="Background" Value="Transparent"></Setter>
         <Setter Property="BorderThickness" Value="0"></Setter>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"></Setter>
+        <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"></Setter>
+        <Setter Property="VirtualizingPanel.IsContainerVirtualizable" Value="True"></Setter>
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"></Setter>
     </Style>
     
     <Style TargetType="ListViewItem">
@@ -303,6 +307,7 @@
                                        Background="Transparent"
                                        Foreground="#888"
                                        HorizontalAlignment="Left"
+                                       Padding="{TemplateBinding Padding}"
                                        Margin="5 0 0 0"
                                        VerticalAlignment="Center"
                                        IsHitTestVisible="False"></TextBlock>
@@ -520,6 +525,9 @@
                                             CornerRadius="10" IsHitTestVisible="True"
                                             Opacity="0" Background="#f1f1f1"></Border>
                                     <ContentPresenter Content="{TemplateBinding TitleOperateContent}" Margin="0 0 40 0"></ContentPresenter>
+                                    <Border Name="Disabled" IsHitTestVisible="False" Opacity="0">
+                                        <ContentPresenter Content="{TemplateBinding DisabledContent}"></ContentPresenter>
+                                    </Border>
                                 </Grid>
                                 <Border Margin="10 0 10 0" Height="1" Background="Black" Visibility="{Binding NeedDivider, RelativeSource={RelativeSource AncestorType=comp:CollapsePanel}}"></Border>
                                 <ContentPresenter Name="ContentPresenter"></ContentPresenter>
@@ -555,6 +563,24 @@
                                              EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                         </Storyboard>
                     </ControlTemplate.Resources>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Disabled" TargetProperty="Opacity">
+                                        <DoubleAnimation To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Disabled" TargetProperty="Opacity">
+                                        <DoubleAnimation To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

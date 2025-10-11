@@ -56,7 +56,19 @@ public partial class ComboBox : UserControl {
     public static readonly DependencyProperty CustomTitleContentProperty = DependencyProperty.Register(
         nameof(CustomTitleContent), typeof(Object), typeof(ComboBox), new PropertyMetadata(default(Object)));
     
-    
+    public Object DisabledContent {
+        get => GetValue(DisabledContentProperty);
+        set => SetValue(DisabledContentProperty, value);
+    }
+    public static readonly DependencyProperty DisabledContentProperty = DependencyProperty.Register(
+        nameof(DisabledContent), typeof(Object), typeof(ComboBox), new PropertyMetadata(default(Object)));
+
+    public string SourceEmptyText {
+        get => (string)GetValue(SourceEmptyTextProperty);
+        set => SetValue(SourceEmptyTextProperty, value);
+    }
+    public static readonly DependencyProperty SourceEmptyTextProperty = DependencyProperty.Register(
+        nameof(SourceEmptyText), typeof(string), typeof(ComboBox), new PropertyMetadata("空"));
     
     public Object ItemsSource {
         get => GetValue(ItemsSourceProperty);
@@ -162,6 +174,10 @@ public partial class ComboBox : UserControl {
         }
         if (NoSelectTemplate == null) {
             NoSelectTemplate = (DataTemplate)FindResource("DefaultNoSelect");
+        }
+
+        if (DisabledContent == null) {
+            DisabledContent = (ContentControl)FindResource("DefaultDisabledContent");
         }
     }
 
