@@ -4,19 +4,181 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:StarFallMC.ResourcePages"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
+      xmlns:util="clr-namespace:StarFallMC.Util"
+      xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       mc:Ignorable="d"
-      Title="DownloadGame" Height="380" Width="600">
+      Title="DownloadGame" Height="380" Width="600"
+      Loaded="DownloadGame_OnLoaded"
+      Unloaded="DownloadGame_OnUnloaded">
+    <Page.Resources>
+        <util:MinecraftDownloaderTypeToLabelConverter x:Key="MinecraftDownloaderTypeToLabelConverter"/>
+        <Style x:Key="ClassTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="15"></Setter>
+            <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+            <Setter Property="Margin" Value="10 0"></Setter>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+        </Style>
+        <Style x:Key="ClassTitleNumber" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="12"></Setter>
+            <Setter Property="HorizontalAlignment" Value="Right"></Setter>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+            <Setter Property="Margin" Value="5 0"></Setter>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+        </Style>
+        <Style TargetType="ListView" BasedOn="{StaticResource {x:Type ListView}}">
+            <Setter Property="VirtualizingStackPanel.IsVirtualizing" Value="True"></Setter>
+            <Setter Property="VirtualizingStackPanel.VirtualizationMode" Value="Recycling"></Setter>
+            <Setter Property="VirtualizingPanel.IsContainerVirtualizable" Value="True"></Setter>
+            <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"></Setter>
+        </Style>
+        <Style TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+            <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
+            <Setter Property="Margin" Value="0 2"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Grid Height="40" Margin="10 0">
+                            <Border Background="{DynamicResource PrimaryBrush}"></Border>
+                            <Border Name="Bg"   
+                                    CornerRadius="5" 
+                                    BorderBrush="{DynamicResource SecondaryBrush}" 
+                                    BorderThickness="1" Opacity="0">
+                            </Border>
+                            <Grid>
+                                <Border Width="30" Height="30"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0"
+                                        CornerRadius="5"
+                                        Background="{DynamicResource PrimaryBrush_2}">
+                                    <TextBlock Text="{Binding Type,Converter={StaticResource MinecraftDownloaderTypeToLabelConverter}}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               FontSize="16"
+                                               FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
+                                </Border>
+                                <StackPanel HorizontalAlignment="Left" 
+                                            VerticalAlignment="Top"
+                                            Orientation="Horizontal"
+                                            Margin="40 2 0 0">
+                                    <TextBlock Text="{Binding Name}" 
+                                               FontSize="13"
+                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                </StackPanel>
+                                <TextBlock HorizontalAlignment="Left" 
+                                    VerticalAlignment="Bottom"
+                                    Margin="40 0 0 2"
+                                    Text="{Binding Description}"
+                                    Foreground="{DynamicResource SecondaryBrush}"
+                                    Opacity="0.6"></TextBlock>
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
     <Grid>
         <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
-        <ScrollViewer Margin="0 5 10 5"
+        <ScrollViewer Name="MainScrollViewer" 
+                      Margin="0 5 10 5"
                       HorizontalScrollBarVisibility="Hidden"
                       VerticalScrollBarVisibility="Auto"
                       CanContentScroll="False">
             <StackPanel>
-                <Border Height="100" Style="{StaticResource RectByMargin}">
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="下载"></TextBlock>
+                <Border Style="{StaticResource Rect}" Margin="20 10 20 5">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="最新版本" Style="{StaticResource RectTitle}"></TextBlock>
+                            <comp:TextButton Content="&#xe60c;" 
+                                             Margin="0 10 10 0" 
+                                             Click="RefreshBtn_OnClick"
+                                             FontSize="16"
+                                             HorizontalAlignment="Right"
+                                             VerticalAlignment="Top"
+                                             ToolTip="刷新"></comp:TextButton>
+                        </Grid>
+                        <ListView Margin="0 10" ItemsSource="{Binding LatestType}" 
+                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                    </StackPanel>
                 </Border>
+                <comp:CollapsePanel Margin="20 0">
+                    <comp:CollapsePanel.TitleContent>
+                        <Grid>
+                            <TextBlock Text="正式版" Style="{StaticResource ClassTitle}"></TextBlock>
+                            <TextBlock Text="{Binding ReleaseType.Count}" Style="{StaticResource ClassTitleNumber}"></TextBlock>
+                        </Grid>
+                    </comp:CollapsePanel.TitleContent>
+                    <comp:CollapsePanel.Content>
+                        <ListView Margin="0 10" 
+                                  ItemsSource="{Binding ReleaseType}"
+                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                    </comp:CollapsePanel.Content>
+                </comp:CollapsePanel>
+                <comp:CollapsePanel Margin="20 0">
+                    <comp:CollapsePanel.TitleContent>
+                        <Grid>
+                            <TextBlock Text="快照版" Style="{StaticResource ClassTitle}"></TextBlock>
+                            <TextBlock Text="{Binding SnapshotType.Count}" Style="{StaticResource ClassTitleNumber}"></TextBlock>
+                        </Grid>
+                    </comp:CollapsePanel.TitleContent>
+                    <comp:CollapsePanel.Content>
+                        <ListView Margin="0 10" 
+                                  ItemsSource="{Binding SnapshotType}"
+                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                    </comp:CollapsePanel.Content>
+                </comp:CollapsePanel>
+                <comp:CollapsePanel Margin="20 0">
+                    <comp:CollapsePanel.TitleContent>
+                        <Grid>
+                            <TextBlock Text="尘封的版本" Style="{StaticResource ClassTitle}"></TextBlock>
+                            <TextBlock Text="{Binding OldType.Count}" Style="{StaticResource ClassTitleNumber}"></TextBlock>
+                        </Grid>
+                    </comp:CollapsePanel.TitleContent>
+                    <comp:CollapsePanel.Content>
+                        <ListView Margin="0 10" 
+                                  ItemsSource="{Binding OldType}"
+                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                    </comp:CollapsePanel.Content>
+                </comp:CollapsePanel>
+                <comp:CollapsePanel Margin="20 0">
+                    <comp:CollapsePanel.TitleContent>
+                        <Grid>
+                            <TextBlock Text="愚人节版本" Style="{StaticResource ClassTitle}"></TextBlock>
+                            <TextBlock Text="{Binding AprilFoolsType.Count}" Style="{StaticResource ClassTitleNumber}"></TextBlock>
+                        </Grid>
+                    </comp:CollapsePanel.TitleContent>
+                    <comp:CollapsePanel.Content>
+                        <ListView Margin="0 10" 
+                                  ItemsSource="{Binding AprilFoolsType}"
+                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                    </comp:CollapsePanel.Content>
+                </comp:CollapsePanel>
             </StackPanel>
         </ScrollViewer>
+        <comp:Loading x:Name="LoadingBorder" PercentText="{Binding PercentText}"></comp:Loading>
+        <comp:TopButton BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
     </Grid>
 </Page>

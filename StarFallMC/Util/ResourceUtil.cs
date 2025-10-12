@@ -6,6 +6,7 @@ using fNbt;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Loader;
 using StarFallMC.Entity.Resource;
 using StarFallMC.SettingPages;
 
@@ -16,6 +17,25 @@ public class ResourceUtil {
     public static List<ModResource> LocalModResources;
     public static List<SavesResource> LocalSavesResources;
     public static List<TexturePackResource> LocalTexturePackResources;
+    
+    public static List<MinecraftDownloader> LatestType = new ();
+    public static List<MinecraftDownloader> ReleaseType = new ();
+    public static List<MinecraftDownloader> SnapshotType = new ();
+    public static List<MinecraftDownloader> AprilFoolsType = new ();
+    public static List<MinecraftDownloader> OldType = new ();
+
+    public static bool IsNeedInitDownloader() {
+        return LatestType == null || ReleaseType == null || SnapshotType == null || AprilFoolsType == null || OldType == null ||
+               LatestType.Count == 0 || ReleaseType.Count == 0 || SnapshotType.Count == 0 || AprilFoolsType.Count == 0 || OldType.Count == 0;
+    }
+    
+    public static void ClearDownloader() {
+        LatestType?.Clear();
+        ReleaseType?.Clear();
+        SnapshotType?.Clear();
+        AprilFoolsType?.Clear();
+        OldType?.Clear();
+    }
     
     public static void ClearLocalResources() {
         LocalModResources?.Clear();
@@ -32,10 +52,421 @@ public class ResourceUtil {
         var currentGame = hvm.CurrentGame;
         return string.IsNullOrEmpty(currentGame.Path) ? null : currentGame;
     }
+
+    public static async Task<(List<ForgeLoader>, List<LiteLoader>, List<NeoForgeLoader>, List<OptifineLoader>, List<FabricLoader>, List<ModResource>, List<QuiltLoader>)> GetAllLoaderByMinecraftDownloader(string version, CancellationToken ct, IProgress<int> progress = null) {
+        var forgeLoaders = new List<ForgeLoader>();
+        var liteLoaders = new List<LiteLoader>();
+        var neoForgeLoaders = new List<NeoForgeLoader>();
+        var optifineLoaders = new List<OptifineLoader>();
+        var fabricLoaders = new List<FabricLoader>();
+        var fabricApiVersions = new List<ModResource>();
+        var quiltLoaders = new List<QuiltLoader>();
+        
+        try {
+            progress.Report(1);
+            ct.ThrowIfCancellationRequested();
+            //获取Forge列表，返回Json的数组，数组为空则为Forge不支持该版本
+            //需要单独Object的build[下载forge标识之一]，version[forge版本]，mcversion[游戏版本]和modified[时间字段]
+            //GET https://bmclapi2.bangbang93.com/forge/minecraft/:id
+            var forgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/forge/minecraft/{version}");
+            if (forgeResult.IsSuccess) {
+                try {
+                    var forgeJson = JArray.Parse(forgeResult.Content);
+                    foreach (var item in forgeJson) {
+                        ct.ThrowIfCancellationRequested();
+                        forgeLoaders.Add(new ForgeLoader {
+                            Build = item["build"]?.ToString(),
+                            Version = item["version"]?.ToString(),
+                            Mcversion = item["mcversion"]?.ToString(),
+                            Modified = DateTime.Parse(item["modified"]?.ToString())
+                        });
+                    }
+
+                    forgeLoaders.Sort((a, b) => DateTime.Compare(b.Modified, a.Modified));
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"获取Forge列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Forge列表失败：{forgeResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(17);
+            //获取Liteloader，返回Json，json为空则为Liteloader不支持该版本
+            //需要version[Liteloader版本]，mcversion[游戏版本]和build-timestamp[时间字段]
+            //GET https://bmclapi2.bangbang93.com/liteloader/list?mcversion=:id
+            var liteloaderResult =
+                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/liteloader/list?mcversion={version}");
+            if (liteloaderResult.IsSuccess) {
+                if (!string.IsNullOrEmpty(liteloaderResult.Content)) {
+                    try {
+                        var liteJson = JObject.Parse(liteloaderResult.Content);
+                        liteLoaders.Add(new LiteLoader {
+                            Version = liteJson["version"]?.ToString(),
+                            Mcversion = liteJson["mcversion"]?.ToString(),
+                            Timestamp = liteJson["build"]?["timestamp"]?.ToObject<long>() ?? 1,
+                        });
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine($"获取Liteloader列表失败：{e}");
+                    }
+
+                    liteLoaders.Sort((a, b) => b.Timestamp.CompareTo(a.Timestamp));
+                }
+            }
+            else {
+                Console.WriteLine($"获取Liteloader列表失败：{liteloaderResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(33);
+            //获取Neoforge，返回Json的数组，数组为空则为Neoforge不支持该版本
+            //需要单独Object的rawVersion[下载neoforge标识之一]，version[forge版本]，mcversion[游戏版本]
+            //GET https://bmclapi2.bangbang93.com/neoforge/list/:id
+            var neoforgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/neoforge/list/{version}");
+            if (neoforgeResult.IsSuccess) {
+                try {
+                    var neoJson = JArray.Parse(neoforgeResult.Content);
+                    foreach (var item in neoJson) {
+                        ct.ThrowIfCancellationRequested();
+                        neoForgeLoaders.Add(new NeoForgeLoader {
+                            RawVersion = item["rawVersion"]?.ToString(),
+                            Version = item["version"]?.ToString(),
+                            Mcversion = item["mcversion"]?.ToString(),
+                        });
+                    }
+
+                    neoForgeLoaders.Reverse();
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"获取Neoforge列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Neoforge列表失败：{neoforgeResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(49);
+            //获取Optifine，返回Json的数组，数组为空则为Optifine不支持该版本
+            //需要单独Object的mcversion[游戏版本]，patch[下载optifine标识之一]，type[Optifine版本类型]，forge[需要forge版本]
+            //GET https://bmclapi2.bangbang93.com/optifine/:id
+            var optifineResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/optifine/{version}");
+            if (optifineResult.IsSuccess) {
+                try {
+                    var optJson = JArray.Parse(optifineResult.Content);
+                    foreach (var i in optJson) {
+                        ct.ThrowIfCancellationRequested();
+                        var item = new OptifineLoader {
+                            Mcversion = i["mcversion"]?.ToString(),
+                            Type = i["type"]?.ToString(),
+                            Patch = i["patch"]?.ToString(),
+                        };
+                        var forgeBuild = i["forge"];
+                        if (forgeBuild != null && forgeBuild.ToString() != "Forge N/A") {
+                            item.NeedForge =
+                                forgeLoaders.FirstOrDefault(x => x.Build == forgeBuild.ToString().Split("#")[^1]);
+                        }
+
+                        optifineLoaders.Add(item);
+                    }
+
+                    optifineLoaders.Reverse();
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"获取Optifine列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Optifine列表失败：{optifineResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(65);
+            //获取Fabric Loader，返回Json的数组，若404且code=COMMON_NO_SUCH_OBJECT
+            //需要单独Object的loader-maven[fabric loader版本]
+            //GET https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/:id
+            var fabricLoaderResult =
+                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/{version}");
+            if (fabricLoaderResult.IsSuccess) {
+                try {
+                    var fabricJson = JArray.Parse(fabricLoaderResult.Content);
+                    foreach (var item in fabricJson) {
+                        ct.ThrowIfCancellationRequested();
+                        var loader = item["loader"];
+                        if (loader != null) {
+                            fabricLoaders.Add(new FabricLoader {
+                                Version = loader["version"]?.ToString(),
+                                Build = loader["build"]?.ToString(),
+                                Maven = loader["maven"]?.ToString(),
+                                Mcversion = version
+                            });
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"获取Fabric Loader列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Fabric Loader列表失败：{fabricLoaderResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(72);
+            if (fabricLoaders.Count > 0) {
+                //获取FabricAPI，返回Json的数组，若fabric不支持该版本跳过这里
+                //GET https://api.modrinth.com/v2/project/P7dR8mSH/version
+                //获取到json的数组
+                var fabricApiModrinthResult =
+                    await HttpRequestUtil.Get("https://api.modrinth.com/v2/project/P7dR8mSH/version");
+                if (fabricApiModrinthResult.IsSuccess) {
+                    try {
+                        var fabricApiJson = JArray.Parse(fabricApiModrinthResult.Content);
+                        foreach (var i in fabricApiJson) {
+                            ct.ThrowIfCancellationRequested();
+                            var gameVersions = i["game_versions"].ToObject<List<string>>();
+                            if (gameVersions == null) {
+                                continue;
+                            }
+
+                            if (gameVersions.Contains(version)) {
+                                var modResource = new ModResource() {
+                                    DisplayName = i["version_number"]?.ToString().Split("+")[0],
+                                    ResourceVersion = i["version_number"]?.ToString(),
+                                };
+                                foreach (var j in i["files"] as JArray) {
+                                    modResource.DownloadFiles.Add(new DownloadFile() {
+                                        Name = j["filename"]?.ToString(),
+                                        Sha1 = j["sha1"]?.ToString(),
+                                        UrlPath = j["url"]?.ToString(),
+                                        Size = long.Parse(j["size"]?.ToString() ?? "1"),
+                                    });
+                                }
+
+                                fabricApiVersions.Add(modResource);
+                            }
+                        }
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine($"Modrinth获取Fabric API列表失败：{e}");
+                    }
+                }
+                else {
+                    Console.WriteLine($"Modrinth获取Fabric API列表失败：{fabricApiModrinthResult.ErrorMessage}");
+                }
+                ct.ThrowIfCancellationRequested();
+                if (fabricApiVersions.Count == 0) {
+                    //若modrinth找不到该模组，则使用curseforge获取
+                    //GET https://api.curseforge.com/v1/mods/306612/files
+                    //headers需要添加X-API-KEY
+                    var fabricApiCurseForgeResult = await HttpRequestUtil.Get(
+                        "https://api.curseforge.com/v1/mods/306612/files",
+                        headers: new Dictionary<string, string>() {
+                            { "X-API-KEY", KeyUtil.CURSEFORGE_API_KEY }
+                        });
+                    if (fabricApiCurseForgeResult.IsSuccess) {
+                        try {
+                            var fabricApiCurseForgeJson = JObject.Parse(fabricApiCurseForgeResult.Content);
+                            foreach (var i in fabricApiCurseForgeJson["data"] as JArray) {
+                                ct.ThrowIfCancellationRequested();
+                                var gameVersion = i["gameVersions"]?.ToObject<List<string>>();
+                                if (gameVersion == null) {
+                                    continue;
+                                }
+
+                                if (gameVersion.Contains(version)) {
+                                    var modResource = new ModResource() {
+                                        DisplayName = i["displayName"]?.ToString().Split(" ")[^1].Split("+")[0],
+                                        ResourceVersion = i["displayName"]?.ToString().Split(" ")[^1],
+                                    };
+                                    modResource.DownloadFiles.Add(new DownloadFile() {
+                                        Name = i["fileName"]?.ToString(),
+                                        Sha1 = i["hashes"] is JArray hashes && hashes.Count > 0
+                                            ? hashes[0].ToString()
+                                            : string.Empty,
+                                        UrlPath = i["downloadUrl"]?.ToString(),
+                                        Size = i["fileLength"]?.ToObject<long>() ?? 1,
+                                    });
+                                    fabricApiVersions.Add(modResource);
+                                }
+                            }
+                        }
+                        catch (Exception e) {
+                            Console.WriteLine($"CurseForge获取Fabric API列表失败：{e}");
+                        }
+                    }
+                    else {
+                        Console.WriteLine($"CurseForge获取Fabric API列表失败：{fabricApiCurseForgeResult.ErrorMessage}");
+                    }
+                }
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(81);
+            //暂时无法使用BMCLAPI获取Quilt Loader
+            //需要单独Object的loader-maven[quilt loader版本]
+            //GET https://meta.quiltmc.org/v3/versions/loader/:id
+            var quiltLoaderResult = await HttpRequestUtil.Get($"https://meta.quiltmc.org/v3/versions/loader/{version}");
+            if (quiltLoaderResult.IsSuccess) {
+                try {
+                    var quiltJson = JArray.Parse(quiltLoaderResult.Content);
+                    foreach (var item in quiltJson) {
+                        ct.ThrowIfCancellationRequested();
+                        var loader = item["loader"];
+                        if (loader != null) {
+                            if ($"{loader["version"]}".Contains("beta")) {
+                                continue;
+                            }
+
+                            quiltLoaders.Add(new QuiltLoader {
+                                Version = loader["version"]?.ToString(),
+                                Build = loader["build"]?.ToString(),
+                                Maven = loader["maven"]?.ToString(),
+                                Mcversion = version
+                            });
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"获取Quilt Loader列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Quilt Loader列表失败：{quiltLoaderResult.ErrorMessage}");
+            }
+            ct.ThrowIfCancellationRequested();
+            progress.Report(96);
+            progress.Report(97);
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+        }
+        progress.Report(100);
+        return (forgeLoaders, liteLoaders, neoForgeLoaders, optifineLoaders, fabricLoaders, fabricApiVersions ,quiltLoaders);
+    }
+    
+    public static async Task GetMinecraftDownloader(CancellationToken ct, IProgress<int> progress = null) {
+        progress.Report(5);
+        try {
+            ct.ThrowIfCancellationRequested();
+            var result = await HttpRequestUtil.Get("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json");
+            ct.ThrowIfCancellationRequested();
+            JObject root;
+            if (result.IsSuccess) {
+                var json = result.Content;
+                root = JObject.Parse(json);
+            }
+            else {
+                progress.Report(100);
+                return;
+            }
+            ct.ThrowIfCancellationRequested();
+            var latestType = new List<MinecraftDownloader>();
+            var releaseType = new List<MinecraftDownloader>();
+            var snapshotType = new List<MinecraftDownloader>();
+            var aprilFoolsType = new List<MinecraftDownloader>();
+            var oldType = new List<MinecraftDownloader>();
+            progress.Report(6);
+            ct.ThrowIfCancellationRequested();
+            var latest = root["latest"];
+            var release = string.Empty;
+            var snapshot = string.Empty;
+            if (latest != null) {
+                release = latest["release"]?.ToString();
+                snapshot = latest["snapshot"]?.ToString();
+            }
+            progress.Report(7);
+            ct.ThrowIfCancellationRequested();
+            var versions = root["versions"] as JArray;
+            if (versions != null) {
+                progress.Report(4);
+                var AprilFoolsVersionName = new List<string>() {
+                    "15w14a",
+                    "1.RV-Pre1",
+                    "3D Shareware v1.34",
+                    "20w14infinite",
+                    "22w13oneBlockAtATime",
+                    "23w13a_or_b",
+                    "24w14potato",
+                    "25w14craftmine"
+                };
+                var ApriFlFoolsDescription = new List<string>() {
+                    "2015 | 爱与抱抱更新 (The Love and Hugs Update)",
+                    "2016 | 时尚更新 (Trendy Update)",
+                    "2019 | Minecraft 3D - 20世纪90年代电子游戏",
+                    "2020 | 终极内容更新 (Ultimate Content Update)",
+                    "2022 | 一次一个方块更新 (One Block at a Time Update)",
+                    "2023 | 投票更新 (The Vote Update)",
+                    "2024 | 毒马铃薯更新 (Poisonous Potato Update)",
+                    "2025 | 探险和升级Minecraft (The Craftmine Update)"
+                };
+                progress.Report(8);
+                ct.ThrowIfCancellationRequested();
+                foreach (var i in versions) {
+                    var name = i["id"]?.ToString();
+                    var type = i["type"]?.ToString();
+                    var url = i["url"]?.ToString();
+                    var sha1 = url != null ? url.Split("/")[^2] : string.Empty;
+                    var jsonReleaseTime = i["releaseTime"];
+                    var releaseTime = jsonReleaseTime != null
+                        ? DateTimeOffset.Parse(jsonReleaseTime.ToString()).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                        : string.Empty;
+                    MinecraftDownloader downloader = new MinecraftDownloader() {
+                        Name = name,
+                        Type = type,
+                        Description = releaseTime,
+                        Downloader = new DownloadFile() {
+                            Name = $"Minecraft {name}",
+                            UrlPath = url,
+                            Sha1 = sha1,
+                            FileDate = releaseTime,
+                        }
+                    };
+                    if (name == release) {
+                        downloader.Description = $"最新发行正式版 | {releaseTime}";
+                        latestType.Add(downloader);
+                    }
+                    else if (name == snapshot) {
+                        downloader.Description = $"最新发行快照版 | {releaseTime}";
+                        latestType.Add(downloader);
+                    }
+                    else if (AprilFoolsVersionName.Contains(name)) {
+                        downloader.Description = ApriFlFoolsDescription[AprilFoolsVersionName.IndexOf(name)];
+                        aprilFoolsType.Add(downloader);
+                    }
+                    else if (type == "release") {
+                        releaseType.Add(downloader);
+                    }
+                    else if (type == "snapshot") {
+                        snapshotType.Add(downloader);
+                    }
+                    else if (type.Contains("old_")) {
+                        oldType.Add(downloader);
+                    }
+                    ct.ThrowIfCancellationRequested();
+                }
+                ct.ThrowIfCancellationRequested();
+            }
+            progress.Report(98);
+            ct.ThrowIfCancellationRequested();
+            LatestType.AddRange(latestType);
+            ReleaseType.AddRange(releaseType);
+            SnapshotType.AddRange(snapshotType);
+            AprilFoolsType.AddRange(aprilFoolsType);
+            OldType.AddRange(oldType);
+            progress.Report(99);
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+        }
+        progress.Report(100);
+    }
     
     public static async Task<List<TexturePackResource>> GetTexturePack(CancellationToken ct,IProgress<int> progress = null) {
         List<TexturePackResource> resources = new();
-        string versionPath = GetMinecraftItem().Path;
+        var item = GetMinecraftItem();
+        if (item == null) {
+            progress.Report(100);
+            return resources;
+        }
+        string versionPath = item.Path;
         LocalModResources?.Clear();
         progress.Report(0);
         var gsvm = GameSetting.GetViewModel?.Invoke();
@@ -114,6 +545,7 @@ public class ResourceUtil {
     public static async Task<List<SavesResource>> GetSavesResource(CancellationToken ct,IProgress<int> progress = null) {
         List<SavesResource> resources = new();
         try {
+            
             LocalSavesResources?.Clear();
             progress.Report(0);
             var gsvm = GameSetting.GetViewModel?.Invoke();
@@ -121,7 +553,12 @@ public class ResourceUtil {
                 ? PropertiesUtil.loadJson["gameArgs"]["isolation"].ToObject<bool>()
                 : gsvm.IsIsolation;
             progress.Report(2);
-            string versionPath = GetMinecraftItem().Path;
+            var mcItem = GetMinecraftItem();
+            if (mcItem == null) {
+                progress.Report(100);
+                return resources;
+            }
+            string versionPath = mcItem.Path;
             ct.ThrowIfCancellationRequested();
             if (!isIsolate) {
                 versionPath = Path.GetDirectoryName(Path.GetDirectoryName(versionPath));
@@ -179,9 +616,15 @@ public class ResourceUtil {
             bool isIsolate = gsvm == null
                 ? PropertiesUtil.loadJson["gameArgs"]["isolation"].ToObject<bool>()
                 : gsvm.IsIsolation;
+            var mcItem = GetMinecraftItem();
+            if (mcItem == null) {
+                progress.Report(100);
+                return null;
+            }
+            string versionPath = mcItem.Path;
             ct.ThrowIfCancellationRequested();
             progress.Report(5);
-            List<ModResource> elementResource = await GetModResourcesElement(GetMinecraftItem().Path, isIsolate,progress,5,34);
+            List<ModResource> elementResource = await GetModResourcesElement(versionPath, isIsolate,progress,5,34);
             if (elementResource.Count == 0) {
                 progress.Report(100);
                 return elementResource;
