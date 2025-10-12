@@ -116,4 +116,11 @@ public partial class TexturePacksPage : Page {
     private void TexturePacksPage_OnUnloaded(object sender, RoutedEventArgs e) {
         cancellationTokenSource?.Cancel();
     }
+
+    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+        ResourceUtil.LocalTexturePackResources?.Clear();
+        InitResource();
+    }
 }

@@ -203,7 +203,16 @@
                       Opacity="0">
             <StackPanel>
                 <Border Height="100" Style="{StaticResource RectByMargin}">
-                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
+                    <Grid>
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
+                        <comp:TextButton Content="&#xe60c;" 
+                                         Margin="10" 
+                                         Click="RefreshBtn_OnClick"
+                                         FontSize="16"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         ToolTip="刷新"></comp:TextButton>
+                    </Grid>
                 </Border>
                 <Border Style="{StaticResource NoAnimRect}" Margin="20 5">
                     <Grid>

@@ -232,4 +232,11 @@ public partial class ModsPage : Page {
         }
         (sender as Border).RenderTransform = st;
     }
+
+    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+        ResourceUtil.LocalModResources?.Clear();
+        InitResource();
+    }
 }

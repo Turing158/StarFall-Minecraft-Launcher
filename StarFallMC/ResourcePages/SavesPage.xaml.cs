@@ -164,4 +164,11 @@ public partial class SavesPage : Page {
             viewModel.Saves.Add(copyResource);
         }
     }
+
+    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+        ResourceUtil.LocalSavesResources?.Clear();
+        InitResource();
+    }
 }
