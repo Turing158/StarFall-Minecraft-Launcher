@@ -50,10 +50,11 @@
                             BorderBrush="{DynamicResource SecondaryBrush_1}" 
                             BorderThickness="1" Opacity="0">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <ContentPresenter.Content>
-                                <TextBlock Text="{TemplateBinding Content}" 
-                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                            </ContentPresenter.Content>
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+                                </Style>
+                            </ContentPresenter.Resources>
                         </ContentPresenter>
                     </Border>
                     <ControlTemplate.Triggers>
