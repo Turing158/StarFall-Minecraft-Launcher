@@ -182,4 +182,16 @@ public class DirFileUtil {
         }
     }
     
+    public static string FormatFileSize(long size) {
+        string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        int unitIndex = 0;
+        double sizeDouble = size;
+    
+        while (sizeDouble >= 1024 && unitIndex < suffixes.Length - 1) {
+            sizeDouble /= 1024;
+            unitIndex++;
+        }
+    
+        return $"{sizeDouble:0.##} {suffixes[unitIndex]}";
+    }
 }

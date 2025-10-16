@@ -12,6 +12,38 @@
     <Page.Resources>
         <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
         <util:StringNotEmptyToVisibilityVisibleConverter x:Key="StringNotEmptyToVisibilityVisibleConverter" />
+        <Style x:Key="LoaderLabel" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border Background="{DynamicResource PrimaryBrush_4}"
+                                CornerRadius="2"
+                                Padding="4 0"
+                                Margin="2 0">
+                            <TextBlock Text="{Binding}"
+                                       Foreground="{DynamicResource PrimaryBrush}"
+                                       FontSize="11"></TextBlock>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="VersionLabel" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border Background="{DynamicResource SecondaryBrush}"
+                                CornerRadius="2"
+                                Padding="4 0"
+                                Margin="2 0">
+                            <TextBlock Text="{Binding}"
+                                       Foreground="{DynamicResource PrimaryBrush}"
+                                       FontSize="11"></TextBlock>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
@@ -45,18 +77,58 @@
                                             Margin="40 2 0 0">
                                     <TextBlock Text="{Binding Name}" 
                                                FontSize="13"
-                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               VerticalAlignment="Center"></TextBlock>
                                     <TextBlock FontSize="12"
                                                Text=" | "
                                                Foreground="{DynamicResource SecondaryBrush_1}"
-                                               Opacity="0.8"></TextBlock>
+                                               Opacity="0.8"
+                                               VerticalAlignment="Center"></TextBlock>
+                                    <TextBlock Text="{Binding Version}" 
+                                               FontSize="12"
+                                               Opacity="0.8"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                                 </StackPanel>
-                                <TextBlock HorizontalAlignment="Left" 
-                                    VerticalAlignment="Bottom"
-                                    Margin="40 0 0 2"
-                                    Text="{Binding FileDate}"
-                                    Foreground="{DynamicResource SecondaryBrush}"
-                                    Opacity="0.6"></TextBlock>
+                                <StackPanel Orientation="Horizontal"
+                                            Margin="40 0 0 2" 
+                                            HorizontalAlignment="Left" 
+                                            VerticalAlignment="Bottom">
+                                    <TextBlock Text="{Binding Date}"
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               Opacity="0.6"></TextBlock>
+                                    <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+                                        <TextBlock Text="&#xe92c;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Opacity="0.6"></TextBlock>
+                                        <TextBlock Text="{Binding Size}"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   Opacity="0.6"></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                                <ListView HorizontalAlignment="Right"
+                                          VerticalAlignment="Top"
+                                          Margin="2"
+                                          ItemContainerStyle="{StaticResource LoaderLabel}"
+                                          ItemsSource="{Binding ModLoader}">
+                                    <ListView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"></StackPanel>
+                                        </ItemsPanelTemplate>
+                                    </ListView.ItemsPanel>
+                                </ListView>
+                                <ListView HorizontalAlignment="Right"
+                                          VerticalAlignment="Bottom"
+                                           Margin="2"
+                                          ItemContainerStyle="{StaticResource VersionLabel}"
+                                          ItemsSource="{Binding McVersion}">
+                                    <ListView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"></StackPanel>
+                                        </ItemsPanelTemplate>
+                                    </ListView.ItemsPanel>
+                                </ListView>
                             </Grid>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -81,6 +153,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
     </Page.Resources>
     <Grid>
         <Border Style="{StaticResource FrameBg}" Opacity="1"></Border>
@@ -172,19 +245,104 @@
                 </Border>
                 <Border Style="{StaticResource RectByMargin}" Margin="50 10">
                     <StackPanel>
-                        <TextBlock Text="下载源" Style="{StaticResource RectTitle}"></TextBlock>
+                        <Grid>
+                            <TextBlock Text="下载源" Style="{StaticResource RectTitle}"></TextBlock>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Margin="0 0 10 0">
+                                <component:ToggleButton Margin="0 0 10 0"
+                                                         Click="Platform_OnClick"
+                                                         IsChecked="{Binding IsCurseForgeSource}">
+                                    <component:ToggleButton.ToolTip>
+                                        <ToolTip>
+                                            <StackPanel>
+                                                <TextBlock Text="切换下载源" FontSize="13"></TextBlock>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="12" Height="12"
+                                                           VerticalAlignment="Center"
+                                                           Margin="5 0"
+                                                           Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                                    <TextBlock Text="Modrinth"></TextBlock>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="12" Height="12"
+                                                           VerticalAlignment="Center"
+                                                           Margin="5 0"
+                                                           Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                                    <TextBlock Text="CurseForge"></TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </ToolTip>
+                                    </component:ToggleButton.ToolTip>
+                                    <component:ToggleButton.LeftContent>
+                                        <Image Width="15" Height="15" 
+                                               Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                    </component:ToggleButton.LeftContent>
+                                    <component:ToggleButton.RightContent>
+                                        <Image Width="15" Height="15" 
+                                               Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                    </component:ToggleButton.RightContent>
+                                </component:ToggleButton>
+                                <component:TextButton Content="&#xe60c;"
+                                                      FontSize="16"
+                                                      Click="RefreshBtn_OnClick"></component:TextButton>
+                            </StackPanel>
+                        </Grid>
                         <Border Height="1" Margin="10 0" Background="{DynamicResource SecondaryBrush}"></Border>
-                        <Border Name="NoDownloadSource" Height="50" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock FontSize="14" Text="没有能下载的源" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                        <Grid>
+                            <Border Name="Loading" Height="30" 
+                                    HorizontalAlignment="Center" 
+                                    VerticalAlignment="Center" Margin="0  5 0 0">
+                            <StackPanel Orientation="Horizontal" 
+                                        HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="&#xe679;" 
+                                           FontSize="18" 
+                                           FontFamily="{StaticResource IconFontFamily}"
+                                           Foreground="{DynamicResource SecondaryBrush}"
+                                           Margin="5 0"
+                                           RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform Angle="0"></RotateTransform>
+                                    </TextBlock.RenderTransform>
+                                    <TextBlock.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)" 
+                                                                     From="0" To="360" Duration="0:0:2"></DoubleAnimation>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </TextBlock.Triggers>
+                                </TextBlock>
+                                <TextBlock Text="加载中..." 
+                                           FontSize="14" 
+                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Name="NoDownloadSource" Height="30" 
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock FontSize="14" Text="没有能下载的源" 
+                                       Foreground="{DynamicResource SecondaryBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                         </Border>
                         <ListView Margin="0 10" 
-                                  ItemsSource="{Binding Resource.DownloadFiles}" 
+                                  ItemsSource="{Binding Downloaders}" 
                                   ItemContainerStyle="{StaticResource ModsListViewStyle}"
                                   SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                        </Grid>
                     </StackPanel>
                 </Border>
+                <component:Pagination x:Name="Pagination" Height="32" 
+                                      HorizontalAlignment="Right" 
+                                      PageChanged="Pagination_OnPageChanged"
+                                      VerticalAlignment="Center" 
+                                      Margin="0 0 45 0"></component:Pagination>
             </StackPanel>
         </ScrollViewer>
-        <component:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=ScrollViewer}"></component:TopButton>
+        <component:TopButton Margin="20 40" 
+                             BindingScrollViewer="{Binding ElementName=ScrollViewer}"></component:TopButton>
     </Grid>
 </Page>

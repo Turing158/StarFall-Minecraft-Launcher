@@ -19,4 +19,8 @@ public class NetworkUtil {
                    || uriResult.Scheme == Uri.UriSchemeHttps
                    || uriResult.Scheme == Uri.UriSchemeFtp);
     }
+
+    public static List<T> GetPageList<T>(List<T> downloaders,int page, int pageSize) {
+        return downloaders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+    }
 }

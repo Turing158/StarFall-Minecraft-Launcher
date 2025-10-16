@@ -38,6 +38,7 @@ public class ModResource : INotifyPropertyChanged{
     }
 
     public List<DownloadFile> DownloadFiles { get; set; } = new();
+    public List<ModDownloader> Downloaders { get; set; } = new();
 
     public override string ToString() {
         return $"MinecraftResource:{{DisplayName:{DisplayName},ResourceVersion:{ResourceVersion},FilePath:{FilePath},FileName:{FileName},FileNameWithExtension:{FileNameWithExtension},Description:{Description},Author:{Author},AuthorUrl:{AuthorUrl},WebsiteUrl:{WebsiteUrl},ResourceSource:{ResourceSource},ModrinthProjectId:{ModrinthProjectId},ModrinthAuthorId:{ModrinthAuthorId},ModrinthSha1:{ModrinthSha1},CurseForgeId:{CurseForgeId},CurseForgeFileId:{CurseForgeFileId},CurseForgeSha1:{CurseForgeSha1}}}";

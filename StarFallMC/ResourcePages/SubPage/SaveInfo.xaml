@@ -237,7 +237,7 @@
                     <component:CollapsePanel.TitleContent>
                         <TextBlock Text="游戏规则参数(GameRule)" 
                                    FontSize="15" 
-                                   Foreground="{DynamicResource SecondaryBrush1}"
+                                   Foreground="{DynamicResource SecondaryBrush_1}"
                                    Margin="10 0 0 0" 
                                    FontWeight="Bold" 
                                    VerticalAlignment="Center"></TextBlock>

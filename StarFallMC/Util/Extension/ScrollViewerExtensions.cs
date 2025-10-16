@@ -41,7 +41,7 @@ public static class ScrollViewerExtensions {
         }
     }
 
-    private static void AnimateScroll(ScrollViewer scrollViewer, double targetOffset, Action onCompleted = null) {
+    public static void AnimateScroll(ScrollViewer scrollViewer, double targetOffset,bool isHorizontal = false, Action onCompleted = null) {
         DoubleAnimation animation = new DoubleAnimation {
             To = targetOffset,
             Duration = TimeSpan.FromSeconds(0.15),
@@ -50,7 +50,13 @@ public static class ScrollViewerExtensions {
         if (onCompleted != null) {
             animation.Completed += (s, e) => onCompleted();
         }
-        scrollViewer.BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, animation);
+
+        if (isHorizontal) {
+            scrollViewer.BeginAnimation(ScrollViewerBehavior.HorizontalOffsetProperty, animation);
+        }
+        else {
+            scrollViewer.BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, animation);
+        }
     }
 }
 
@@ -73,5 +79,25 @@ public class ScrollViewerBehavior : DependencyObject {
     private static void OnVerticalOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
         if (d is ScrollViewer scrollViewer)
             scrollViewer.ScrollToVerticalOffset((double)e.NewValue);
+    }
+    
+    public static readonly DependencyProperty HorizontalOffsetProperty =
+        DependencyProperty.RegisterAttached(
+            "HorizontalOffset", 
+            typeof(double), 
+            typeof(ScrollViewerBehavior), 
+            new FrameworkPropertyMetadata(
+                0.0, 
+                FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, 
+                OnHorizontalOffsetChanged
+            )
+        );
+
+    public static double GetHorizontalOffset(DependencyObject obj) => (double)obj.GetValue(HorizontalOffsetProperty);
+    public static void SetHorizontalOffset(DependencyObject obj, double value) => obj.SetValue(HorizontalOffsetProperty, value);
+    
+    private static void OnHorizontalOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        if (d is ScrollViewer scrollViewer)
+            scrollViewer.ScrollToHorizontalOffset((double)e.NewValue);
     }
 }

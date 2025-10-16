@@ -76,6 +76,14 @@
       <Resource Include="assets\DefaultGameIcon\quiltmc.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="assets\DefaultGameIcon\curseForge.png" />
+      <Resource Include="assets\DefaultGameIcon\curseForge.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\DefaultGameIcon\modrinth.png" />
+      <Resource Include="assets\DefaultGameIcon\modrinth.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
     <ItemGroup>
@@ -105,6 +113,11 @@
         <SubType>Designer</SubType>
       </Page>
       <Page Update="SettingPages\Style\GameSettingStyle.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="ResourcePages\ModResources.xaml">
         <Generator>MSBuild:Compile</Generator>
         <XamlRuntime>Wpf</XamlRuntime>
         <SubType>Designer</SubType>

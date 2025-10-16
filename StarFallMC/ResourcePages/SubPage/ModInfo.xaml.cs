@@ -17,24 +17,52 @@ public partial class ModInfo : Page {
     public static Action<ModResource> SetResource;
 
     private ViewModel viewModel = new();
-    
+    private CancellationTokenSource cts;
     public ModInfo() {
         InitializeComponent();
         DataContext = viewModel;
         SetResource = setResource;
-        
     }
     
     private void setResource(ModResource resource) {
         Dispatcher.BeginInvoke(() => {
             viewModel.Resource = resource;
-            if (resource.DownloadFiles == null || resource.DownloadFiles.Count == 0) {
-                NoDownloadSource.Visibility = Visibility.Visible;
+            Loading.Visibility = Visibility.Visible;
+            NoDownloadSource.Visibility = Visibility.Collapsed;
+            GetDownloadFiles();
+        });
+    }
+    
+    private async Task GetDownloadFiles(bool init = true) {
+        if (viewModel.Resource == null) {
+            return;
+        }
+        cts?.Cancel();
+        cts = new CancellationTokenSource();
+        NoDownloadSource.Visibility = Visibility.Collapsed;
+        Loading.Visibility = Visibility.Visible;
+        viewModel.Downloaders = new();
+        if (init) {
+            var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
+            viewModel.ModrinthDownloaders = modrinth;
+            if (modrinth.Count == 0) {
+                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
+                viewModel.CurseForgeDownloaders = curseForge;
+                viewModel.IsCurseForgeSource = false;
+            }
+        }
+        else {
+            if (viewModel.IsCurseForgeSource) {
+                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
+                viewModel.CurseForgeDownloaders = curseForge;
             }
             else {
-                NoDownloadSource.Visibility = Visibility.Collapsed;
+                var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
+                viewModel.ModrinthDownloaders = modrinth;
             }
-        });
+        }
+        Pagination.CurrentPage = 1;
+        SetDownloaderPage();
     }
 
     public class ViewModel : INotifyPropertyChanged {
@@ -44,6 +72,30 @@ public partial class ModInfo : Page {
         public ModResource Resource {
             get => _resource;
             set => SetField(ref _resource, value);
+        }
+        
+        private List<ModDownloader> _downloaders = new();
+        public List<ModDownloader> Downloaders {
+            get => _downloaders;
+            set => SetField(ref _downloaders, value);
+        }
+        
+        private List<ModDownloader> _modrinthDownloaders = new();
+        public List<ModDownloader> ModrinthDownloaders {
+            get => _modrinthDownloaders;
+            set => SetField(ref _modrinthDownloaders, value);
+        }
+        
+        private List<ModDownloader> _curseForgeDownloaders = new();
+        public List<ModDownloader> CurseForgeDownloaders {
+            get => _curseForgeDownloaders;
+            set => SetField(ref _curseForgeDownloaders, value);
+        }
+
+        private bool _isCurseForgeSource = false;
+        public bool IsCurseForgeSource {
+            get => _isCurseForgeSource;
+            set => SetField(ref _isCurseForgeSource, value);
         }
         
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -83,22 +135,23 @@ public partial class ModInfo : Page {
             return;
         }
         
-        var downloadFile = listView.SelectedItem as DownloadFile;
+        var modDownloader = listView.SelectedItem as ModDownloader;
         (sender as ListView).SelectedIndex = -1;
-        if (downloadFile == null) {
+        if (modDownloader.File == null) {
             return;
         }
         
-        DownloadFile(downloadFile);
+        DownloadFile(modDownloader.File);
     }
     
     private async void DownloadFile(DownloadFile download) {
         Console.WriteLine($"下载文件：{download}");
-        OpenFolderDialog ofd = new OpenFolderDialog();
-        ofd.Title = $"请选择保存 {download.Name} 的文件夹";
-        ofd.DefaultDirectory = DirFileUtil.CurrentDirPosition;
-        if (ofd.ShowDialog() == true) {
-            download.FilePath = Path.Combine(ofd.FolderName, download.Name);
+        SaveFileDialog sfd = new SaveFileDialog();
+        sfd.Title = $"请选择保存 {download.Name} 的文件夹";
+        sfd.DefaultDirectory = DirFileUtil.CurrentDirPosition;
+        sfd.FileName = download.Name;
+        if (sfd.ShowDialog() == true) {
+            download.FilePath = Path.Combine(sfd.FileName);
             MessageTips.Show($"正在下载 {download.Name}");
             var result = await DownloadUtil.SingalDownload(download);
             if (result) {
@@ -117,5 +170,43 @@ public partial class ModInfo : Page {
             }
             
         }
+    }
+
+    private void SetDownloaderPage() {
+        if (viewModel.IsCurseForgeSource) {
+            viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.CurseForgeDownloaders,Pagination.CurrentPage,20);
+            Pagination.TotalCount = viewModel.CurseForgeDownloaders.Count;
+        }
+        else {
+            viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.ModrinthDownloaders,Pagination.CurrentPage,20);
+            Pagination.TotalCount = viewModel.ModrinthDownloaders.Count;
+        }
+        if (viewModel.Downloaders == null || viewModel.Downloaders.Count == 0) {
+            NoDownloadSource.Visibility = Visibility.Visible;
+        }
+        else {
+            NoDownloadSource.Visibility = Visibility.Collapsed;
+        }
+        Loading.Visibility = Visibility.Collapsed;
+    }
+
+    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        GetDownloadFiles(false).ConfigureAwait(false);
+    }
+
+    private bool isFirstChangePlatform = true;
+    private void Platform_OnClick(object sender, RoutedEventArgs e) {
+        if (isFirstChangePlatform) {
+            isFirstChangePlatform = false;
+            GetDownloadFiles(false).ConfigureAwait(false);
+        }
+        else {
+            Pagination.CurrentPage = 1;
+            SetDownloaderPage();
+        }
+    }
+
+    private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
+        SetDownloaderPage();
     }
 }

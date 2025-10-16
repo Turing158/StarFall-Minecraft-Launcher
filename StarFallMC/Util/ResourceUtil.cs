@@ -2,6 +2,7 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using fNbt;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
@@ -51,6 +52,124 @@ public class ResourceUtil {
 
         var currentGame = hvm.CurrentGame;
         return string.IsNullOrEmpty(currentGame.Path) ? null : currentGame;
+    }
+
+    public static async Task<List<ModDownloader>> GetModDownloaderByModrinth(ModResource modResource, CancellationToken ct) {
+        List<ModDownloader> downloaders = new();
+        try {
+            //通过Modrinth的API获取模组下载信息
+            //GET https://api.modrinth.com/v2/project/:ModrinthProjectId/version
+            var modrinth = await HttpRequestUtil.Get($"https://api.modrinth.com/v2/project/{modResource.ModrinthProjectId}/version");
+            if (modrinth.IsSuccess) {
+                try {
+                    var fabricApiJson = JArray.Parse(modrinth.Content);
+                    foreach (var i in fabricApiJson) {
+                        ct.ThrowIfCancellationRequested();
+                        var gameVersions = i["game_versions"].ToObject<List<string>>();
+                        var loaders = i["loaders"].ToObject<List<string>>();
+                        foreach (var j in i["files"] as JArray) {
+                            var downloader = new ModDownloader() {
+                                Name = Path.GetFileNameWithoutExtension(j["filename"]?.ToString() ?? ""),
+                                Version = i["version_number"]?.ToString(),
+                            };
+                            downloader.McVersion.AddRange(gameVersions);
+                            downloader.ModLoader.AddRange(loaders);
+                            try {
+                                downloader.Date = DateTime.Parse(i["date_published"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+                            }
+                            catch (Exception e){
+                                Console.WriteLine(e);
+                            }
+                            downloader.File = new DownloadFile() {
+                                Name = j["filename"]?.ToString(),
+                                Sha1 = j["sha1"]?.ToString(),
+                                UrlPath = j["url"]?.ToString(),
+                                Size = long.Parse(j["size"]?.ToString() ?? "1"),
+                            };
+                            downloaders.Add(downloader);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    Console.WriteLine($"Modrinth获取下载列表失败：{e}");
+                }
+            }
+            else {
+                Console.WriteLine($"获取Modrinth模组 {modResource.ModrinthProjectId} 版本信息失败");
+            }
+        }
+        catch (Exception e) {
+            Console.WriteLine(e);
+        }
+        return downloaders;
+    }
+    
+    public static async Task<List<ModDownloader>> GetModDownloaderByCurseForge(ModResource modResource, CancellationToken ct) {
+        List<ModDownloader> downloaders = new();
+        var modLoader = new HashSet<string> {
+            "Forge",
+            "NeoForge",
+            "Fabric",
+            "Quilt",
+        };
+        try {
+            if (modResource.CurseForgeId == 0) {
+                var list = await GetCurseForgeArgs(new List<ModResource> {modResource},null,0,1,true);
+                if (list.Count == 0) {
+                    return downloaders;
+                }
+                modResource.CurseForgeId = list[0].CurseForgeId;
+            }
+            bool hasMore = true;
+            while (hasMore) {
+                var curseForge = await HttpRequestUtil.Get(
+                    $"https://api.curseforge.com/v1/mods/{modResource.CurseForgeId}/files",
+                    args: new Dictionary<string, Object> {
+                        {"index", 0 * 100},
+                        {"pageSize", 100},
+                    },
+                    headers: new Dictionary<string, string> {
+                        {"X-API-KEY", KeyUtil.CURSEFORGE_API_KEY}
+                    });
+                if (curseForge.IsSuccess) {
+                    var root = JObject.Parse(curseForge.Content);
+                    foreach (var i in root["data"] as JArray) {
+                        var gameVersions = i["gameVersions"].ToObject<List<string>>();
+                        var versions = gameVersions.Where(x => Regex.IsMatch(x, @"\d")).ToList();
+                        var loaders = gameVersions.Where(x => modLoader.Contains(x)).ToList();
+                        var downloader = new ModDownloader() {
+                            Name = Path.GetFileNameWithoutExtension(i["fileName"]?.ToString() ?? ""),
+                        };
+                        downloader.McVersion.AddRange(versions);
+                        downloader.ModLoader.AddRange(loaders);
+                        try {
+                            downloader.Date = DateTime.Parse(i["fileDate"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+                        }
+                        catch (Exception e){
+                            Console.WriteLine(e);
+                        }
+                        downloader.File = new DownloadFile() {
+                            Name = i["fileName"]?.ToString(),
+                            Sha1 = i["hashes"][1]["value"]?.ToString(),
+                            UrlPath = i["downloadUrl"]?.ToString(),
+                            Size = long.Parse(i["fileLength"]?.ToString() ?? "1"),
+                        };
+                        downloaders.Add(downloader);
+                    }
+
+                    if (downloaders.Count >= root["pagination"]?["totalCount"]?.ToObject<int>()) {
+                        hasMore = false;
+                    }
+                }
+                else {
+                    Console.WriteLine($"CurseForge获取下载列表失败：{curseForge.ErrorMessage}");
+                }
+            }
+        }
+        catch (Exception e) {
+            Console.WriteLine($"CurseForge获取下载列表失败：{e}");
+        }
+        return downloaders;
     }
 
     public static async Task<(List<ForgeLoader>, List<LiteLoader>, List<NeoForgeLoader>, List<OptifineLoader>, List<FabricLoader>, List<ModResource>, List<QuiltLoader>)> GetAllLoaderByMinecraftDownloader(string version, CancellationToken ct, IProgress<int> progress = null) {
@@ -223,22 +342,33 @@ public class ResourceUtil {
                         foreach (var i in fabricApiJson) {
                             ct.ThrowIfCancellationRequested();
                             var gameVersions = i["game_versions"].ToObject<List<string>>();
-                            if (gameVersions == null) {
-                                continue;
-                            }
 
-                            if (gameVersions.Contains(version)) {
+                            if (gameVersions == null || gameVersions.Contains(version)) {
                                 var modResource = new ModResource() {
                                     DisplayName = i["version_number"]?.ToString().Split("+")[0],
                                     ResourceVersion = i["version_number"]?.ToString(),
                                 };
                                 foreach (var j in i["files"] as JArray) {
-                                    modResource.DownloadFiles.Add(new DownloadFile() {
+                                    
+                                    var downloader = new ModDownloader() {
+                                        Name = $"Fabric API {modResource.ResourceVersion}",
+                                        Version = modResource.ResourceVersion,
+                                    };
+                                    downloader.McVersion.Add(version);
+                                    downloader.ModLoader.Add("Fabric");
+                                    try {
+                                        downloader.Date = DateTime.Parse(i["date_published"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+                                    }
+                                    catch (Exception e){
+                                        Console.WriteLine(e);
+                                    }
+                                    downloader.File = new DownloadFile() {
                                         Name = j["filename"]?.ToString(),
                                         Sha1 = j["sha1"]?.ToString(),
                                         UrlPath = j["url"]?.ToString(),
                                         Size = long.Parse(j["size"]?.ToString() ?? "1"),
-                                    });
+                                    };
+                                    modResource.Downloaders.Add(downloader);
                                 }
 
                                 fabricApiVersions.Add(modResource);
@@ -268,23 +398,33 @@ public class ResourceUtil {
                             foreach (var i in fabricApiCurseForgeJson["data"] as JArray) {
                                 ct.ThrowIfCancellationRequested();
                                 var gameVersion = i["gameVersions"]?.ToObject<List<string>>();
-                                if (gameVersion == null) {
-                                    continue;
-                                }
 
-                                if (gameVersion.Contains(version)) {
+                                if (gameVersion == null || gameVersion.Contains(version)) {
                                     var modResource = new ModResource() {
                                         DisplayName = i["displayName"]?.ToString().Split(" ")[^1].Split("+")[0],
                                         ResourceVersion = i["displayName"]?.ToString().Split(" ")[^1],
                                     };
-                                    modResource.DownloadFiles.Add(new DownloadFile() {
+                                    var downloader = new ModDownloader() {
+                                        Name = $"Fabric API {modResource.ResourceVersion}",
+                                        Version = modResource.ResourceVersion,
+                                    };
+                                    downloader.McVersion.Add(version);
+                                    downloader.ModLoader.Add("Fabric");
+                                    try {
+                                        downloader.Date = DateTime.Parse(i["fileDate"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+                                    }
+                                    catch (Exception e){
+                                        Console.WriteLine(e);
+                                    }
+                                    downloader.File = new DownloadFile() {
                                         Name = i["fileName"]?.ToString(),
                                         Sha1 = i["hashes"] is JArray hashes && hashes.Count > 0
                                             ? hashes[0].ToString()
                                             : string.Empty,
                                         UrlPath = i["downloadUrl"]?.ToString(),
                                         Size = i["fileLength"]?.ToObject<long>() ?? 1,
-                                    });
+                                    };
+                                    modResource.Downloaders.Add(downloader);
                                     fabricApiVersions.Add(modResource);
                                 }
                             }
@@ -887,23 +1027,16 @@ public class ResourceUtil {
                 if (string.IsNullOrEmpty(modVersion) || modVersion != arg.VersionNumber) {
                     resources[hashIndex].ResourceVersion = arg.VersionNumber;
                 }
-                foreach (var i in v["files"] as JArray) {
-                    resources[hashIndex].DownloadFiles.Add(new DownloadFile {
-                        Name = i["filename"].ToString(),
-                        UrlPath = i["url"].ToString(),
-                        Size = i["size"].ToObject<long>(),
-                    });
-                }
                 progressCount = start + (int)((double)jsonIndex / json.Count * (progressFirstEnd - start));
-                progress.Report(progressCount);
+                progress?.Report(progressCount);
                 await Task.Delay(5);
             }
         }
         else {
-            progress.Report(end);
+            progress?.Report(end);
             return resources;
         }
-        progress.Report(progressFirstEnd);
+        progress?.Report(progressFirstEnd);
         //GET https://api.modrinth.com/v2/projects?ids=[ModrinthSha1,...]
         StringBuilder args = new StringBuilder();
         foreach (var i in modrinthHashAndId.Values) {
@@ -925,26 +1058,21 @@ public class ResourceUtil {
                 minecraftResource.Description = i["description"].ToString().Trim().Replace("\n"," ");
                 minecraftResource.Logo = i["icon_url"].ToString();
                 minecraftResource.ResourceSource = "Modrinth";
-                DateTimeOffset updateDate = DateTimeOffset.Parse(i["updated"].ToString());
-                for (int j = 0; j < minecraftResource.DownloadFiles.Count; j++) {
-                    minecraftResource.DownloadFiles[j].FileDate = updateDate.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                }
                 resources[currentIndex] = minecraftResource;
-                //这里也需要progress
                 progressCount = progressFirstEnd + (int)((double)modrinthProjectJArrayIndex / modrinthProjectJArray.Count * (end - progressFirstEnd));
-                progress.Report(progressCount);
+                progress?.Report(progressCount);
                 await Task.Delay(5);
             }
         }
         else {
-            progress.Report(end);
+            progress?.Report(end);
             return resources;
         }
-        progress.Report(end);
+        progress?.Report(end);
         return resources;
     }
     
-    private static async Task<List<ModResource>> GetCurseForgeArgs(List<ModResource> resources,IProgress<int> progress,int start,int end) {
+    private static async Task<List<ModResource>> GetCurseForgeArgs(List<ModResource> resources,IProgress<int> progress,int start,int end,bool JustId = false) {
         //POST https://api.curseforge.com/v1/fingerprints/432
         //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6[示例，已废弃]
         //body {"fingerprints" :[CurseForgeSha1,...]}
@@ -971,8 +1099,8 @@ public class ResourceUtil {
                     resources[resources.FindIndex(j => j.CurseForgeSha1 == sha1)].CurseForgeId =
                         i["id"].ToObject<int>();
                     progressCount = start + (int)((double)matchesIndex / matches.Count * (progressFirstEnd - start));
-                    progress.Report(progressCount);
-                    await Task.Delay(5);
+                    progress?.Report(progressCount);
+                    await Task.Delay(2);
                 }
             }
         }
@@ -980,7 +1108,11 @@ public class ResourceUtil {
             Console.WriteLine(curseForgeIdJson.ErrorMessage);
             return resources;
         }
-        progress.Report(progressFirstEnd);
+        progress?.Report(progressFirstEnd);
+        if (JustId) {
+            progress?.Report(end);
+            return resources;
+        }
         //POST https://api.curseforge.com/v1/mods
         //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6[示例，已废弃]
         //body {"modIds":[上一个请求的id,...]}
@@ -1004,27 +1136,19 @@ public class ResourceUtil {
                     resource.Author = i["authors"]?[0]?["name"].ToString();
                     resource.slug = i["slug"].ToString();
                     resource.ResourceSource = "CurseForge";
-                    foreach (var j in i["latestFiles"]) {
-                        resource.DownloadFiles.Add(new DownloadFile {
-                            Name = j["fileName"].ToString(),
-                            UrlPath = j["downloadUrl"].ToString(),
-                            Size = j["fileLength"].ToObject<long>(),
-                            FileDate = DateTimeOffset.Parse(j["fileDate"].ToString()).LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                        });
-                    }
                     resources[currentIndex] = resource;
                     progressCount = progressFirstEnd + (int)((double)modArrayIndex / modArray.Count * (end - progressFirstEnd));
-                    progress.Report(progressCount);
+                    progress?.Report(progressCount);
                     await Task.Delay(5);
                 }
             }
         }
         else {
-            progress.Report(end);
+            progress?.Report(end);
             Console.WriteLine(curseForgeModJson.ErrorMessage);
             return resources;
         }
-        progress.Report(end);
+        progress?.Report(end);
         return resources;
     }
 }

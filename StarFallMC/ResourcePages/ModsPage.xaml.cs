@@ -36,16 +36,15 @@ public partial class ModsPage : Page {
             var progress = new Progress<int>(percent => {
                 viewModel.PercentText = $"加载Mod列表... {percent}%";
                 if (percent >= 99) {
-                    
-                    viewModel.Mods = new ObservableCollection<ModResource>(ResourceUtil.LocalModResources ?? new List<ModResource>());
-                    for (int i = 0; i < viewModel.Mods.Count; i++) {
-                        _modIndexCache[viewModel.Mods[i].ModrinthSha1] = i;
+                    viewModel.TotalMods = ResourceUtil.LocalModResources ?? new List<ModResource>();
+                    for (int i = 0; i < viewModel.TotalMods.Count; i++) {
+                        _modIndexCache[viewModel.TotalMods[i].ModrinthSha1] = i;
                     }
                 }
                 if (percent == 100) {
                     ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
                     viewModel.PercentText = "加载完成";
-                    MessageTips.Show($"获取到{viewModel.Mods.Count}个Mods资源");
+                    MessageTips.Show($"获取到{viewModel.TotalMods.Count}个Mods资源");
                 }
             });
             try {
@@ -63,15 +62,18 @@ public partial class ModsPage : Page {
                 MessageTips.Show("获取的Mod数量比较多，可能会造成一小会的卡顿");
             }
             await Task.Delay(250);
-            viewModel.Mods = new ObservableCollection<ModResource>(ResourceUtil.LocalModResources);
-            for (int i = 0; i < viewModel.Mods.Count; i++) {
-                _modIndexCache[viewModel.Mods[i].ModrinthSha1] = i;
+            viewModel.TotalMods = ResourceUtil.LocalModResources;
+            for (int i = 0; i < viewModel.TotalMods.Count; i++) {
+                _modIndexCache[viewModel.TotalMods[i].ModrinthSha1] = i;
             }
             ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
         }
-    }
 
-    
+        Dispatcher.BeginInvoke(() => {
+            Pagination.CurrentPage = 1;
+            SetModsPages();
+        });
+    }
     
     public class ViewModel : INotifyPropertyChanged {
 
@@ -80,6 +82,12 @@ public partial class ModsPage : Page {
         public ObservableCollection<ModResource> Mods {
             get => _mods;
             set => SetField(ref _mods, value);
+        }
+
+        private List<ModResource> _TotalMods;
+        public List<ModResource> TotalMods {
+            get => _TotalMods;
+            set => SetField(ref _TotalMods, value);
         }
 
         
@@ -157,7 +165,7 @@ public partial class ModsPage : Page {
             if (_modIndexCache.TryGetValue(item.ModrinthSha1, out index)) {
                 if (index >= 0) {
                     ResourceUtil.LocalModResources[index] = item;
-                    viewModel.Mods[index] = item;
+                    viewModel.TotalMods[index] = item;
                     Dispatcher.BeginInvoke(() => {
                         var parent = textButton.TemplatedParent as ListViewItem;
                         (parent.Template.FindName("Disabled", parent) as Border)?.RenderTransform.BeginAnimation(
@@ -202,7 +210,7 @@ public partial class ModsPage : Page {
             int index = ResourceUtil.LocalModResources.FindIndex(i => item.DisplayName == i.DisplayName);
             if (index >= 0) {
                 ResourceUtil.LocalModResources[index] = item;
-                viewModel.Mods[index] = item;
+                viewModel.TotalMods[index] = item;
                 var parent = textButton.TemplatedParent as ListViewItem;
                 var border = parent.Template.FindName("Disabled", parent) as Border;
                 var disabledBg = parent.Template.FindName("DisabledBg", parent) as Border;
@@ -238,5 +246,14 @@ public partial class ModsPage : Page {
         cancellationTokenSource = new CancellationTokenSource();
         ResourceUtil.LocalModResources?.Clear();
         InitResource();
+    }
+    
+    private void SetModsPages() {
+        viewModel.Mods = new ObservableCollection<ModResource>(NetworkUtil.GetPageList(viewModel.TotalMods,Pagination.CurrentPage,20));
+        Pagination.TotalCount = viewModel.TotalMods.Count;
+    }
+
+    private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
+        SetModsPages();
     }
 }
