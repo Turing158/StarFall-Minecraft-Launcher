@@ -30,6 +30,8 @@ public partial class ModInfo : Page {
             Loading.Visibility = Visibility.Visible;
             NoDownloadSource.Visibility = Visibility.Collapsed;
             GetDownloadFiles();
+            Pagination.TotalCount = 1;
+            Pagination.CurrentPage = 1;
         });
     }
     

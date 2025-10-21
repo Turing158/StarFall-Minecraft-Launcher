@@ -102,6 +102,13 @@ public partial class Pagination : UserControl {
     public static readonly DependencyProperty GoToButtonVisibilityProperty =
         DependencyProperty.Register(nameof(GoToButtonVisibility), typeof(Visibility), typeof(Pagination), new PropertyMetadata(Visibility.Collapsed));
     
+    public Visibility PageNumVisibility {
+        get => (Visibility)GetValue(PageNumVisibilityProperty);
+        set => SetValue(PageNumVisibilityProperty, value);
+    }
+    public static readonly DependencyProperty PageNumVisibilityProperty =
+        DependencyProperty.Register(nameof(PageNumVisibility), typeof(Visibility), typeof(Pagination), new PropertyMetadata(Visibility.Visible));
+    
     public event SelectionChangedEventHandler PageChanged {
         add { AddHandler(PageChangedEvent, value); }
         remove { RemoveHandler(PageChangedEvent, value); }

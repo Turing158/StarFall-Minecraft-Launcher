@@ -611,4 +611,148 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Grid>
+                        <Border Name="Border" 
+                                Background="{DynamicResource PrimaryBrush_1}"
+                                CornerRadius="2"
+                                Opacity="0"></Border>
+                        <ContentPresenter Margin="5 2">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Border" TargetProperty="Opacity">
+                                        <DoubleAnimation To="1" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Border" TargetProperty="Opacity">
+                                        <DoubleAnimation To="0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="ComboBox">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <Border Background="{DynamicResource PrimaryBrush_1}" CornerRadius="5"></Border>
+                        <Border Name="Border" Background="{DynamicResource PrimaryBrush_2}" CornerRadius="5" Opacity="0"></Border>
+                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"/>
+                        <Border Width="2" Margin="0 5 30 5" Background="{DynamicResource SecondaryBrush_2}" HorizontalAlignment="Right"></Border>
+                        <ToggleButton FontSize="25" FontWeight="Normal"
+                                      IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <TextBlock Text="&#xe903;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                                        <ColumnDefinition Width="30"></ColumnDefinition>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Background="Transparent"></Border>
+                                                    <Border Grid.Column="1" RenderTransformOrigin="0.5,0.5" Name="Border" Background="Transparent">
+                                                        <Border.RenderTransform>
+                                                            <RotateTransform Angle="0"></RotateTransform>
+                                                        </Border.RenderTransform>
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"></ContentPresenter>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Trigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                    <DoubleAnimation Duration="0:0:0.8" To="180" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.EnterActions>
+                                                        <Trigger.ExitActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard TargetName="Border" TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)">
+                                                                    <DoubleAnimation Duration="0:0:0.8" To="0" EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </Trigger.ExitActions>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ToggleButton.Style>
+                        </ToggleButton>
+                        <Popup
+                            AllowsTransparency="True"
+                            Focusable="False"
+                            IsOpen="{TemplateBinding IsDropDownOpen}"
+                            Placement="Bottom"
+                            PopupAnimation="Fade">
+                            <Grid MinWidth="{TemplateBinding ActualWidth}"
+                                  MaxHeight="180"
+                                  >
+                                <Border Background="{DynamicResource PrimaryBrush}"
+                                        BorderBrush="{DynamicResource SecondaryBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="5"></Border>
+                                <ScrollViewer
+                                    Margin="1"
+                                    CanContentScroll="False"
+                                    HorizontalScrollBarVisibility="Hidden"
+                                    VerticalScrollBarVisibility="Auto"
+                                     PanningMode="VerticalOnly">
+                                    <ItemsPresenter></ItemsPresenter>
+                                </ScrollViewer>
+                            </Grid>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Border" TargetProperty="Opacity">
+                                        <DoubleAnimation To="1" Duration="0:0:0.15"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard TargetName="Border" TargetProperty="Opacity">
+                                        <DoubleAnimation To="0" Duration="0:0:0.15"></DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

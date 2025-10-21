@@ -41,7 +41,10 @@ public partial class ResourcePage : Page {
                     new ("模组","ModsPage"),
                 }),
             new ("Minecraft","DownloadGame"),
-            new ("社区资源","CommunityResource"),
+            new ("社区资源","CommunityResource",
+                0 ,new ObservableCollection<NavigationItem>() {
+                    new ("Mod","ModResources"),
+                }),
         };
         public ObservableCollection<NavigationItem> Navi {
             get=> _navi;

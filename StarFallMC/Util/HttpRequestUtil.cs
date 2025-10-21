@@ -23,9 +23,11 @@ public class HttpRequestUtil {
             foreach (var i in args) {
                 queryString += $"{i.Key}={i.Value}&";
             }
+            queryString = queryString.TrimEnd('&');
         }
         var cts = CancellationTokenSource.CreateLinkedTokenSource(globalCts.Token);
         try {
+            Console.WriteLine($"GET {url + queryString}");
             var req = new HttpRequestMessage(HttpMethod.Get, url + queryString);
             if (headers != null && headers.Count > 0) {
                 foreach (var i in headers) {

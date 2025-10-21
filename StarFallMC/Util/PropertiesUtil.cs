@@ -9,7 +9,9 @@ namespace StarFallMC.Util;
 public class PropertiesUtil {
     public static string jsonPath = DirFileUtil.LauncherSettingsDir + "/SFMCL.json";
     public static string LauncherName = "StarFallMC";
-    public static string LauncherVersion = "1.0.0";
+    public static string LauncherVersion = "0.0.2";
+    public static DateTime LastCheckUpdateTime = DateTime.MinValue;
+    public static UpdateInfo LastUpdateInfo = new();
     public static JObject loadJson;
     public static void LoadPropertiesJson() {
         if (!File.Exists(jsonPath) || File.ReadAllText(jsonPath) == "") {

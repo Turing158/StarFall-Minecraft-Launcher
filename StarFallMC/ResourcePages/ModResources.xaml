@@ -1,0 +1,306 @@
+﻿<Page x:Class="StarFallMC.ResourcePages.ModResources"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:StarFallMC.ResourcePages"
+      xmlns:util="clr-namespace:StarFallMC.Util"
+      xmlns:comp="clr-namespace:StarFallMC.Component"
+      xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
+      mc:Ignorable="d"
+      Title="ModsPage" Height="380" Width="640"
+      Loaded="ModResources_OnLoaded"
+      Unloaded="ModResources_OnUnloaded">
+    <Page.Resources>
+        <util:ListToLabelConverter x:Key="ListToLabelConverter" />
+        <Style x:Key="SearchTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontSize" Value="15"></Setter>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+            <Setter Property="VerticalAlignment" Value="Center"></Setter>
+            <Setter Property="HorizontalAlignment" Value="Right"></Setter>
+            <Setter Property="Margin" Value="10 0"></Setter>
+        </Style>
+        <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+            <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Grid Height="55" Margin="10 0">
+                            <Border Background="{DynamicResource PrimaryBrush}"></Border>
+                            <Border Name="Bg"
+                                    CornerRadius="5"
+                                    BorderBrush="{DynamicResource SecondaryBrush}"
+                                    BorderThickness="1" Opacity="0">
+                            </Border>
+                            <Grid>
+                                <Border Width="40" Height="40"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0"
+                                        CornerRadius="5"
+                                        Background="{DynamicResource PrimaryBrush_2}">
+                                    <TextBlock Text="&#xe61d;"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               FontSize="16"
+                                               FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                                </Border>
+                                <Border Width="40" Height="40"
+                                        Background="{DynamicResource PrimaryBrush}"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="5 0">
+                                    <Image Width="40" Height="40"
+                                           Source="{Binding Logo}"></Image>
+                                </Border>
+                                <Grid Margin="50 2 0 0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition></RowDefinition>
+                                        <RowDefinition></RowDefinition>
+                                        <RowDefinition></RowDefinition>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Name="ModTitle" 
+                                                HorizontalAlignment="Left" 
+                                                VerticalAlignment="Top"
+                                                Orientation="Horizontal">
+                                        <TextBlock Text="{Binding DisplayName}" 
+                                                   FontSize="13"
+                                                   MaxWidth="300"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                        <TextBlock FontSize="12"
+                                                   Text=" | "
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   Opacity="0.8"></TextBlock>
+                                        <TextBlock FontSize="12"
+                                                   Text="{Binding Slug}"
+                                                   VerticalAlignment="Bottom"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   Opacity="0.8"></TextBlock>
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="1" Name="description"
+                                               MaxWidth="500"
+                                               HorizontalAlignment="Left"
+                                               VerticalAlignment="Bottom"
+                                               FontSize="11"
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="WordEllipsis"
+                                               Foreground="{DynamicResource SecondaryBrush_1}"
+                                               Opacity="0.6"
+                                               Text="{Binding Description}">
+                                    </TextBlock>
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" 
+                                                    HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding Loaders, Converter={StaticResource ListToLabelConverter}}" 
+                                                       Opacity="0.6"></TextBlock>
+                                            <TextBlock Margin="5 0" 
+                                                       Text="{Binding GameVersions, Converter={StaticResource ListToLabelConverter}}" 
+                                                       Opacity="0.6"></TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" 
+                                                    Orientation="Horizontal" 
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="&#xe60c;" 
+                                                       FontSize="12"
+                                                       Margin="0 2 2 0"
+                                                       FontFamily="{StaticResource IconFontFamily}"
+                                                       Opacity="0.6"></TextBlock>
+                                            <TextBlock FontSize="12"
+                                                       Foreground="{DynamicResource SecondaryBrush_1}"
+                                                       Opacity="0.6"
+                                                       Text="{Binding UpdatedTimeAgo}">
+                                            </TextBlock>
+                                        </StackPanel>
+                                        
+                                        <StackPanel Grid.Column="2" 
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Right"
+                                                    Margin="5 0">
+                                            <TextBlock Text="&#xe92c;" 
+                                                       FontSize="14"
+                                                       FontFamily="{StaticResource IconFontFamily}"
+                                                       Opacity="0.6"
+                                                       Margin="0 2 0 0"></TextBlock>
+                                            <TextBlock Margin="5 0" 
+                                                       Text="{Binding DownloadCountText}" 
+                                                       Opacity="0.6"></TextBlock>
+                                            
+                                        </StackPanel>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+    <Grid>
+        <Border Background="#f1f1f1" CornerRadius="10" Width="620" HorizontalAlignment="Left"></Border>
+        <ScrollViewer Name="MainScrollViewer" Margin="0 5 10 5"
+                      HorizontalScrollBarVisibility="Hidden"
+                      VerticalScrollBarVisibility="Auto"
+                      CanContentScroll="False">
+            <StackPanel>
+                <Border Style="{StaticResource RectByMargin}">
+                    <StackPanel>
+                        <Grid Margin="5 10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition Width="80"></ColumnDefinition>
+                                <ColumnDefinition Width="150"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="35"></RowDefinition>
+                                <RowDefinition Height="35"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="搜索:" 
+                                       Style="{StaticResource SearchTextBlock}"></TextBlock>
+                            <comp:TextInput Grid.Row="0" Grid.Column="1" 
+                                            Margin="0 5" 
+                                            Text="{Binding SearchText}"
+                                            VerticalContentAlignment="Center"></comp:TextInput>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="版本:" 
+                                       Style="{StaticResource SearchTextBlock}"></TextBlock>
+                            <comp:TextInput Grid.Row="1" Grid.Column="1" 
+                                            Margin="0 5" 
+                                            Text="{Binding SelectedVersion}"
+                                            VerticalContentAlignment="Center"></comp:TextInput>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="来源:" 
+                                       Style="{StaticResource SearchTextBlock}"></TextBlock>
+                            <comp:ToggleButton Grid.Row="0" Grid.Column="3" 
+                                               Click="Platform_OnClick"
+                                               IsChecked="{Binding UseCurseForge}"
+                                               HorizontalAlignment="Left"
+                                               VerticalAlignment="Center">
+                                <comp:ToggleButton.ToolTip>
+                                    <ToolTip>
+                                        <StackPanel>
+                                            <TextBlock Text="切换下载源" FontSize="13"></TextBlock>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Width="12" Height="12"
+                                                       VerticalAlignment="Center"
+                                                       Margin="5 0"
+                                                       Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                                <TextBlock Text="Modrinth"></TextBlock>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Width="12" Height="12"
+                                                       VerticalAlignment="Center"
+                                                       Margin="5 0"
+                                                       Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                                <TextBlock Text="CurseForge"></TextBlock>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </ToolTip>
+                                </comp:ToggleButton.ToolTip>
+                                <comp:ToggleButton.LeftContent>
+                                    <Image Width="15" Height="15" 
+                                           Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                </comp:ToggleButton.LeftContent>
+                                <comp:ToggleButton.RightContent>
+                                    <Image Width="15" Height="15" 
+                                           Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                </comp:ToggleButton.RightContent>
+                            </comp:ToggleButton>
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="加载器:" 
+                                       Style="{StaticResource SearchTextBlock}"></TextBlock>
+                            <ComboBox Grid.Row="1" Grid.Column="3" Margin="0 5 20 5"
+                                      ItemsSource="{Binding Loaders}"
+                                      SelectedItem="{Binding SelectedLoader}"
+                                      DropDownOpened="ComboBox_OnDropDownOpened"
+                                      DropDownClosed="ComboBox_OnDropDownClosed">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" 
+                                                   FontSize="14" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Left"
+                                                   Margin="5 0"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                        <Grid Height="40" Margin="10 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <comp:Button Grid.Column="1" 
+                                         Margin="5"
+                                         Click="Search_OnClick">搜索</comp:Button>
+                            <comp:Button Grid.Column="2" 
+                                         Margin="5"
+                                         Click="Reset_OnClick">重置</comp:Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <Grid>
+                    <comp:Loading x:Name="LoadingBorder" Height="100" PercentText="{Binding PercentText}" Margin="20 5"></comp:Loading>
+                    <Border Name="ResourceContent" Style="{StaticResource NoAnimRect}" Margin="20 5">
+                        <StackPanel>
+                            <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
+                                <TextBlock HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"
+                                           FontSize="16" Text="暂无模组资源"
+                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                            </Grid>
+                            <ListView Name="ListView" 
+                                      ItemContainerStyle="{StaticResource ModsListViewStyle}"
+                                      ItemsSource="{Binding Mods}" Width="580"
+                                      SelectionChanged="ListView_OnSelectionChanged"
+                                      ScrollViewer.IsDeferredScrollingEnabled="True"
+                                      ScrollViewer.CanContentScroll="True"
+                                      Margin="0 10">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel VirtualizationMode="Recycling"/>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
+                            <comp:Pagination x:Name="Pagination" 
+                                             Height="32" 
+                                             PageNumVisibility="Collapsed"
+                                             GoToButtonVisibility="Visible"
+                                             HorizontalAlignment="Right" 
+                                             Margin="0 5"
+                                             PageChanged="Pagination_OnPageChanged"></comp:Pagination>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
+    </Grid>
+</Page>

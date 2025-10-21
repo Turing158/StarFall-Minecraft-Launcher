@@ -6,9 +6,8 @@
              xmlns:local="clr-namespace:StarFallMC.Component"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center"
-             Width="150" Height="100">
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
     <Border Style="{StaticResource Rect}">
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock Text="&#xe679;" 
