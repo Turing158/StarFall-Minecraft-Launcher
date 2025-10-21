@@ -178,7 +178,7 @@
                 </comp:CollapsePanel>
             </StackPanel>
         </ScrollViewer>
-        <comp:Loading x:Name="LoadingBorder" PercentText="{Binding PercentText}"></comp:Loading>
+        <comp:Loading x:Name="LoadingBorder" Width="150" Height="100" PercentText="{Binding PercentText}"></comp:Loading>
         <comp:TopButton BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
     </Grid>
 </Page>

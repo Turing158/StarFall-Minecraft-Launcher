@@ -18,7 +18,14 @@ public class TopButton : ButtonBase{
         set => SetValue(ShowToOffsetYProperty, value);
     }
     public static readonly DependencyProperty ShowToOffsetYProperty =
-        DependencyProperty.Register(nameof(ShowToOffsetY), typeof(double), typeof(TopButton), new PropertyMetadata(300.0));
+        DependencyProperty.Register(nameof(ShowToOffsetY), typeof(double), typeof(TopButton), new PropertyMetadata(400.0));
+    
+    public double CloseToOffsetY {
+        get => (double)GetValue(CloseToOffsetYProperty);
+        set => SetValue(CloseToOffsetYProperty, value);
+    }
+    public static readonly DependencyProperty CloseToOffsetYProperty =
+        DependencyProperty.Register(nameof(CloseToOffsetY), typeof(double), typeof(TopButton), new PropertyMetadata(200.0));
 
     private DoubleAnimation showAnimation;
     private DoubleAnimation hideAnimation;
@@ -61,7 +68,7 @@ public class TopButton : ButtonBase{
             Visibility = Visibility.Visible;
             isVisible = true;
             BeginAnimation(OpacityProperty, showAnimation);
-        } else if (isVisible) {
+        } else if (isVisible && BindingScrollViewer.VerticalOffset < CloseToOffsetY) {
             isVisible = false;
             BeginAnimation(OpacityProperty, hideAnimation);
         }

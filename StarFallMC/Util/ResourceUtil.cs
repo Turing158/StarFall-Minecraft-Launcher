@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using fNbt;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
@@ -24,6 +25,25 @@ public class ResourceUtil {
     public static List<MinecraftDownloader> SnapshotType = new ();
     public static List<MinecraftDownloader> AprilFoolsType = new ();
     public static List<MinecraftDownloader> OldType = new ();
+
+    public static ModResourceCache ModResourceCache;
+    
+    private static HashSet<string> ModLoaders = new () {
+        "Forge",
+        "NeoForge",
+        "Fabric",
+        "Quilt",
+        "Liteloader",
+        "forge",
+        "neoforge",
+        "fabric",
+        "quilt",
+        "liteloader"
+    };
+    
+    private static Dictionary<string,string> CurseForgeApiHeader = new () {
+        {"X-API-KEY",KeyUtil.CURSEFORGE_API_KEY}
+    };
 
     public static bool IsNeedInitDownloader() {
         return LatestType == null || ReleaseType == null || SnapshotType == null || AprilFoolsType == null || OldType == null ||
@@ -54,6 +74,216 @@ public class ResourceUtil {
         return string.IsNullOrEmpty(currentGame.Path) ? null : currentGame;
     }
 
+    
+    public static async Task<(List<ModResource>,int)> GetCurseForgeModResources(
+        CancellationToken token,
+        int page,
+        string query = "",
+        string loader = "",
+        string version = "",
+        string category = "",
+        IProgress<int> progress = null ,
+        int limit = 20
+        ) {
+        var arg = new Dictionary<string, object>() {
+            {"gameId","432"},
+            {"sortField", "2"},
+            {"sortOrder", "desc"},
+            {"index", (page - 1) * limit},
+            {"pageSize", limit},
+        };
+        if (!string.IsNullOrEmpty(loader) && loader != "全部") {
+            arg["modLoaderType"] = GetCurseForgeModLoader(loader);
+        }
+        if (!string.IsNullOrEmpty(version) && version != "全部") {
+            if (version.Contains(",")) {
+                arg["gameVersions"] = $"[{version}]";
+            }
+            else if (version.Contains(" ")) {
+                arg["gameVersions"] = $"[{version.Replace(" ",",")}]";
+            }
+            else {
+                arg["gameVersion"] = version;
+            }
+        }
+        if (!string.IsNullOrEmpty(query)) {
+            arg["searchFilter"] = query;
+        }
+
+        int total = 0;
+        var tmp = new List<ModResource>();
+        var result = await HttpRequestUtil.Get("https://api.curseforge.com/v1/mods/search", arg,CurseForgeApiHeader);
+        if (result.IsSuccess) {
+            var root = JObject.Parse(result.Content);
+            foreach (var i in root["data"] as JArray) {
+                var resource = new ModResource() {
+                    DisplayName = i["name"]?.ToString(),
+                    Logo = i["logo"]?["thumbnailUrl"]?.ToString(),
+                    Slug = i["slug"]?.ToString(),
+                    DownloadCount = int.Parse(i["downloadCount"]?.ToString() ?? "0"),
+                    Description = i["summary"]?.ToString(),
+                    CurseForgeId = i["id"]?.ToObject<int>() ?? 0,
+                    WebsiteUrl = i["websiteUrl"]?.ToString(),
+                    LastUpdated = DateTime.Parse(i["dateModified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
+                };
+                resource.Author = string.Join(",",i["authors"]?.Select(j => j["name"]?.ToString()) ?? new List<string>());
+                List<string> versions = new List<string>();
+                List<string> loaders = new List<string>();
+                foreach (var j in i["latestFilesIndexes"] as JArray) {
+                    var versionStr = j["gameVersion"]?.ToString();
+                    var loaderInt = j["modLoader"]?.ToObject<int>() ?? 0;
+                    if (versionStr != null & !versions.Contains(versionStr)) {
+                        versions.Add(versionStr);
+                    }
+                    if (loaderInt != 0 && GetCurseForgeModLoader(loaderInt) is string loaderStr && !loaders.Contains(loaderStr)) {
+                        loaders.Add(loaderStr);
+                    }
+                }
+                resource.GameVersions = NetworkUtil.SortVersions(versions);
+                resource.Loaders = loaders;
+                tmp.Add(resource);
+            }
+            total = root["pagination"]?["totalCount"]?.ToObject<int>() ?? 0;
+        }
+        return (tmp,total);
+    }
+    
+    public static string GetCurseForgeModLoader(int modLoader) {
+        return modLoader switch {
+            1 => "Forge",
+            2 => "Cauldron",
+            3 => "LiteLoader",
+            4 => "Fabric",
+            5 => "Quilt",
+            6 => "NeoForge",
+            _ => "unknown"
+        };
+    }
+    
+    public static int GetCurseForgeModLoader(string modLoader) {
+        return modLoader.ToLower() switch {
+            "forge" => 1,
+            "cauldron" => 2,
+            "liteloader" => 3,
+            "fabric" => 4,
+            "quilt" => 5,
+            "neoforge" => 6,
+            _ => 0
+        };
+    }
+
+    private static async Task<HttpResult> GetModrinthSearch(string query,string type,JArray facets,int page,int limit) {
+        facets.Add(new JArray($"project_type:{type}"));
+        var arg = new Dictionary<string, Object> {
+            {"limit", limit},
+            {"offset", (page - 1) * limit},
+            {"facets", facets.ToString(Formatting.None)},
+        };
+        if (!string.IsNullOrEmpty(query)) {
+            arg["query"] = query;
+        }
+        //Modrinth搜索API
+        //接受的参数比较复杂，详细看官网文档
+        //GET https://api.modrinth.com/v2/search
+        return await HttpRequestUtil.Get("https://api.modrinth.com/v2/search",arg);
+    }
+    
+
+    public static async Task<(List<ModResource>, int)> GetModrinthModResources(
+        CancellationToken ct,
+        int page,
+        string query = "",
+        string loader = "",
+        string version = "",
+        string category = "",
+        IProgress<int> progress = null) {
+        var netWorkModResources = new List<ModResource>();
+        progress?.Report(1);
+        JArray facetsArray = new JArray();
+        
+        if (!string.IsNullOrEmpty(version) && version != "全部") {
+            Console.WriteLine("add version facet");
+            facetsArray.Add(new JArray($"versions:{version}"));
+        }
+
+        JArray categoriesArray = new JArray();
+        if (!string.IsNullOrEmpty(loader) && loader != "全部") {
+            Console.WriteLine("add loader facet");
+            categoriesArray.Add($"categories:{loader}");
+        }
+        if (!string.IsNullOrEmpty(category) && category != "全部") {
+            Console.WriteLine("add category facet");
+            categoriesArray.Add($"categories:{category}");
+        }
+        
+        if (categoriesArray.Count != 0) {
+            facetsArray.Add(categoriesArray);
+        }
+        
+        
+        int totalCount = 0;
+        try {
+            var elementResult = await GetModrinthSearch(query,"mod", facetsArray,page,20);
+            if (elementResult.IsSuccess) {
+                var root = JObject.Parse(elementResult.Content);
+                foreach (var i in root["hits"] as JArray) {
+                    var resource = new ModResource() {
+                        DisplayName = i["title"]?.ToString(),
+                        Logo = i["icon_url"]?.ToString(),
+                        Slug = i["slug"]?.ToString(),
+                        DownloadCount = int.Parse(i["downloads"]?.ToString() ?? "0"),
+                        FollowsCount = int.Parse(i["follows"]?.ToString() ?? "0"),
+                        Description = i["description"]?.ToString(),
+                        ModrinthProjectId = i["project_id"]?.ToString(),
+                        Author = i["author"]?.ToString(),
+                        LastUpdated = DateTime.Parse(i["date_modified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
+                    };
+                    resource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"];
+                    var (loaders, gameVersions) = GetCurseForgeLoaderAndGameVersion(i);
+                    resource.Loaders = loaders;
+                    resource.GameVersions = gameVersions;
+                    netWorkModResources.Add(resource);
+                }
+                totalCount = int.Parse(root["total_hits"]?.ToString() ?? "0");
+            }
+            else {
+                Console.WriteLine($"获取Modrinth模组列表失败：{elementResult.ErrorMessage}");
+            }
+            progress?.Report(99);
+        }
+        catch (Exception e) {
+            Console.WriteLine(e);
+        }
+        progress?.Report(100);
+        return (netWorkModResources,totalCount);
+    }
+
+    private static (List<string>, List<string>) GetCurseForgeLoaderAndGameVersion(JToken i) {
+        var loaders = new List<string>();
+        var versions = i["versions"]?.ToObject<List<string>>();
+        foreach (var j in i["categories"] as JArray) {
+            if (ModLoaders.Contains(j.ToString())) {
+                loaders.Add(j.ToString());
+            }
+        }
+        var endVersion = new List<string>();
+        if (versions != null) {
+            var tmp = new List<string>();
+            foreach (var j in versions) {
+                if (j.Contains(".") && !j.Contains("-") && !j.Contains("b")) {
+                    tmp.Add(j);
+                }
+            }
+            if (tmp.Count != 0) {
+                endVersion = NetworkUtil.SortVersions(tmp);
+            }
+            else {
+                endVersion = tmp;
+            }
+        }
+        return (loaders, endVersion);
+    }
+    
     public static async Task<List<ModDownloader>> GetModDownloaderByModrinth(ModResource modResource, CancellationToken ct) {
         List<ModDownloader> downloaders = new();
         try {
@@ -106,12 +336,6 @@ public class ResourceUtil {
     
     public static async Task<List<ModDownloader>> GetModDownloaderByCurseForge(ModResource modResource, CancellationToken ct) {
         List<ModDownloader> downloaders = new();
-        var modLoader = new HashSet<string> {
-            "Forge",
-            "NeoForge",
-            "Fabric",
-            "Quilt",
-        };
         try {
             if (modResource.CurseForgeId == 0) {
                 var list = await GetCurseForgeArgs(new List<ModResource> {modResource},null,0,1,true);
@@ -122,6 +346,7 @@ public class ResourceUtil {
             }
             bool hasMore = true;
             while (hasMore) {
+                //GET https://api.curseforge.com/v1/mods/：id/files
                 var curseForge = await HttpRequestUtil.Get(
                     $"https://api.curseforge.com/v1/mods/{modResource.CurseForgeId}/files",
                     args: new Dictionary<string, Object> {
@@ -136,7 +361,7 @@ public class ResourceUtil {
                     foreach (var i in root["data"] as JArray) {
                         var gameVersions = i["gameVersions"].ToObject<List<string>>();
                         var versions = gameVersions.Where(x => Regex.IsMatch(x, @"\d")).ToList();
-                        var loaders = gameVersions.Where(x => modLoader.Contains(x)).ToList();
+                        var loaders = gameVersions.Where(x => ModLoaders.Contains(x)).ToList();
                         var downloader = new ModDownloader() {
                             Name = Path.GetFileNameWithoutExtension(i["fileName"]?.ToString() ?? ""),
                         };
@@ -830,7 +1055,6 @@ public class ResourceUtil {
         }
         catch (Exception e){
             Console.WriteLine(e);
-            MessageTips.Show("取消获取Mod列表");
             LocalModResources = new List<ModResource>();
             progress.Report(100);
             return LocalModResources;
@@ -866,7 +1090,6 @@ public class ResourceUtil {
         if (Path.GetFileName(Path.GetDirectoryName(filePath)) == ".disabled") {
             resource.Disabled = true;
         }
-        // string hashStr = $"{fileInfo.Name}-{fileInfo.LastWriteTime.ToLongTimeString()}-{fileInfo.Length}-C";
         await Task.Run(() => {
             resource.ModrinthSha1 = BitConverter.ToString(sha1.ComputeHash(file)).Replace("-", "").ToLower();
             resource.CurseForgeSha1 = GetMurmurHash2(filePath);
@@ -1006,9 +1229,10 @@ public class ResourceUtil {
             { "hashes", ModrinthSha1s},
             { "algorithm", "sha1" }
         };
-        int progressCount = 0;
-        int progressFirstEnd = start + (int)((end - start) /2);
+        int currentStep = 0;
+        int stepRange = (end - start) / 4;
         var modrinthProfileResult = await HttpRequestUtil.Post("https://api.modrinth.com/v2/version_files",body);
+        HashSet<string> modrinthAuthorIds = new ();
         Dictionary<string,ModrinthPostProfileArg> modrinthHashAndId = new ();
         if (modrinthProfileResult.IsSuccess) {
             var json = JObject.Parse(modrinthProfileResult.Content);
@@ -1018,6 +1242,9 @@ public class ResourceUtil {
                 ModrinthPostProfileArg arg = new ModrinthPostProfileArg();
                 arg.ProjectId = v["project_id"].ToString();
                 arg.AuthorId = v["author_id"].ToString();
+                if (v["author_id"] != null) {
+                    modrinthAuthorIds.Add(arg.AuthorId);
+                }
                 arg.VersionNumber = v["version_number"].ToString();
                 modrinthHashAndId[k] = arg;
                 int hashIndex = resources.FindIndex(i => i.ModrinthSha1 == k);
@@ -1027,16 +1254,16 @@ public class ResourceUtil {
                 if (string.IsNullOrEmpty(modVersion) || modVersion != arg.VersionNumber) {
                     resources[hashIndex].ResourceVersion = arg.VersionNumber;
                 }
-                progressCount = start + (int)((double)jsonIndex / json.Count * (progressFirstEnd - start));
-                progress?.Report(progressCount);
-                await Task.Delay(5);
+                
+                progress?.Report(start + (int)(stepRange * (jsonIndex / (double)json.Count)));
             }
         }
         else {
             progress?.Report(end);
             return resources;
         }
-        progress?.Report(progressFirstEnd);
+        currentStep++;
+        progress?.Report(start + stepRange * currentStep);
         //GET https://api.modrinth.com/v2/projects?ids=[ModrinthSha1,...]
         StringBuilder args = new StringBuilder();
         foreach (var i in modrinthHashAndId.Values) {
@@ -1053,21 +1280,49 @@ public class ResourceUtil {
                 if (minecraftResource.DisplayName != i["title"].ToString()) {
                     minecraftResource.DisplayName = i["title"].ToString();
                 }
-                minecraftResource.slug = i["slug"].ToString();
+                minecraftResource.Slug = i["slug"].ToString();
                 minecraftResource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"];
                 minecraftResource.Description = i["description"].ToString().Trim().Replace("\n"," ");
                 minecraftResource.Logo = i["icon_url"].ToString();
+                minecraftResource.DownloadCount = i["downloads"]?.ToObject<int>() ?? 0;
+                minecraftResource.GameVersions = i["game_versions"]?.ToObject<List<string>>() ?? new List<string>();
+                minecraftResource.Loaders = i["loaders"]?.ToObject<List<string>>() ?? new List<string>();
+                minecraftResource.LastUpdated = DateTime.Parse(i["updated"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
                 minecraftResource.ResourceSource = "Modrinth";
                 resources[currentIndex] = minecraftResource;
-                progressCount = progressFirstEnd + (int)((double)modrinthProjectJArrayIndex / modrinthProjectJArray.Count * (end - progressFirstEnd));
-                progress?.Report(progressCount);
-                await Task.Delay(5);
+                
+                progress?.Report(start + stepRange + (int)(stepRange * (modrinthProjectJArrayIndex / (double)modrinthProjectJArray.Count)));
             }
         }
         else {
             progress?.Report(end);
             return resources;
         }
+        currentStep++;
+        progress?.Report(start + stepRange * currentStep);
+        //GET https://api.modrinth.com/v2/users?ids=[ModrinthAuthorId,...]
+        Dictionary<string,string> modrinthAuthor = new ();
+        var modrinthAuthorResult = await HttpRequestUtil.Get($"https://api.modrinth.com/v2/users?ids=[{string.Join(',',modrinthAuthorIds.Select(i => $"\"{i}\""))}]");
+        if (modrinthAuthorResult.IsSuccess) {
+            JArray modrinthAuthorJArray = JArray.Parse(modrinthAuthorResult.Content);
+            int modrinthAuthorJArrayIndex = 0;
+            foreach (var i in modrinthAuthorJArray) {
+                modrinthAuthorJArrayIndex++;
+                var key = i["id"]?.ToString();
+                modrinthAuthor[key] = i["username"]?.ToString();
+                
+                progress?.Report(start + stepRange * 2 + (int)(stepRange * (modrinthAuthorJArrayIndex / (double)modrinthAuthorJArray.Count)));
+            }
+        }
+        currentStep++;
+        progress?.Report(start + stepRange * currentStep);
+        for (int i = 0; i < resources.Count; i++) {
+            if (!string.IsNullOrEmpty(resources[i].ModrinthAuthorId) && modrinthAuthor.TryGetValue(resources[i].ModrinthAuthorId,out string author)) {
+                resources[i].Author = author;
+            }
+            progress?.Report(start + stepRange * 3 + (int)(stepRange * ((i + 1) / (double)resources.Count)));
+        }
+        
         progress?.Report(end);
         return resources;
     }
@@ -1078,14 +1333,11 @@ public class ResourceUtil {
         //body {"fingerprints" :[CurseForgeSha1,...]}
         int progressCount = 0;
         int progressFirstEnd = start + (int)((end - start) /2);
-        Dictionary<string,string> header = new () {
-            {"X-API-KEY",KeyUtil.CURSEFORGE_API_KEY}
-        };
         List<uint> curseForgeSha1s = resources.Select(i => i.CurseForgeSha1).ToList();
         Dictionary<string,Object> curseForgeIdJsonBody = new () {
             {"fingerprints",curseForgeSha1s}
         };
-        var curseForgeIdJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/fingerprints/432",curseForgeIdJsonBody,header);
+        var curseForgeIdJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/fingerprints/432",curseForgeIdJsonBody,CurseForgeApiHeader);
         Dictionary<uint, int> curseForgeHashAndId = new ();
         if (curseForgeIdJson.IsSuccess) {
             JObject data = JObject.Parse(curseForgeIdJson.Content);
@@ -1100,7 +1352,6 @@ public class ResourceUtil {
                         i["id"].ToObject<int>();
                     progressCount = start + (int)((double)matchesIndex / matches.Count * (progressFirstEnd - start));
                     progress?.Report(progressCount);
-                    await Task.Delay(2);
                 }
             }
         }
@@ -1119,7 +1370,7 @@ public class ResourceUtil {
         Dictionary<string,Object> curseForgeModJsonBody = new () {
             {"modIds",curseForgeHashAndId.Values}
         };
-        var curseForgeModJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/mods",curseForgeModJsonBody,header);
+        var curseForgeModJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/mods",curseForgeModJsonBody,CurseForgeApiHeader);
         if (curseForgeModJson.IsSuccess) {
             JObject data = JObject.Parse(curseForgeModJson.Content);
             var modArray = data["data"] as JArray;
@@ -1134,12 +1385,16 @@ public class ResourceUtil {
                     resource.Description = i["summary"].ToString();
                     resource.WebsiteUrl = i["links"]?["websiteUrl"].ToString();
                     resource.Author = i["authors"]?[0]?["name"].ToString();
-                    resource.slug = i["slug"].ToString();
+                    resource.Slug = i["slug"].ToString();
                     resource.ResourceSource = "CurseForge";
+                    resource.DownloadCount = i["downloadCount"]?.ToObject<int>() ?? 0;
+                    resource.LastUpdated = DateTime.Parse(i["dateModified"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
+                    var (loaders, gameVersions) = GetCurseForgeLoaderAndGameVersion(i);
+                    resource.Loaders = loaders;
+                    resource.GameVersions = gameVersions;
                     resources[currentIndex] = resource;
                     progressCount = progressFirstEnd + (int)((double)modArrayIndex / modArray.Count * (end - progressFirstEnd));
                     progress?.Report(progressCount);
-                    await Task.Delay(5);
                 }
             }
         }

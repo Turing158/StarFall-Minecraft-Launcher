@@ -116,7 +116,8 @@
                       CanContentScroll="False" 
                       HorizontalScrollBarVisibility="Hidden" 
                       VerticalScrollBarVisibility="Disabled"
-                      MaxWidth="{Binding MaxWidth}">
+                      MaxWidth="{Binding MaxWidth}"
+                      Visibility="{Binding PageNumVisibility,RelativeSource={RelativeSource AncestorType=local:Pagination}}">
             <ListView Name="Nums" 
                       ItemsSource="{Binding Pages}"
                       Height="{Binding ListHeight}"

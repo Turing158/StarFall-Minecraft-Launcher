@@ -43,7 +43,8 @@ public partial class TexturePacksPage : Page {
                 await ResourceUtil.GetTexturePack(cancellationTokenSource.Token,progress).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
-                MessageTips.Show("加载已取消");
+                Console.WriteLine("取消加载材质包文件");
+                return;
             }
             catch (Exception e){
                 Console.WriteLine(e);

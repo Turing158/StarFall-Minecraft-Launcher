@@ -116,3 +116,21 @@ public class ListEmptyToCollapsedConverter : IValueConverter {
         return Visibility.Visible;
     }
 }
+
+public class ListToLabelConverter : IValueConverter {
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        if (value != null && value is IList list) {
+            if (list != null && list.Count == 1) {
+                return $"{list[0]}";
+            }
+            if (list != null && list.Count > 1) {
+                return $"{list[0]}+";
+            }
+        }
+        return "";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        return "";
+    }
+}

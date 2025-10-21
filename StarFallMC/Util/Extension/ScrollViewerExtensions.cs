@@ -41,6 +41,24 @@ public static class ScrollViewerExtensions {
         }
     }
 
+    private static void OnPreviewMouseWheelDisabled(object sender, MouseWheelEventArgs e) {
+        if (sender is ScrollViewer scrollViewer) {
+            e.Handled = true;
+        }
+    }
+
+    public static void ScrollEnabled(ScrollViewer scrollViewer,bool isEnabled) {
+        if (isEnabled) {
+            scrollViewer.PreviewMouseWheel += OnPreviewMouseWheel;
+            scrollViewer.PreviewMouseWheel -= OnPreviewMouseWheelDisabled;
+        }
+        else {
+            scrollViewer.PreviewMouseWheel -= OnPreviewMouseWheel;
+            scrollViewer.PreviewMouseWheel += OnPreviewMouseWheelDisabled;
+        }
+        
+    }
+
     public static void AnimateScroll(ScrollViewer scrollViewer, double targetOffset,bool isHorizontal = false, Action onCompleted = null) {
         DoubleAnimation animation = new DoubleAnimation {
             To = targetOffset,

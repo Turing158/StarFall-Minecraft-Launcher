@@ -45,7 +45,8 @@ public partial class SavesPage : Page {
                 await ResourceUtil.GetSavesResource(cancellationTokenSource.Token,progress).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
-                MessageTips.Show("加载已取消");
+                Console.WriteLine("取消加载地图文件");
+                return;
             }
             catch (Exception e){
                 Console.WriteLine(e);

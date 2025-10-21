@@ -44,14 +44,19 @@ public partial class ModsPage : Page {
                 if (percent == 100) {
                     ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
                     viewModel.PercentText = "加载完成";
-                    MessageTips.Show($"获取到{viewModel.TotalMods.Count}个Mods资源");
+                    if (!cancellationTokenSource.IsCancellationRequested) {
+                        MessageTips.Show($"获取到{viewModel.TotalMods.Count}个Mods资源");
+                    }
                 }
             });
             try {
+                cancellationTokenSource.Token.ThrowIfCancellationRequested();
                 await ResourceUtil.GetModResources(cancellationTokenSource.Token,progress).ConfigureAwait(false);
+                cancellationTokenSource.Token.ThrowIfCancellationRequested();
             }
             catch (OperationCanceledException) {
-                MessageTips.Show("加载已取消");
+                Console.WriteLine("取消加载Mod列表");
+                return;
             }
             catch (Exception e){
                 Console.WriteLine(e);
@@ -249,7 +254,8 @@ public partial class ModsPage : Page {
     }
     
     private void SetModsPages() {
-        viewModel.Mods = new ObservableCollection<ModResource>(NetworkUtil.GetPageList(viewModel.TotalMods,Pagination.CurrentPage,20));
+        var tmp = NetworkUtil.GetPageList(viewModel.TotalMods, Pagination.CurrentPage, 20);
+        viewModel.Mods = new ObservableCollection<ModResource>(tmp);
         Pagination.TotalCount = viewModel.TotalMods.Count;
     }
 

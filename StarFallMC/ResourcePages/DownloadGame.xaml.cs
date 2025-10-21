@@ -74,7 +74,6 @@ public partial class DownloadGame : Page {
     }
     
     private async Task InitMinecraftDownloader() {
-        MessageTips.Show("加载Minecraft列表过程中可能卡顿");
         ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder);
         if (ResourceUtil.IsNeedInitDownloader()) {
             var progress = new Progress<int>(percent => {
@@ -94,7 +93,8 @@ public partial class DownloadGame : Page {
                 await ResourceUtil.GetMinecraftDownloader(cts.Token,progress).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
-                MessageTips.Show("加载已取消");
+                Console.WriteLine("取消加载Minecraft列表");
+                return;
             }
             catch (Exception e){
                 Console.WriteLine(e);

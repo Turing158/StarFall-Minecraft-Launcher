@@ -83,7 +83,7 @@
                                             CornerRadius="5"
                                             Margin="5"
                                             Background="{DynamicResource PrimaryBrush}">
-                                        <TextBlock Text="v0.0.1" 
+                                        <TextBlock Text="{Binding CurrentVersion}" 
                                                    Foreground="{DynamicResource PrimaryBrush_4}"
                                                    FontSize="11"
                                                    Margin="5 2" 
@@ -104,29 +104,45 @@
                                     <ScaleTransform></ScaleTransform>
                                 </Border.RenderTransform>
                                 <Grid>
-                                    <TextBlock HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource PrimaryBrush}"
-                                               FontSize="13"
-                                               Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
-                                               Text="暂无更新"></TextBlock>
-                                    <Grid Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}">
-                                        <TextBlock Text="&#xe604;" 
-                                                   FontFamily="{StaticResource IconFontFamily}"
-                                                   HorizontalAlignment="Left"
-                                                   VerticalAlignment="Top" 
-                                                   Margin="5"
+                                    <StackPanel ToolTip="点击检查更新"  VerticalAlignment="Center"
+                                                Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}">
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   Foreground="{DynamicResource PrimaryBrush}"
+                                                   FontSize="13"
+                                                   Text="暂无更新"></TextBlock>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   Text="点击检查更新" 
+                                                   FontSize="10"
+                                                   Margin="0 1 0 0" 
                                                    Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                    </StackPanel>
+                                    <Grid Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}">
+                                        <Border Margin="5"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Top" 
+                                                Background="{DynamicResource PrimaryBrush}"
+                                                CornerRadius="20">
+                                            <TextBlock Text="&#xe604;" 
+                                                       Padding="2"
+                                                       FontFamily="{StaticResource IconFontFamily}"
+                                                       Foreground="{DynamicResource PrimaryBrush_4}"></TextBlock>
+                                        </Border>
                                         <Border HorizontalAlignment="Right"
                                                 VerticalAlignment="Top" 
                                                 CornerRadius="5"
                                                 Margin="5"
                                                 Background="{DynamicResource PrimaryBrush}">
-                                            <TextBlock Name="UpdateVersionName" Text="{Binding UpdateVersionName}" 
-                                                       Foreground="{DynamicResource PrimaryBrush_4}"
-                                                       FontSize="10"
-                                                       Margin="3 0" 
-                                                       HorizontalAlignment="Center"></TextBlock>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="v"
+                                                           Foreground="{DynamicResource PrimaryBrush_4}"
+                                                           FontSize="10"
+                                                           Margin="3 0 0 0" ></TextBlock>
+                                                <TextBlock Name="UpdateVersionName" 
+                                                           Text="{Binding LastUpdateInfo.Version}" 
+                                                           Foreground="{DynamicResource PrimaryBrush_4}"
+                                                           FontSize="10"
+                                                           Margin="0 0 3 0" ></TextBlock>
+                                            </StackPanel>
                                         </Border>
                                         <TextBlock Text="点击更新" 
                                                    FontSize="11"
@@ -135,8 +151,37 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Bottom"></TextBlock>
                                     </Grid>
+                                    <Border Name="UpdateLoading" 
+                                            Background="{DynamicResource PrimaryBrush_4}"
+                                            CornerRadius="5">
+                                        <StackPanel  HorizontalAlignment="Center" 
+                                                     VerticalAlignment="Center">
+                                            <TextBlock Text="&#xe679;" 
+                                                       FontFamily="{StaticResource IconFontFamily}"
+                                                       FontSize="13"
+                                                       HorizontalAlignment="Center"
+                                                       RenderTransformOrigin="0.5,0.5"
+                                                       Foreground="{DynamicResource PrimaryBrush}">
+                                                <TextBlock.RenderTransform>
+                                                    <RotateTransform Angle="0"></RotateTransform>
+                                                </TextBlock.RenderTransform>
+                                                <TextBlock.Triggers>
+                                                    <EventTrigger RoutedEvent="Loaded">
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                                 To="360"
+                                                                                 Duration="0:0:1"
+                                                                                 RepeatBehavior="Forever"></DoubleAnimation>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                </TextBlock.Triggers>
+                                            </TextBlock>
+                                            <TextBlock Text="检测更新中..." Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                        </StackPanel>
+                                    </Border>
                                 </Grid>
-                                
                             </Border>
                         </Grid>
                     </StackPanel>

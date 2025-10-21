@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using StarFallMC.Entity;
 using StarFallMC.Util;
 using Button = StarFallMC.Component.Button;
 
@@ -13,10 +14,40 @@ namespace StarFallMC.SettingPages;
 public partial class About : Page {
 
     private ViewModel viewModel = new();
-    
+    DoubleAnimation valueTo1 = new () {
+        To = 1,
+        Duration = TimeSpan.FromSeconds(0.2),
+    };
+    DoubleAnimation valueTo0 = new () {
+        To = 0,
+        Duration = TimeSpan.FromSeconds(0.2),
+    };
     public About() {
         InitializeComponent();
         DataContext = viewModel;
+        UpdateLoading.BeginAnimation(OpacityProperty, valueTo1);
+        CheckUpdate();
+    }
+    
+    public async Task CheckUpdate() {
+        return;//提交注释这里，可以检测版本更新
+        UpdateLoading.BeginAnimation(OpacityProperty, valueTo1);
+        if (DateTime.Now - PropertiesUtil.LastCheckUpdateTime > TimeSpan.FromMinutes(10)) {
+            PropertiesUtil.LastCheckUpdateTime = DateTime.Now;
+            var updateInfo = await NetworkUtil.GetUpdateInfo();
+            if (updateInfo == null) {
+                viewModel.NeedUpdate = false;
+                UpdateLoading.BeginAnimation(OpacityProperty, valueTo0);
+            }
+            else {
+                PropertiesUtil.LastUpdateInfo = updateInfo;
+                viewModel.LastUpdateInfo = updateInfo;
+                if (Version.Parse(viewModel.LastUpdateInfo.Version) > Version.Parse(PropertiesUtil.LauncherVersion)) {
+                    viewModel.NeedUpdate = true;
+                }
+            }
+        }
+        UpdateLoading.BeginAnimation(OpacityProperty, valueTo0);
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -56,16 +87,20 @@ public partial class About : Page {
             };
         }
         
-        public bool _needUpdate = false;
+        private bool _needUpdate = false;
         public bool NeedUpdate { 
             get => _needUpdate;
             set => SetField(ref _needUpdate, value);
         }
-
-        public string _updateVersionName;
-        public string UpdateVersionName { 
-            get => _updateVersionName;
-            set => SetField(ref _updateVersionName, value);
+        
+        private UpdateInfo _lastUpdateInfo = new();
+        public UpdateInfo LastUpdateInfo { 
+            get => _lastUpdateInfo;
+            set => SetField(ref _lastUpdateInfo, value);
+        }
+        
+        public string CurrentVersion { 
+            get => $"v{PropertiesUtil.LauncherVersion}";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -110,19 +145,27 @@ public partial class About : Page {
         EasingFunction = new CubicEase()
     };
     private void Update_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        if (viewModel.NeedUpdate) {
-            updateBtnDown = true;
-            UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, updateBtnDownAnimation);
-            UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, updateBtnDownAnimation);
-        }
+        updateBtnDown = true;
+        UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, updateBtnDownAnimation);
+        UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, updateBtnDownAnimation);
     }
 
     private void Update_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-        if (viewModel.NeedUpdate && updateBtnDown) {
+        if (updateBtnDown) {
             updateBtnDown = false;
             UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, updateBtnUpAnimation);
             UpdateBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, updateBtnUpAnimation);
-            // 执行更新操作
+            if (viewModel.NeedUpdate) {
+                if (!string.IsNullOrEmpty(viewModel.LastUpdateInfo.UpdateUrl)) {
+                    NetworkUtil.OpenUrl(viewModel.LastUpdateInfo.UpdateUrl);
+                }
+                else {
+                    NetworkUtil.OpenUrl(viewModel.LastUpdateInfo.DefaultUpdateUrl);
+                }
+            }
+            else {
+                CheckUpdate();
+            }
         }
     }
 
