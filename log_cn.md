@@ -346,3 +346,44 @@
 
 ---
 
+## 小更新集合成大更新-2025-10-21
+
+### [更新]
+
+1. ComboBox组件支持选择动画
+2. 将关于资源有关的实体类单独放在一起(代码文件位置调整)
+3. 更新CollapsePanel组件，添加DisabledContent属性，可自定义Disabled的情况
+4. 更新ComboBox组件，可自定义Disabled的情况
+5. ListView的通用样式添加虚拟化
+6. 去除Notices的杂项
+7. 可浏览可安装的Minecraft版本和加载器
+8. ToolTip组件支持整个对象，而不是只能文字
+9. 修改了一些显示逻辑和样式
+10. ScrollViewerExtensions类可支持横向动画
+11. 添加资源图片图标
+12. 修改ResourcePageExtension类，让其方法更加泛用
+
+### [新增]
+
+1. ComboBox组件添加能够自定义标题的背景内容
+2. 新增Loading组件，代替重复代码
+3. 添加图片资源
+4. 添加刷新按钮（资源页面）
+5. DirFileUtil类添加FormatFileSize方法转换文件大小
+6. NetworkUtil类添加GetPageList方法用于分页
+7. 添加Pagination组件用于分页，新增PageNumVisibility属性，可以隐藏数字分页
+8. 添加更新检测，目前不支持自动更新，需前往下载
+9. 新增模组资源搜索功能(源：Modrinth和CurseForge)，可下载
+10. ScrollViewerExtensions类新增可禁用滚动方法
+11. TopButton组件新增CloseToOffsetY属性，可以让跳转顶部按钮在指定地方隐藏
+12. 添加普通ComboBox组件的样式
+
+### [已解决问题]
+
+1. 修复ComboBox组件中内容为空的显示问题
+2. 修复ComboBox组件自定义当前选项模板时，未选择也会出现的问题
+3. 修复TextInput组件的Padding问题
+4. 修复了查找Minecraft版本的报错
+5. 修复了HttpRequestUtil类使用Get方法传入参数报错的问题
+6. 修复查看Mod详情的时候，下载的分页出现的问题
+7. 修复了获取当前版本的Mod列表时，出现的报错问题
