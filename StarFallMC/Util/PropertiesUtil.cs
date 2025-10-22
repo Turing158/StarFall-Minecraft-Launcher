@@ -10,6 +10,7 @@ public class PropertiesUtil {
     public static string jsonPath = DirFileUtil.LauncherSettingsDir + "/SFMCL.json";
     public static string LauncherName = "StarFallMC";
     public static string LauncherVersion = "0.0.2";
+    public static string UserAgent = $"SFMCL/{LauncherVersion}";
     public static DateTime LastCheckUpdateTime = DateTime.MinValue;
     public static UpdateInfo LastUpdateInfo = new();
     public static JObject loadJson;

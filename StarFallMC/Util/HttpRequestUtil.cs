@@ -28,13 +28,14 @@ public class HttpRequestUtil {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(globalCts.Token);
         try {
             Console.WriteLine($"GET {url + queryString}");
-            var req = new HttpRequestMessage(HttpMethod.Get, url + queryString);
+            using var req = new HttpRequestMessage(HttpMethod.Get, url + queryString);
             if (headers != null && headers.Count > 0) {
                 foreach (var i in headers) {
                     req.Headers.Add(i.Key, i.Value);
                 }
             }
-            var resp = await client.SendAsync(req, cts.Token);
+            req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
+            using var resp = await client.SendAsync(req, cts.Token);
             var content = await resp.Content.ReadAsStringAsync();
             
             return HttpResult.Success(resp,content,"Get");
@@ -72,13 +73,14 @@ public class HttpRequestUtil {
         }
         var cts = CancellationTokenSource.CreateLinkedTokenSource(globalCts.Token);
         try {
-            var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
             if (headers != null && headers.Count > 0) {
                 foreach (var i in headers) {
                     req.Headers.Add(i.Key,i.Value);
                 }
             }
-            var resp = await client.SendAsync(req,cts.Token);
+            req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
+            using var resp = await client.SendAsync(req,cts.Token);
             var respContent = await resp.Content.ReadAsStringAsync();
             return HttpResult.Success(resp, respContent,"Post");
         }

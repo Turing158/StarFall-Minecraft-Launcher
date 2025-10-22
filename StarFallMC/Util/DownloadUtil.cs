@@ -199,8 +199,10 @@ public class DownloadUtil {
         }
         for (int i = 0; i < RetryCount * 2; i++) {
             try {
+                using var req = new HttpRequestMessage(HttpMethod.Get, downloadFile.UrlPath);
+                req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
                 using var download =
-                    await httpClient.GetAsync(downloadFile.UrlPath, HttpCompletionOption.ResponseHeadersRead);
+                    await httpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
                 download.EnsureSuccessStatusCode();
                 using var fileStream = new FileStream(downloadFile.FilePath, FileMode.Create);
                 await download.Content.CopyToAsync(fileStream);
@@ -253,8 +255,12 @@ public class DownloadUtil {
                 //     long size = getSize.Content.Headers.ContentLength.Value / 1024;
                 //     // Console.WriteLine(size);
                 // }
+                // 添加User-Agent
+                using var req = new HttpRequestMessage(HttpMethod.Get, item.UrlPath);
+                req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
                 using var download =
-                    await httpClient.GetAsync(item.UrlPath, HttpCompletionOption.ResponseHeadersRead, ct);
+                    await httpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+                
                 ct.ThrowIfCancellationRequested();
                 download.EnsureSuccessStatusCode();
                 ct.ThrowIfCancellationRequested();
