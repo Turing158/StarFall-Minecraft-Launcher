@@ -5,7 +5,40 @@ using System.Runtime.CompilerServices;
 namespace StarFallMC.Entity.Resource;
 
 public class ModResource : INotifyPropertyChanged{
-    public string DisplayName { get; set; }
+    public string DisplayName {
+        get => !string.IsNullOrEmpty(ChineseName) ? ChineseName : !string.IsNullOrEmpty(EnglishName) ? EnglishName : OriginalName;
+    }
+    public string ChineseName { get; set; }
+    
+    private string _englishName;
+    public string EnglishName {
+        get {
+            if (!string.IsNullOrEmpty(_englishName)) {
+                return _englishName;
+            }
+            if ( !string.IsNullOrEmpty(Slug)) {
+                var name = "";
+                var slug = Slug.Split("-");
+                int index = 0;
+                foreach (var i in slug) {
+                    name += char.ToUpper(i[0]);
+                    if (i.Length > 1) {
+                        name += i[1..];
+                    }
+                    if (index++ < slug.Length - 1) {
+                        name += " ";
+                    }
+                }
+                return name;
+            }
+            return OriginalName;
+        }
+        set {
+            SetField(ref _englishName, value);
+        }
+    }
+
+    public string OriginalName { get; set; }
     public string Slug { get; set; }
     public string Logo { get; set; }
     public string Type { get; set; }

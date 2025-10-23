@@ -11,7 +11,8 @@
       Loaded="SavesPage_OnLoaded"
       Unloaded="SavesPage_OnUnloaded">
     <Page.Resources>
-        <util:StringNotEmptyToVisibilityVisibleConverter x:Key="StringNotEmptyToVisibilityVisibleConverter" />
+        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
+        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
         <Style x:Key="ListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="Template">
@@ -34,7 +35,8 @@
                                         VerticalAlignment="Center"
                                         Margin="5 0"
                                         CornerRadius="5"
-                                        Background="{DynamicResource PrimaryBrush_2}">
+                                        Background="{DynamicResource PrimaryBrush_2}"
+                                        Visibility="{Binding Logo,Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}">
                                     <TextBlock Text="&#xe61d;" 
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
@@ -61,7 +63,7 @@
                                             Background="{DynamicResource PrimaryBrush_4}" 
                                             Margin="5 0 5 2" 
                                             Padding="4 0"
-                                            Visibility="{Binding RefreshDate, Converter={StaticResource StringNotEmptyToVisibilityVisibleConverter}}">
+                                            Visibility="{Binding RefreshDate, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
                                         <TextBlock Text="{Binding RefreshDate}" 
                                                    VerticalAlignment="Center" 
                                                    HorizontalAlignment="Center" 

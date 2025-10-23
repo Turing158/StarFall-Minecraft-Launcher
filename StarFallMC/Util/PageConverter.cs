@@ -9,25 +9,26 @@ public class StringEmptyToVisibilityCollapsedConverter : IValueConverter {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
         if (value != null && value is string str) {
             if (!string.IsNullOrEmpty(str)) {
-                return Visibility.Collapsed;
-            }
-        }
-        return Visibility.Visible;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-        return Visibility.Visible;
-    }
-}
-
-public class StringNotEmptyToVisibilityVisibleConverter : IValueConverter {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-        if (value != null && value is string str) {
-            if (!string.IsNullOrEmpty(str)) {
                 return Visibility.Visible;
             }
         }
         return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        return Visibility.Collapsed;
+    }
+}
+
+public class StringEmptyToVisibilityVisibleConverter : IValueConverter {
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        if (value != null && value is string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return Visibility.Visible;
+            }
+            return Visibility.Collapsed;
+        }
+        return Visibility.Visible;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -132,5 +133,26 @@ public class ListToLabelConverter : IValueConverter {
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
         return "";
+    }
+}
+
+public class ListCountTwoMoreConverter : IValueConverter {
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        if (value != null && value is List<string> strs) {
+            if (strs.Count > 2) {
+                return new List<string>() { strs[0] , strs[1] , "+" };
+            }
+            else if (strs.Count > 1) {
+                return new List<string>() { strs[0] , "+" };
+            }
+            else {
+                return strs;
+            }
+        }
+        return new List<string>();
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        return value;
     }
 }

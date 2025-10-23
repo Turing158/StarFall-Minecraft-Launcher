@@ -84,6 +84,10 @@
       <Resource Include="assets\DefaultGameIcon\modrinth.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="assets\ModData" />
+      <Resource Include="assets\ModData">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
     <ItemGroup>

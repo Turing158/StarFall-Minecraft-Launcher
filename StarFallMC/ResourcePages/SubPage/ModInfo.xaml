@@ -11,7 +11,8 @@
       Title="ModInfo" Height="400" Width="800">
     <Page.Resources>
         <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
-        <util:StringNotEmptyToVisibilityVisibleConverter x:Key="StringNotEmptyToVisibilityVisibleConverter" />
+        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
+        <util:ListCountTwoMoreConverter x:Key="ListCountTwoMoreConverter" />
         <Style x:Key="LoaderLabel" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -19,7 +20,7 @@
                         <Border Background="{DynamicResource PrimaryBrush_4}"
                                 CornerRadius="2"
                                 Padding="4 0"
-                                Margin="2 0">
+                                Margin="2 1">
                             <TextBlock Text="{Binding}"
                                        Foreground="{DynamicResource PrimaryBrush}"
                                        FontSize="11"></TextBlock>
@@ -35,10 +36,28 @@
                         <Border Background="{DynamicResource SecondaryBrush}"
                                 CornerRadius="2"
                                 Padding="4 0"
-                                Margin="2 0">
+                                Margin="2 1">
                             <TextBlock Text="{Binding}"
                                        Foreground="{DynamicResource PrimaryBrush}"
                                        FontSize="11"></TextBlock>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CateGoryLabel" TargetType="ListViewItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border Background="{DynamicResource PrimaryBrush_1}"
+                                CornerRadius="2" 
+                                Margin="2 0"
+                                Padding="0">
+                            <TextBlock Margin="2 0" 
+                                       Padding="0"
+                                       
+                                       Foreground="{DynamicResource SecondaryBrush}"
+                                       Text="{Binding}"></TextBlock>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -110,7 +129,7 @@
                                 </StackPanel>
                                 <ListView HorizontalAlignment="Right"
                                           VerticalAlignment="Top"
-                                          Margin="2"
+                                          Margin="1"
                                           ItemContainerStyle="{StaticResource LoaderLabel}"
                                           ItemsSource="{Binding ModLoader}">
                                     <ListView.ItemsPanel>
@@ -121,10 +140,21 @@
                                 </ListView>
                                 <ListView HorizontalAlignment="Right"
                                           VerticalAlignment="Bottom"
-                                          Margin="2"
-                                          MaxWidth="400"
+                                          Margin="1"
                                           ItemContainerStyle="{StaticResource VersionLabel}"
-                                          ItemsSource="{Binding McVersion}">
+                                          ItemsSource="{Binding McVersion,Converter={StaticResource ListCountTwoMoreConverter}}">
+                                    <ListView.ToolTip>
+                                        <ToolTip>
+                                            <ListView ItemContainerStyle="{StaticResource VersionLabel}"
+                                                      ItemsSource="{Binding McVersion}">
+                                                <ListView.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal" MaxWidth="500"></WrapPanel>
+                                                    </ItemsPanelTemplate>
+                                                </ListView.ItemsPanel>
+                                            </ListView>
+                                        </ToolTip>
+                                    </ListView.ToolTip>
                                     <ListView.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel Orientation="Horizontal"></StackPanel>
@@ -174,7 +204,7 @@
                                     VerticalAlignment="Center"
                                     Margin="10"
                                     CornerRadius="5"
-                                    Visibility="{Binding Resource.Logo, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}"
+                                    Visibility="{Binding Resource.Logo, Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}"
                                     Background="{DynamicResource PrimaryBrush_2}">
                                 <TextBlock Text="&#xe61d;" 
                                            HorizontalAlignment="Center"
@@ -189,20 +219,27 @@
                                         <TextBlock Text="{Binding Resource.DisplayName}" 
                                                    FontSize="15" 
                                                    FontWeight="Bold" 
-                                                   VerticalAlignment="Center"
+                                                   VerticalAlignment="Top"
                                                    Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                                        <TextBlock Text=" | " VerticalAlignment="Bottom" Margin="0 0 0 2"></TextBlock>
-                                        <TextBlock Text="{Binding Resource.ResourceVersion}" 
-                                                   VerticalAlignment="Bottom" 
-                                                   Foreground="{DynamicResource SecondaryBrush}"
-                                                   Opacity="0.8"></TextBlock>
+                                        <StackPanel Orientation="Horizontal" 
+                                                    Visibility="{Binding Resource.ChineseName,Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                            <TextBlock FontSize="12"
+                                                       Text=" | "
+                                                       Foreground="{DynamicResource SecondaryBrush_1}"
+                                                       Opacity="0.8"></TextBlock>
+                                            <TextBlock FontSize="12"
+                                                       Text="{Binding Resource.EnglishName}"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource SecondaryBrush_1}"
+                                                       Opacity="0.8"></TextBlock>
+                                        </StackPanel>
                                     </StackPanel>
                                     <Border Height="18" CornerRadius="5" 
                                             HorizontalAlignment="Right"
                                             Background="{DynamicResource PrimaryBrush_4}" 
                                             Margin="10 0 10 2" 
                                             Padding="4 0"
-                                            Visibility="{Binding Resource.ResourceSource, Converter={StaticResource StringNotEmptyToVisibilityVisibleConverter}}">
+                                            Visibility="{Binding Resource.ResourceSource, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
                                         <TextBlock Text="{Binding Resource.ResourceSource}" 
                                                    VerticalAlignment="Center" 
                                                    HorizontalAlignment="Center" 
@@ -249,6 +286,17 @@
                                 <ColumnDefinition></ColumnDefinition>
                                 <ColumnDefinition></ColumnDefinition>
                             </Grid.ColumnDefinitions>
+                            <ListView HorizontalAlignment="Left"
+                                      Margin="10 0 0 0"
+                                      ItemContainerStyle="{StaticResource CateGoryLabel}"
+                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                      ItemsSource="{Binding Resource.Categories}">
+                                <ListView.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"></StackPanel>
+                                    </ItemsPanelTemplate>
+                                </ListView.ItemsPanel>
+                            </ListView>
                             <StackPanel Grid.Column="1" 
                                         Orientation="Horizontal" 
                                         HorizontalAlignment="Center"
@@ -338,8 +386,9 @@
                                         VerticalAlignment="Center"
                                         Margin="0 0 10 0">
                                 <component:ToggleButton Margin="0 0 10 0"
-                                                         Click="Platform_OnClick"
-                                                         IsChecked="{Binding IsCurseForgeSource}">
+                                                        Visibility="{Binding PlatFormVisibility}"
+                                                        Click="Platform_OnClick"
+                                                        IsChecked="{Binding IsCurseForgeSource,Mode=TwoWay}">
                                     <component:ToggleButton.ToolTip>
                                         <ToolTip>
                                             <StackPanel>
@@ -377,47 +426,47 @@
                         </Grid>
                         <Border Height="1" Margin="10 0" Background="{DynamicResource SecondaryBrush}"></Border>
                         <Grid>
+                            <Border Name="NoDownloadSource" Height="30" 
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="14" Text="没有能下载的源" 
+                                           Foreground="{DynamicResource SecondaryBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+                            </Border>
                             <Border Name="Loading" Height="30" 
                                     HorizontalAlignment="Center" 
                                     VerticalAlignment="Center" Margin="0  5 0 0">
-                            <StackPanel Orientation="Horizontal" 
-                                        HorizontalAlignment="Center" 
-                                        VerticalAlignment="Center">
-                                <TextBlock Text="&#xe679;" 
-                                           FontSize="18" 
-                                           FontFamily="{StaticResource IconFontFamily}"
-                                           Foreground="{DynamicResource SecondaryBrush}"
-                                           Margin="5 0"
-                                           RenderTransformOrigin="0.5,0.5">
-                                    <TextBlock.RenderTransform>
-                                        <RotateTransform Angle="0"></RotateTransform>
-                                    </TextBlock.RenderTransform>
-                                    <TextBlock.Triggers>
-                                        <EventTrigger RoutedEvent="Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard RepeatBehavior="Forever">
-                                                    <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)" 
-                                                                     From="0" To="360" Duration="0:0:2"></DoubleAnimation>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </TextBlock.Triggers>
-                                </TextBlock>
-                                <TextBlock Text="加载中..." 
-                                           FontSize="14" 
-                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                            </StackPanel>
-                        </Border>
-                        <Border Name="NoDownloadSource" Height="30" 
-                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock FontSize="14" Text="没有能下载的源" 
-                                       Foreground="{DynamicResource SecondaryBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                        </Border>
-                        <ListView Margin="0 10" 
-                                  ItemsSource="{Binding Downloaders}" 
-                                  ItemContainerStyle="{StaticResource ModsListViewStyle}"
-                                  SelectionChanged="Selector_OnSelectionChanged"></ListView>
+                                <StackPanel Orientation="Horizontal" 
+                                            HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="&#xe679;" 
+                                               FontSize="18" 
+                                               FontFamily="{StaticResource IconFontFamily}"
+                                               Foreground="{DynamicResource SecondaryBrush}"
+                                               Margin="5 0"
+                                               RenderTransformOrigin="0.5,0.5">
+                                        <TextBlock.RenderTransform>
+                                            <RotateTransform Angle="0"></RotateTransform>
+                                        </TextBlock.RenderTransform>
+                                        <TextBlock.Triggers>
+                                            <EventTrigger RoutedEvent="Loaded">
+                                                <BeginStoryboard>
+                                                    <Storyboard RepeatBehavior="Forever">
+                                                        <DoubleAnimation Storyboard.TargetProperty="(TextBlock.RenderTransform).(RotateTransform.Angle)" 
+                                                                         From="0" To="360" Duration="0:0:2"></DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </TextBlock.Triggers>
+                                    </TextBlock>
+                                    <TextBlock Text="加载中..." 
+                                               FontSize="14" 
+                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <ListView Margin="0 10" 
+                                      ItemsSource="{Binding Downloaders,Mode=TwoWay}" 
+                                      ItemContainerStyle="{StaticResource ModsListViewStyle}"
+                                      SelectionChanged="Selector_OnSelectionChanged"></ListView>
                         </Grid>
                     </StackPanel>
                 </Border>

@@ -27,8 +27,18 @@ public partial class ModInfo : Page {
     private void setResource(ModResource resource) {
         Dispatcher.BeginInvoke(() => {
             viewModel.Resource = resource;
-            Loading.Visibility = Visibility.Visible;
-            NoDownloadSource.Visibility = Visibility.Collapsed;
+            if (!string.IsNullOrEmpty(resource.ModrinthSha1) && resource.CurseForgeSha1 != 0) {
+                viewModel.PlatFormVisibility = Visibility.Visible;
+            }
+            else {
+                viewModel.PlatFormVisibility = Visibility.Collapsed;
+            }
+            if (resource.CurseForgeSha1 != 0 || resource.CurseForgeId != 0) {
+                viewModel.IsCurseForgeSource = true;
+            }
+            else {
+                viewModel.IsCurseForgeSource = false;
+            }
             GetDownloadFiles();
             Pagination.TotalCount = 1;
             Pagination.CurrentPage = 1;
@@ -43,22 +53,32 @@ public partial class ModInfo : Page {
         cts = new CancellationTokenSource();
         NoDownloadSource.Visibility = Visibility.Collapsed;
         Loading.Visibility = Visibility.Visible;
-        viewModel.Downloaders = new();
+        viewModel.Downloaders = new List<ModDownloader>();
         if (init) {
-            var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
-            viewModel.ModrinthDownloaders = modrinth;
-            if (modrinth.Count == 0) {
-                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
-                viewModel.CurseForgeDownloaders = curseForge;
-                viewModel.IsCurseForgeSource = false;
-            }
-        }
-        else {
             if (viewModel.IsCurseForgeSource) {
                 var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
                 viewModel.CurseForgeDownloaders = curseForge;
             }
             else {
+                var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
+                viewModel.ModrinthDownloaders = modrinth;
+                viewModel.IsCurseForgeSource = false;
+                if (modrinth.Count == 0) {
+                    viewModel.IsCurseForgeSource = true;
+                    var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
+                    viewModel.CurseForgeDownloaders = curseForge;
+                }
+            }
+            
+        }
+        else {
+            if (viewModel.IsCurseForgeSource) {
+                viewModel.CurseForgeDownloaders.Clear();
+                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
+                viewModel.CurseForgeDownloaders = curseForge;
+            }
+            else {
+                viewModel.ModrinthDownloaders.Clear();
                 var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
                 viewModel.ModrinthDownloaders = modrinth;
             }
@@ -98,6 +118,12 @@ public partial class ModInfo : Page {
         public bool IsCurseForgeSource {
             get => _isCurseForgeSource;
             set => SetField(ref _isCurseForgeSource, value);
+        }
+
+        private Visibility _platFormVisibility = Visibility.Visible;
+        public Visibility PlatFormVisibility {
+            get => _platFormVisibility;
+            set => SetField(ref _platFormVisibility, value);
         }
         
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -174,22 +200,39 @@ public partial class ModInfo : Page {
         }
     }
 
+    private bool isFirstLoad = true;
     private void SetDownloaderPage() {
-        if (viewModel.IsCurseForgeSource) {
-            viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.CurseForgeDownloaders,Pagination.CurrentPage,20);
-            Pagination.TotalCount = viewModel.CurseForgeDownloaders.Count;
+        viewModel.Downloaders = new List<ModDownloader>();
+        if (isFirstLoad) {
+            Loading.Visibility = Visibility.Visible;
+            isFirstLoad = false;
         }
         else {
-            viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.ModrinthDownloaders,Pagination.CurrentPage,20);
-            Pagination.TotalCount = viewModel.ModrinthDownloaders.Count;
+            Loading.Visibility = Visibility.Collapsed;
+            if (viewModel.IsCurseForgeSource) {
+                viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.CurseForgeDownloaders,Pagination.CurrentPage,20);
+                Pagination.TotalCount = viewModel.CurseForgeDownloaders.Count;
+            }
+            else {
+                viewModel.Downloaders = NetworkUtil.GetPageList(viewModel.ModrinthDownloaders,Pagination.CurrentPage,20);
+                Pagination.TotalCount = viewModel.ModrinthDownloaders.Count;
+            }
+            if (viewModel.Downloaders == null || viewModel.Downloaders.Count == 0) {
+                NoDownloadSource.Visibility = Visibility.Visible;
+            }
+            else {
+                NoDownloadSource.Visibility = Visibility.Collapsed;
+            }
+
+            if (Pagination.TotalCount > 10) {
+                Pagination.PageNumVisibility = Visibility.Collapsed;
+                Pagination.GoToButtonVisibility = Visibility.Visible;
+            }
+            else {
+                Pagination.PageNumVisibility = Visibility.Visible;
+                Pagination.GoToButtonVisibility = Visibility.Collapsed;
+            }
         }
-        if (viewModel.Downloaders == null || viewModel.Downloaders.Count == 0) {
-            NoDownloadSource.Visibility = Visibility.Visible;
-        }
-        else {
-            NoDownloadSource.Visibility = Visibility.Collapsed;
-        }
-        Loading.Visibility = Visibility.Collapsed;
     }
 
     private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -209,6 +252,10 @@ public partial class ModInfo : Page {
     }
 
     private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
+        if (Pagination.CurrentPage < 0) {
+            return;
+        }
+        
         SetDownloaderPage();
     }
 }

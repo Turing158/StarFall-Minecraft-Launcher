@@ -30,7 +30,6 @@ public partial class About : Page {
     }
     
     public async Task CheckUpdate() {
-        return;//提交注释这里，可以检测版本更新
         UpdateLoading.BeginAnimation(OpacityProperty, valueTo1);
         if (DateTime.Now - PropertiesUtil.LastCheckUpdateTime > TimeSpan.FromMinutes(10)) {
             PropertiesUtil.LastCheckUpdateTime = DateTime.Now;

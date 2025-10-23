@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using StarFallMC.Entity;
+using StarFallMC.Util;
 
 
 namespace StarFallMC;
@@ -29,6 +30,9 @@ public partial class ResourcePage : Page {
         NaviBarChangeAnim = (Storyboard)FindResource("NaviBarChangeAnim");
         ChangeVersionAction = changeVersionAction;
         LoadTempPage = loadTempPage;
+        
+        //初始化ModData
+        ResourceUtil.GetMcModDataInit();
     }
     
     public class ViewModel : INotifyPropertyChanged {

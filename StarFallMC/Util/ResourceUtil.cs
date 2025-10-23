@@ -3,6 +3,8 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Resources;
 using fNbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -27,6 +29,8 @@ public class ResourceUtil {
     public static List<MinecraftDownloader> OldType = new ();
 
     public static ModResourceCache ModResourceCache;
+    
+    public static List<McModData> McModData = new ();
     
     private static HashSet<string> ModLoaders = new () {
         "Forge",
@@ -73,7 +77,62 @@ public class ResourceUtil {
         var currentGame = hvm.CurrentGame;
         return string.IsNullOrEmpty(currentGame.Path) ? null : currentGame;
     }
+    
+    public static void GetMcModDataInit() {
+        McModData?.Clear();
+        Uri uri = new Uri("pack://application:,,,/;component/assets/ModData");
+        StreamResourceInfo info = Application.GetResourceStream(uri);
+        string data = "";
+        if(info != null){
+            using (StreamReader reader = new StreamReader(info.Stream)){
+                data = reader.ReadToEnd();
+            }
+        }
+        if (string.IsNullOrEmpty(data)) {
+            return;
+        }
+        string[] lines = data.Replace("\r\n", "\n").Replace("\r", "").Split('\n');
+        int index = 0;
+        foreach (var i in lines) {
+            index++;
+            if (i == "") {
+                continue;
+            }
+            foreach (var j in i.Split("\u00a8")) {
+                var modData = new McModData() {
+                    WikiId = index,
+                };
+                var splitLine = j.Split("|");
+                if (splitLine[0].StartsWith("@")) {
+                    modData.CurseForgeSlug = string.Empty;
+                    modData.ModrinthSlug = splitLine[0].Replace("@", "");
+                }
+                else if (splitLine[0].EndsWith("@")) {
+                    modData.CurseForgeSlug = splitLine[0].TrimEnd('@');
+                    modData.ModrinthSlug = modData.CurseForgeSlug;
+                }
+                else if (splitLine[0].Contains("@")) {
+                    modData.CurseForgeSlug = splitLine[0].Split("@")[0];
+                    modData.ModrinthSlug = splitLine[0].Split("@")[1];
+                }
+                else {
+                    modData.CurseForgeSlug = splitLine[0];
+                    modData.ModrinthSlug = string.Empty;
+                }
+                if (splitLine.Length >= 2) {
+                    modData.AllName = splitLine[1];
+                    if (modData.AllName.Contains("*")) {
+                        var slugToName = (modData.CurseForgeSlug ?? modData.ModrinthSlug).Replace("-", " ");
+                        modData.AllName = modData.AllName.Replace("*", 
+                            $" ({char.ToUpper(slugToName[0]) + slugToName.Substring(1).ToLower()})");
+                    }
+                }
+                McModData.Add(modData);
+            }
+        }
+    }
 
+    
     
     public static async Task<(List<ModResource>,int)> GetCurseForgeModResources(
         CancellationToken token,
@@ -84,10 +143,10 @@ public class ResourceUtil {
         string category = "",
         IProgress<int> progress = null ,
         int limit = 20
-        ) {
+    ) {
         var arg = new Dictionary<string, object>() {
             {"gameId","432"},
-            {"sortField", "2"},
+            {"sortField", "6"},
             {"sortOrder", "desc"},
             {"index", (page - 1) * limit},
             {"pageSize", limit},
@@ -117,7 +176,7 @@ public class ResourceUtil {
             var root = JObject.Parse(result.Content);
             foreach (var i in root["data"] as JArray) {
                 var resource = new ModResource() {
-                    DisplayName = i["name"]?.ToString(),
+                    OriginalName = i["name"]?.ToString(),
                     Logo = i["logo"]?["thumbnailUrl"]?.ToString(),
                     Slug = i["slug"]?.ToString(),
                     DownloadCount = int.Parse(i["downloadCount"]?.ToString() ?? "0"),
@@ -127,25 +186,45 @@ public class ResourceUtil {
                     LastUpdated = DateTime.Parse(i["dateModified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
                 };
                 resource.Author = string.Join(",",i["authors"]?.Select(j => j["name"]?.ToString()) ?? new List<string>());
-                List<string> versions = new List<string>();
-                List<string> loaders = new List<string>();
-                foreach (var j in i["latestFilesIndexes"] as JArray) {
-                    var versionStr = j["gameVersion"]?.ToString();
-                    var loaderInt = j["modLoader"]?.ToObject<int>() ?? 0;
-                    if (versionStr != null & !versions.Contains(versionStr)) {
-                        versions.Add(versionStr);
-                    }
-                    if (loaderInt != 0 && GetCurseForgeModLoader(loaderInt) is string loaderStr && !loaders.Contains(loaderStr)) {
-                        loaders.Add(loaderStr);
-                    }
-                }
+                var (loaders, versions,categories) = GetCurseForgeLoaderVersionsCategory(i);
                 resource.GameVersions = NetworkUtil.SortVersions(versions);
                 resource.Loaders = loaders;
+                resource.Categories = categories;
+                resource.ResourceSource = "CurseForge";
+                if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                    && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
+                    resource.ChineseName = modData.ChineseName[^1];
+                    resource.EnglishName = modData.EnglishName[^1];
+                }
                 tmp.Add(resource);
             }
             total = root["pagination"]?["totalCount"]?.ToObject<int>() ?? 0;
         }
         return (tmp,total);
+    }
+
+    private static (List<string> loaders, List<string> versions, List<string> categories) GetCurseForgeLoaderVersionsCategory(JToken i) {
+        List<string> versions = new List<string>();
+        List<string> loaders = new List<string>();
+        List<string> categories = new List<string>();
+        foreach (var j in i["categories"]) {
+            var category = ResourceCategory.CurseForgeCategoriesParse(j["id"].ToObject<int>());
+            if (!string.IsNullOrEmpty(category)) {
+                categories.Add(category);
+            }
+        }
+        foreach (var j in i["latestFilesIndexes"] as JArray) {
+            var versionStr = j["gameVersion"]?.ToString();
+            var loaderInt = j["modLoader"]?.ToObject<int>() ?? 0;
+            if (versionStr != null & !versions.Contains(versionStr)) {
+                versions.Add(versionStr);
+            }
+            if (loaderInt != 0 && GetCurseForgeModLoader(loaderInt) is string loaderStr && !loaders.Contains(loaderStr)) {
+                loaders.Add(loaderStr);
+            }
+        }
+
+        return (loaders, versions, categories);
     }
     
     public static string GetCurseForgeModLoader(int modLoader) {
@@ -228,7 +307,7 @@ public class ResourceUtil {
                 var root = JObject.Parse(elementResult.Content);
                 foreach (var i in root["hits"] as JArray) {
                     var resource = new ModResource() {
-                        DisplayName = i["title"]?.ToString(),
+                        OriginalName = i["title"]?.ToString(),
                         Logo = i["icon_url"]?.ToString(),
                         Slug = i["slug"]?.ToString(),
                         DownloadCount = int.Parse(i["downloads"]?.ToString() ?? "0"),
@@ -238,10 +317,17 @@ public class ResourceUtil {
                         Author = i["author"]?.ToString(),
                         LastUpdated = DateTime.Parse(i["date_modified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
                     };
-                    resource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"];
-                    var (loaders, gameVersions) = GetCurseForgeLoaderAndGameVersion(i);
+                    resource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"]; 
+                    var (loaders, versions, categories) = GetModrinthLoaderGameVersionCategory(i);
                     resource.Loaders = loaders;
-                    resource.GameVersions = gameVersions;
+                    resource.GameVersions = versions;
+                    resource.Categories = categories;
+                    resource.ResourceSource = "Modrinth";
+                    if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                        && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
+                        resource.ChineseName = modData.ChineseName[^1];
+                        resource.EnglishName = modData.EnglishName[^1];
+                    }
                     netWorkModResources.Add(resource);
                 }
                 totalCount = int.Parse(root["total_hits"]?.ToString() ?? "0");
@@ -258,12 +344,19 @@ public class ResourceUtil {
         return (netWorkModResources,totalCount);
     }
 
-    private static (List<string>, List<string>) GetCurseForgeLoaderAndGameVersion(JToken i) {
+    private static (List<string>, List<string>, List<string>) GetModrinthLoaderGameVersionCategory(JToken i) {
         var loaders = new List<string>();
         var versions = i["versions"]?.ToObject<List<string>>();
+        var categories = new List<string>();
         foreach (var j in i["categories"] as JArray) {
             if (ModLoaders.Contains(j.ToString())) {
                 loaders.Add(j.ToString());
+            }
+            else {
+                var category = ResourceCategory.ModrinthCategoriesParse(j.ToString());
+                if (!string.IsNullOrEmpty(category)) {
+                    categories.Add(category);
+                }
             }
         }
         var endVersion = new List<string>();
@@ -281,7 +374,7 @@ public class ResourceUtil {
                 endVersion = tmp;
             }
         }
-        return (loaders, endVersion);
+        return (loaders, endVersion, categories);
     }
     
     public static async Task<List<ModDownloader>> GetModDownloaderByModrinth(ModResource modResource, CancellationToken ct) {
@@ -345,12 +438,16 @@ public class ResourceUtil {
                 modResource.CurseForgeId = list[0].CurseForgeId;
             }
             bool hasMore = true;
+            int index = 0;
+            bool isFirstTip = false;
             while (hasMore) {
+                ct.ThrowIfCancellationRequested();
+                hasMore = false;
                 //GET https://api.curseforge.com/v1/mods/：id/files
                 var curseForge = await HttpRequestUtil.Get(
                     $"https://api.curseforge.com/v1/mods/{modResource.CurseForgeId}/files",
                     args: new Dictionary<string, Object> {
-                        {"index", 0 * 100},
+                        {"index", index * 100},
                         {"pageSize", 100},
                     },
                     headers: new Dictionary<string, string> {
@@ -381,14 +478,22 @@ public class ResourceUtil {
                         };
                         downloaders.Add(downloader);
                     }
-
                     if (downloaders.Count >= root["pagination"]?["totalCount"]?.ToObject<int>()) {
                         hasMore = false;
                     }
+                    else {
+                        hasMore = true;
+                        if (!isFirstTip && index >= 4) {
+                            isFirstTip = true;
+                            MessageTips.Show("该模组下载源总量较多，所以获取的时间较久，请耐心等待!");
+                        }
+                    }
                 }
                 else {
+                    hasMore = false;
                     Console.WriteLine($"CurseForge获取下载列表失败：{curseForge.ErrorMessage}");
                 }
+                index++;
             }
         }
         catch (Exception e) {
@@ -570,7 +675,7 @@ public class ResourceUtil {
 
                             if (gameVersions == null || gameVersions.Contains(version)) {
                                 var modResource = new ModResource() {
-                                    DisplayName = i["version_number"]?.ToString().Split("+")[0],
+                                    OriginalName = i["version_number"]?.ToString().Split("+")[0],
                                     ResourceVersion = i["version_number"]?.ToString(),
                                 };
                                 foreach (var j in i["files"] as JArray) {
@@ -626,7 +731,7 @@ public class ResourceUtil {
 
                                 if (gameVersion == null || gameVersion.Contains(version)) {
                                     var modResource = new ModResource() {
-                                        DisplayName = i["displayName"]?.ToString().Split(" ")[^1].Split("+")[0],
+                                        OriginalName = i["displayName"]?.ToString().Split(" ")[^1].Split("+")[0],
                                         ResourceVersion = i["displayName"]?.ToString().Split(" ")[^1],
                                     };
                                     var downloader = new ModDownloader() {
@@ -1040,7 +1145,7 @@ public class ResourceUtil {
                 if (string.IsNullOrEmpty(allModResources[i].ResourceSource) || string.IsNullOrEmpty(allModResources[i].WebsiteUrl) ||
                     string.IsNullOrEmpty(allModResources[i].Description)) {
                     if (string.IsNullOrEmpty(allModResources[i].DisplayName)) {
-                        allModResources[i].DisplayName = allModResources[i].FileNameWithExtension;
+                        allModResources[i].OriginalName = allModResources[i].FileNameWithExtension;
                     }
                     NotFoundNumber++;
                 }
@@ -1103,7 +1208,7 @@ public class ResourceUtil {
                         Dictionary<string, string> modInfo =
                             GetModstomlValue(modsToml, "mods", ["version", "displayName", "authors"]);
                         resource.ResourceVersion = modInfo.Keys.Contains("version") ? modInfo["version"] : "";
-                        resource.DisplayName = modInfo.Keys.Contains("displayName") ? modInfo["displayName"] : "";
+                        resource.OriginalName = modInfo.Keys.Contains("displayName") ? modInfo["displayName"] : "";
                         resource.Author = modInfo.Keys.Contains("authors") ? modInfo["authors"] : "";
                     }
                 }
@@ -1276,20 +1381,26 @@ public class ResourceUtil {
             foreach (var i in modrinthProjectJArray) {
                 modrinthProjectJArrayIndex++;
                 int currentIndex = resources.FindIndex(j => j.ModrinthProjectId == i["id"].ToString());
-                ModResource minecraftResource = resources[currentIndex];
-                if (minecraftResource.DisplayName != i["title"].ToString()) {
-                    minecraftResource.DisplayName = i["title"].ToString();
+                ModResource resource = resources[currentIndex];
+                if (resource.OriginalName != i["title"].ToString()) {
+                    resource.OriginalName = i["title"].ToString();
                 }
-                minecraftResource.Slug = i["slug"].ToString();
-                minecraftResource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"];
-                minecraftResource.Description = i["description"].ToString().Trim().Replace("\n"," ");
-                minecraftResource.Logo = i["icon_url"].ToString();
-                minecraftResource.DownloadCount = i["downloads"]?.ToObject<int>() ?? 0;
-                minecraftResource.GameVersions = i["game_versions"]?.ToObject<List<string>>() ?? new List<string>();
-                minecraftResource.Loaders = i["loaders"]?.ToObject<List<string>>() ?? new List<string>();
-                minecraftResource.LastUpdated = DateTime.Parse(i["updated"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
-                minecraftResource.ResourceSource = "Modrinth";
-                resources[currentIndex] = minecraftResource;
+                resource.Slug = i["slug"].ToString();
+                resource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"];
+                resource.Description = i["description"].ToString().Trim().Replace("\n"," ");
+                resource.Logo = i["icon_url"].ToString();
+                resource.DownloadCount = i["downloads"]?.ToObject<int>() ?? 0;
+                resource.GameVersions = i["game_versions"]?.ToObject<List<string>>() ?? new List<string>();
+                resource.Loaders = i["loaders"]?.ToObject<List<string>>() ?? new List<string>();
+                resource.Categories = i["categories"]?.ToObject<List<string>>() ?? new List<string>();
+                resource.LastUpdated = DateTime.Parse(i["updated"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
+                resource.ResourceSource = "Modrinth";
+                if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                    && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
+                    resource.ChineseName = modData.ChineseName[^1];
+                    resource.EnglishName = modData.EnglishName[^1];
+                }
+                resources[currentIndex] = resource;
                 
                 progress?.Report(start + stepRange + (int)(stepRange * (modrinthProjectJArrayIndex / (double)modrinthProjectJArray.Count)));
             }
@@ -1348,8 +1459,8 @@ public class ResourceUtil {
                     matchesIndex++;
                     uint sha1 = i["file"]["fileFingerprint"].ToObject<uint>();
                     curseForgeHashAndId[sha1] = i["id"].ToObject<int>();
-                    resources[resources.FindIndex(j => j.CurseForgeSha1 == sha1)].CurseForgeId =
-                        i["id"].ToObject<int>();
+                    int currentIndex = resources.FindIndex(j => j.CurseForgeSha1 == sha1);
+                    resources[currentIndex].CurseForgeId = i["id"].ToObject<int>();
                     progressCount = start + (int)((double)matchesIndex / matches.Count * (progressFirstEnd - start));
                     progress?.Report(progressCount);
                 }
@@ -1380,7 +1491,7 @@ public class ResourceUtil {
                     modArrayIndex++;
                     int currentIndex = resources.FindIndex(j => j.CurseForgeId == i["id"].ToObject<int>());
                     ModResource resource = resources[currentIndex];
-                    resource.DisplayName = i["name"].ToString();
+                    resource.OriginalName = i["name"].ToString();
                     resource.Logo = i["logo"]?["url"].ToString();
                     resource.Description = i["summary"].ToString();
                     resource.WebsiteUrl = i["links"]?["websiteUrl"].ToString();
@@ -1389,9 +1500,15 @@ public class ResourceUtil {
                     resource.ResourceSource = "CurseForge";
                     resource.DownloadCount = i["downloadCount"]?.ToObject<int>() ?? 0;
                     resource.LastUpdated = DateTime.Parse(i["dateModified"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
-                    var (loaders, gameVersions) = GetCurseForgeLoaderAndGameVersion(i);
+                    var (loaders, versions, categories) = GetCurseForgeLoaderVersionsCategory(i);
                     resource.Loaders = loaders;
-                    resource.GameVersions = gameVersions;
+                    resource.GameVersions = versions;
+                    resource.Categories = categories;
+                    if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                        && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
+                        resource.ChineseName = modData.ChineseName[^1];
+                        resource.EnglishName = modData.EnglishName[^1];
+                    }
                     resources[currentIndex] = resource;
                     progressCount = progressFirstEnd + (int)((double)modArrayIndex / modArray.Count * (end - progressFirstEnd));
                     progress?.Report(progressCount);

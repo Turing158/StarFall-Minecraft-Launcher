@@ -187,6 +187,9 @@ public partial class Pagination : UserControl {
     }
 
     private void Nums_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        if (Nums.SelectedIndex < 0) {
+            return;
+        }
         var item = Nums.ItemContainerGenerator.ContainerFromIndex(Nums.SelectedIndex) as ListViewItem;
         if (item != null) {
             Point itemPoint = item.TranslatePoint(new Point(0, 0), Nums);

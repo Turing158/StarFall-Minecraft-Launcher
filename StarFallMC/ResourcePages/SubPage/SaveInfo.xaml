@@ -11,7 +11,7 @@
       Title="SaveInfo" Height="400" Width="800">
     <Page.Resources>
         <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
-        <util:StringNotEmptyToVisibilityVisibleConverter x:Key="StringNotEmptyToVisibilityVisibleConverter" />
+        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
         <util:BooleanTrueToVisibilityVisibleConverter x:Key="BooleanTrueToVisibilityVisibleConverter"/>
         <util:BooleanFalseToVisibilityVisibleConverter x:Key="BooleanFalseToVisibilityVisibleConverter"/>
         <Style x:Key="GameRuleItem" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
@@ -73,7 +73,7 @@
                                 VerticalAlignment="Center"
                                 Margin="10"
                                 CornerRadius="5"
-                                Visibility="{Binding Resource.IconPath, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}"
+                                Visibility="{Binding Resource.Icon, Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}"
                                 Background="{DynamicResource PrimaryBrush_2}">
                             <TextBlock Text="&#xe61d;" 
                                        HorizontalAlignment="Center"
@@ -102,7 +102,7 @@
                                         Background="{DynamicResource PrimaryBrush_4}" 
                                         Margin="10 0 10 2" 
                                         Padding="4 0"
-                                        Visibility="{Binding Resource.VersionName, Converter={StaticResource StringNotEmptyToVisibilityVisibleConverter}}">
+                                        Visibility="{Binding Resource.VersionName, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding Resource.VersionName}" 
                                                    VerticalAlignment="Center" 

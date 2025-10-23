@@ -13,12 +13,32 @@
       Unloaded="ModResources_OnUnloaded">
     <Page.Resources>
         <util:ListToLabelConverter x:Key="ListToLabelConverter" />
+        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter"/>
+        <util:ListCountTwoMoreConverter x:Key="ListCountTwoMoreConverter" />
         <Style x:Key="SearchTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="FontSize" Value="15"></Setter>
             <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
             <Setter Property="VerticalAlignment" Value="Center"></Setter>
             <Setter Property="HorizontalAlignment" Value="Right"></Setter>
             <Setter Property="Margin" Value="10 0"></Setter>
+        </Style>
+        <Style x:Key="CateGoryLabel" TargetType="ListViewItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <Border Background="{DynamicResource PrimaryBrush_1}"
+                                CornerRadius="2" 
+                                Margin="2 0"
+                                Padding="0">
+                            <TextBlock Margin="2 0" 
+                                       Padding="0"
+                                       
+                                       Foreground="{DynamicResource SecondaryBrush}"
+                                       Text="{Binding}"></TextBlock>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
@@ -61,26 +81,41 @@
                                         <RowDefinition></RowDefinition>
                                         <RowDefinition></RowDefinition>
                                     </Grid.RowDefinitions>
-                                    <StackPanel Name="ModTitle" 
-                                                HorizontalAlignment="Left" 
+                                    <Grid VerticalAlignment="Top">
+                                        <StackPanel Name="ModTitle" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DisplayName}" 
+                                                       FontSize="13"
+                                                       MaxWidth="300"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                            <StackPanel Orientation="Horizontal" 
+                                                        Visibility="{Binding ChineseName,Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                                <TextBlock FontSize="12"
+                                                           Text=" | "
+                                                           Foreground="{DynamicResource SecondaryBrush_1}"
+                                                           Opacity="0.8"></TextBlock>
+                                                <TextBlock FontSize="12"
+                                                           Text="{Binding EnglishName}"
+                                                           VerticalAlignment="Bottom"
+                                                           Foreground="{DynamicResource SecondaryBrush_1}"
+                                                           Opacity="0.8"></TextBlock>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Border CornerRadius="5" 
+                                                HorizontalAlignment="Right"
                                                 VerticalAlignment="Top"
-                                                Orientation="Horizontal">
-                                        <TextBlock Text="{Binding DisplayName}" 
-                                                   FontSize="13"
-                                                   MaxWidth="300"
-                                                   TextWrapping="NoWrap"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                                        <TextBlock FontSize="12"
-                                                   Text=" | "
-                                                   Foreground="{DynamicResource SecondaryBrush_1}"
-                                                   Opacity="0.8"></TextBlock>
-                                        <TextBlock FontSize="12"
-                                                   Text="{Binding Slug}"
-                                                   VerticalAlignment="Bottom"
-                                                   Foreground="{DynamicResource SecondaryBrush_1}"
-                                                   Opacity="0.8"></TextBlock>
-                                    </StackPanel>
+                                                Margin="5 1"
+                                                Padding="4 0"
+                                                Background="{DynamicResource PrimaryBrush_4}" 
+                                                Visibility="{Binding ResourceSource, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                            <TextBlock Text="{Binding ResourceSource}" 
+                                                       VerticalAlignment="Center" 
+                                                       HorizontalAlignment="Center" 
+                                                       FontSize="11" 
+                                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                        </Border>
+                                    </Grid>
                                     <TextBlock Grid.Row="1" Name="description"
                                                MaxWidth="500"
                                                HorizontalAlignment="Left"
@@ -97,6 +132,7 @@
                                             <ColumnDefinition></ColumnDefinition>
                                             <ColumnDefinition></ColumnDefinition>
                                             <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Orientation="Horizontal" 
                                                     HorizontalAlignment="Left">
@@ -106,7 +142,29 @@
                                                        Text="{Binding GameVersions, Converter={StaticResource ListToLabelConverter}}" 
                                                        Opacity="0.6"></TextBlock>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="1" 
+                                        <ListView Grid.Column="1" HorizontalAlignment="Left"
+                                                  ItemContainerStyle="{StaticResource CateGoryLabel}"
+                                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                                  ItemsSource="{Binding Categories,Converter={StaticResource ListCountTwoMoreConverter}}">
+                                            <ListView.ToolTip>
+                                                <ToolTip>
+                                                    <ListView ItemContainerStyle="{StaticResource CateGoryLabel}"
+                                                              ItemsSource="{Binding Categories}">
+                                                        <ListView.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel Orientation="Horizontal" MaxWidth="500"></WrapPanel>
+                                                            </ItemsPanelTemplate>
+                                                        </ListView.ItemsPanel>
+                                                    </ListView>
+                                                </ToolTip>
+                                            </ListView.ToolTip>
+                                            <ListView.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"></StackPanel>
+                                                </ItemsPanelTemplate>
+                                            </ListView.ItemsPanel>
+                                        </ListView>
+                                        <StackPanel Grid.Column="2" 
                                                     Orientation="Horizontal" 
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
@@ -122,7 +180,7 @@
                                             </TextBlock>
                                         </StackPanel>
                                         
-                                        <StackPanel Grid.Column="2" 
+                                        <StackPanel Grid.Column="3" 
                                                     Orientation="Horizontal"
                                                     HorizontalAlignment="Right"
                                                     Margin="5 0">
@@ -187,12 +245,16 @@
                                        Style="{StaticResource SearchTextBlock}"></TextBlock>
                             <comp:TextInput Grid.Row="0" Grid.Column="1" 
                                             Margin="0 5" 
+                                            Padding="2 0"
+                                            PlaceholderText="搜索Mod，但不支持中文捏！"
                                             Text="{Binding SearchText}"
                                             VerticalContentAlignment="Center"></comp:TextInput>
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="版本:" 
                                        Style="{StaticResource SearchTextBlock}"></TextBlock>
                             <comp:TextInput Grid.Row="1" Grid.Column="1" 
                                             Margin="0 5" 
+                                            Padding="2 0"
+                                            PlaceholderText="搜索版本，例如：1.16.5，为空表示搜索所有版本"
                                             Text="{Binding SelectedVersion}"
                                             VerticalContentAlignment="Center"></comp:TextInput>
                             <TextBlock Grid.Row="0" Grid.Column="2" Text="来源:" 
@@ -269,34 +331,36 @@
                 <Grid>
                     <comp:Loading x:Name="LoadingBorder" Height="100" PercentText="{Binding PercentText}" Margin="20 5"></comp:Loading>
                     <Border Name="ResourceContent" Style="{StaticResource NoAnimRect}" Margin="20 5">
-                        <StackPanel>
+                        <Grid>
                             <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
                                 <TextBlock HorizontalAlignment="Center" 
                                            VerticalAlignment="Center"
                                            FontSize="16" Text="暂无模组资源"
                                            Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                             </Grid>
-                            <ListView Name="ListView" 
-                                      ItemContainerStyle="{StaticResource ModsListViewStyle}"
-                                      ItemsSource="{Binding Mods}" Width="580"
-                                      SelectionChanged="ListView_OnSelectionChanged"
-                                      ScrollViewer.IsDeferredScrollingEnabled="True"
-                                      ScrollViewer.CanContentScroll="True"
-                                      Margin="0 10">
-                                <ListView.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel VirtualizationMode="Recycling"/>
-                                    </ItemsPanelTemplate>
-                                </ListView.ItemsPanel>
-                            </ListView>
-                            <comp:Pagination x:Name="Pagination" 
-                                             Height="32" 
-                                             PageNumVisibility="Collapsed"
-                                             GoToButtonVisibility="Visible"
-                                             HorizontalAlignment="Right" 
-                                             Margin="0 5"
-                                             PageChanged="Pagination_OnPageChanged"></comp:Pagination>
-                        </StackPanel>
+                            <StackPanel>
+                                <ListView Name="ListView" 
+                                          ItemContainerStyle="{StaticResource ModsListViewStyle}"
+                                          ItemsSource="{Binding Mods}" Width="580"
+                                          SelectionChanged="ListView_OnSelectionChanged"
+                                          ScrollViewer.IsDeferredScrollingEnabled="True"
+                                          ScrollViewer.CanContentScroll="True"
+                                          Margin="0 10">
+                                    <ListView.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel VirtualizationMode="Recycling"/>
+                                        </ItemsPanelTemplate>
+                                    </ListView.ItemsPanel>
+                                </ListView>
+                                <comp:Pagination x:Name="Pagination" 
+                                                 Height="32" 
+                                                 PageNumVisibility="Collapsed"
+                                                 GoToButtonVisibility="Visible"
+                                                 HorizontalAlignment="Right" 
+                                                 Margin="0 5"
+                                                 PageChanged="Pagination_OnPageChanged"></comp:Pagination>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
             </StackPanel>
