@@ -31,10 +31,10 @@ public class SaveResourceInfo : SavesResource{
             public string GameType {
                 get => nbt.TryGet("GameType",out NbtInt gameType) ?
                     gameType.Value switch {
-                        0 => "生存模式",
-                        1 => "创造模式",
-                        2 => "冒险模式",
-                        3 => "旁观者模式",
+                        0 => "生存",
+                        1 => "创造",
+                        2 => "冒险",
+                        3 => "旁观者",
                         _ => string.Empty,
                     } : 
                     string.Empty;

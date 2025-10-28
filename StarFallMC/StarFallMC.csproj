@@ -88,6 +88,14 @@
       <Resource Include="assets\ModData">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Resource>
+      <None Remove="assets\java-wrapper.jar" />
+      <Resource Include="assets\java-wrapper.jar">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="assets\forge-install.jar" />
+      <Resource Include="assets\forge-install.jar">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
     </ItemGroup>
 
     <ItemGroup>
@@ -137,7 +145,6 @@
 
     <ItemGroup>
       <Folder Include="assets\font\" />
-      <Folder Include="ResourcePages\Style\" />
     </ItemGroup>
 
 </Project>

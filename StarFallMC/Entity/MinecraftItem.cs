@@ -28,4 +28,8 @@ public class MinecraftItem {
     public override int GetHashCode() {
         return HashCode.Combine(Name, Loader, Path, Icon);
     }
+    
+    public MinecraftItem Clone() {
+        return new MinecraftItem(Name, Loader, Path, Icon);
+    }
 }

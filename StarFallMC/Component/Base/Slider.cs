@@ -54,7 +54,6 @@ public class Slider : System.Windows.Controls.Slider{
         };
         IsEnabledChanged += (sender, args) => {
             if (IsEnabled) {
-                Console.WriteLine(IsEnabled);
                 _border.Background.BeginAnimation(SolidColorBrush.ColorProperty, EnableAnimation);
             }
             else {

@@ -124,7 +124,13 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             EasingFunction = new CubicEase()
         };
         _active.RenderTransform.BeginAnimation(TranslateTransform.XProperty,doubleAnimation);
-        doubleAnimation.To = -_leftMask.Width;
+        if (double.IsNaN(_leftMask.Width)) {
+            doubleAnimation.To = 0;
+        }
+        else {
+            doubleAnimation.To = -_leftMask.Width;
+        }
+        
         _leftMask.RenderTransform.BeginAnimation(TranslateTransform.XProperty, doubleAnimation);
         doubleAnimation.To = 0;
         _rightMask.RenderTransform.BeginAnimation(TranslateTransform.XProperty, doubleAnimation);
@@ -140,7 +146,12 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             EasingFunction = new CubicEase()
         };
         _active.RenderTransform.BeginAnimation(TranslateTransform.XProperty,doubleAnimation);
-        doubleAnimation.To = _rightMask.Width;
+        if (double.IsNaN(_rightMask.Width)) {
+            doubleAnimation.To = 0;
+        }
+        else {
+            doubleAnimation.To = _rightMask.Width;
+        }
         _rightMask.RenderTransform.BeginAnimation(TranslateTransform.XProperty, doubleAnimation);
         doubleAnimation.To = 0;
         _leftMask.RenderTransform.BeginAnimation(TranslateTransform.XProperty, doubleAnimation);

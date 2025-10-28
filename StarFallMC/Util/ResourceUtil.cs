@@ -140,7 +140,7 @@ public class ResourceUtil {
         string query = "",
         string loader = "",
         string version = "",
-        string category = "",
+        int category = -1,
         IProgress<int> progress = null ,
         int limit = 20
     ) {
@@ -167,6 +167,10 @@ public class ResourceUtil {
         }
         if (!string.IsNullOrEmpty(query)) {
             arg["searchFilter"] = query;
+        }
+
+        if (category >= 0) {
+            arg["categoryId"] = category;
         }
 
         int total = 0;
@@ -1392,8 +1396,16 @@ public class ResourceUtil {
                 resource.DownloadCount = i["downloads"]?.ToObject<int>() ?? 0;
                 resource.GameVersions = i["game_versions"]?.ToObject<List<string>>() ?? new List<string>();
                 resource.Loaders = i["loaders"]?.ToObject<List<string>>() ?? new List<string>();
-                resource.Categories = i["categories"]?.ToObject<List<string>>() ?? new List<string>();
                 resource.LastUpdated = DateTime.Parse(i["updated"]?.ToString() ?? "0001-01-01T00:00:00Z").ToString("yyyy-MM-dd HH:mm:ss");
+                var categories = new List<string>();
+                
+                foreach (var j in i["categories"]?.ToObject<List<string>>() ?? new List<string>()) {
+                    var category = ResourceCategory.ModrinthCategoriesParse(j);
+                    if (!string.IsNullOrEmpty(category)) {
+                        categories.Add(category);
+                    }
+                }
+                resource.Categories = categories;
                 resource.ResourceSource = "Modrinth";
                 if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
                     && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {

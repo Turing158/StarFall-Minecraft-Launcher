@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 
@@ -62,5 +63,48 @@ public class NetworkUtil {
         }
         Console.WriteLine("获取更新信息失败");
         return null;
+    }
+    
+    public static bool IsValidVersion(string input){
+        if (string.IsNullOrEmpty(input))
+            return false;
+        Regex regex = new Regex(@"\d+\.");
+        return regex.IsMatch(input);
+    }
+
+    
+    public static string GetNewerVersion(string version1, string version2) {
+        if (string.IsNullOrEmpty(version1)) return version2;
+        if (string.IsNullOrEmpty(version2)) return version1;
+        try {
+            var v1 = new Version(version1);
+            var v2 = new Version(version2);
+        
+            return v1 > v2 ? version1 : version2;
+        }
+        catch {
+            return CompareVersionStrings(version1, version2);
+        }
+    }
+
+    private static string CompareVersionStrings(string v1, string v2) {
+        string[] parts1 = v1.Split('.');
+        string[] parts2 = v2.Split('.');
+        int maxLength = Math.Max(parts1.Length, parts2.Length);
+        for (int i = 0; i < maxLength; i++)
+        {
+            int num1 = i < parts1.Length ? GetNumberPart(parts1[i]) : 0;
+            int num2 = i < parts2.Length ? GetNumberPart(parts2[i]) : 0;
+        
+            if (num1 > num2) return v1;
+            if (num1 < num2) return v2;
+        }
+        return v1;
+    }
+
+    private static int GetNumberPart(string part) {
+        if (int.TryParse(System.Text.RegularExpressions.Regex.Match(part, @"^\d+").Value, out int result))
+            return result;
+        return 0;
     }
 }

@@ -339,6 +339,7 @@ public partial class DownloadPage : Page {
             }
         }
         SetOperateBtn(DownloadUtil.IsCancel);
+        downloadingAnimState(true);
     }
 
     private void SetOperateBtn(bool isCancel) {

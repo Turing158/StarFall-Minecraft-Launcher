@@ -49,6 +49,54 @@ public class ResourceCategory {
         };
     }
 
+    public static int CurseForgeCategoriesToInt(string categoryChinese) {
+        return categoryChinese switch {
+            "美食" => 436,
+            "矿物|资源" => 408,
+            "杂项" => 425,
+            "热力膨胀" => 427,
+            "装饰" => 424,
+            "教育" => 5299,
+            "建筑工艺" => 432,
+            "处理" => 413,
+            "匠魂" => 428,
+            "地图|信息" => 423,
+            "工业" => 429,
+            "农业" => 416,
+            "科技" => 412,
+            "基因" => 418,
+            "地形结构" => 409,
+            "生物" => 411,
+            "魔法" => 419,
+            "插件" => 426,
+            "维度" => 410,
+            "装备" => 434,
+            "世界元素" => 406,
+            "服务器" => 435,
+            "物流|管道" => 415,
+            "AE" => 4545,
+            "运输" => 414,
+            "能源" => 417,
+            "生物群系" => 407,
+            "冒险" => 422,
+            "林业" => 433,
+            "支持库" => 421,
+            "存储" => 420,
+            "红石" => 4558,
+            "血魔法" => 4485,
+            "神秘时代" => 430,
+            "自动化" => 4843,
+            "魔改配方" => 4773,
+            "实用" => 5191,
+            "空岛" => 6145,
+            "整合" => 6954,
+            "性能" => 6814,
+            "修复" => 6821,
+            "创造模式" => 9026,
+            _ => -1
+        };
+    }
+
     public static string ModrinthCategoriesParse(string name) {
         return name switch {
             "adventure" => "冒险",
@@ -71,6 +119,31 @@ public class ResourceCategory {
             "utility" => "实用",
             "worldgen" => "世界元素",
             _ => String.Empty
+        };
+    }
+
+    public static string ModrinthCategoryToString(string categoryChinese) {
+        return categoryChinese switch {
+            "冒险" => "adventure",
+            "诅咒" => "cursed",
+            "装饰" => "decoration", 
+            "经济" => "economy",
+            "装备" => "equipment",
+            "美食" => "food",
+            "机制" => "game-mechanics",
+            "支持库" => "library",
+            "魔法" => "magic",
+            "管理" => "management",
+            "小游戏" => "minigame",
+            "生物" => "mobs",
+            "优化" => "optimization",
+            "服务器" => "social",
+            "存储" => "storage",
+            "科技" => "technology",
+            "运输" => "transportation",
+            "实用" => "utility",
+            "世界元素" => "worldgen",
+            _ => string.Empty
         };
     }
 }
