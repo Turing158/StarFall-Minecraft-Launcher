@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Resource" Height="400" Width="800">
+      Title="Resource" MinHeight="400" MinWidth="800">
     <Page.Resources>
         <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>
@@ -19,6 +19,7 @@
         </Border>
         <Frame Name="PageFrame" 
                Source="Blank.xaml" 
+               Margin="160 10 0 10"
                Style="{StaticResource SettingAndResourceFrame}">
             <Frame.RenderTransform>
                 <TranslateTransform Y="0"></TranslateTransform>

@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Setting" Height="400" Width="800">
+      Title="Setting" MinHeight="400" MinWidth="800">
     <Page.Resources>
         <ResourceDictionary Source="Style/SettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>

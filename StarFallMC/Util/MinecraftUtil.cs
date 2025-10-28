@@ -227,7 +227,6 @@ public class MinecraftUtil {
         else {
             var lib = root["libraries"];
             bool isOnlyMinecraft = true;
-            Console.WriteLine(item.Name);
             if (lib != null) {
                 if (lib.ToString().Contains("neoforge")) {
                     isOnlyMinecraft = false;

@@ -144,15 +144,6 @@ public partial class NavigationBar : ScrollViewer {
     
     public NavigationBar() {
         InitializeComponent();
-        ThemeUtil.updateColor += () => {
-            Dispatcher.BeginInvoke(() => {
-                ActiveBlockColor = ThemeUtil.SecondaryBrush_1;
-                ActiveForeground = ThemeUtil.PrimaryBrush;
-                ItemBackground = ThemeUtil.PrimaryBrush;
-                ItemForeground = ThemeUtil.SecondaryBrush_1;
-                ItemHoverColor = ThemeUtil.SecondaryBrush_2;
-            });
-        };
         switch (Animation) {
             case AnimationType.Elastic:
                 _animationFunction = new ElasticEase{

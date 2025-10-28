@@ -1,0 +1,15 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="ResourcePageBgBorder" TargetType="Border">
+        <Setter Property="Background" Value="#f1f1f1"></Setter>
+        <Setter Property="CornerRadius" Value="10"></Setter>
+        <Setter Property="Margin" Value="0 0 20 0"></Setter>
+    </Style>
+    <Style x:Key="ResourcePageScrollViewer" TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+        <Setter Property="Margin" Value="0 5 0 5"></Setter>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Hidden"></Setter>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"></Setter>
+        <Setter Property="CanContentScroll" Value="False"></Setter>
+        <Setter Property="Opacity" Value="0"></Setter>
+    </Style>
+</ResourceDictionary>

@@ -73,6 +73,23 @@ public partial class MainWindow : Window {
             set => SetField(ref _tabs, value);
         }
         
+        private HorizontalAlignment _naviHorizontalAlignment = HorizontalAlignment.Center;
+        public HorizontalAlignment NaviHorizontalAlignment {
+            get => _naviHorizontalAlignment;
+            set {
+                NaviMargin = value == HorizontalAlignment.Center
+                    ? new Thickness(0, 0, 0, 0)
+                    : new Thickness(50, 0, 120, 0);
+                SetField(ref _naviHorizontalAlignment, value);
+            }
+        }
+        
+        private Thickness _naviMargin = new Thickness(0, 0, 0, 0);
+        public Thickness NaviMargin {
+            get => _naviMargin;
+            set => SetField(ref _naviMargin, value);
+        }
+        
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
@@ -98,7 +115,7 @@ public partial class MainWindow : Window {
             OperateGrid.SelectedIndex = 0;
             return;
         }
-
+        SettingFrame.IsHitTestVisible = true;
         SettingFrameTimer?.Dispose();
         SettingLeave.Stop();
         SettingEnter.Begin();
@@ -111,7 +128,7 @@ public partial class MainWindow : Window {
             OperateGrid.SelectedIndex = 0;
             return;
         }
-        
+        DownloadGameFrame.IsHitTestVisible = true;
         DownloadGameFrameTimer?.Dispose();
         ResourcePage.LoadTempPage?.Invoke();
         DownloadGameLeave.Stop();
@@ -120,6 +137,7 @@ public partial class MainWindow : Window {
     }
 
     private void HideSetting() {
+        SettingFrame.IsHitTestVisible = false;
         SettingEnter.Stop();
         SettingLeave.Begin();
         SettingFrameTimer?.Dispose();
@@ -132,6 +150,7 @@ public partial class MainWindow : Window {
     }
 
     private void HideDownloadGame() {
+        DownloadGameFrame.IsHitTestVisible = false;
         DownloadGameEnter.Stop();
         DownloadGameLeave.Begin();
         DownloadGameFrameTimer?.Dispose();
@@ -164,6 +183,7 @@ public partial class MainWindow : Window {
         Title.Text = pageTitle;
         SubFrame.Navigate(new Uri($"{pageName}.xaml", UriKind.Relative));
         SubFrameShow.Begin();
+        SubFrame.IsHitTestVisible = true;
     }
     ~MainWindow() => SubFrameNavigate -= SubFrameNavigateFunc;
 
@@ -176,7 +196,7 @@ public partial class MainWindow : Window {
                     SubFrameTimer.Dispose();
                 });
             }, null, 200, 0);
-            
+            SubFrame.IsHitTestVisible = false;
         }
         else {
             if (SubFrame.Opacity == 0) {
@@ -201,9 +221,12 @@ public partial class MainWindow : Window {
     }
 
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        if (WindowState == WindowState.Maximized) {
+            WindowState = WindowState.Normal;
+        }
         DragMove();
     }
-
+    
     private void reloadSubFrame(string pageName,Action action) {
         SubFrame.Navigate(new Uri("Blank.xaml", UriKind.Relative));
         Dispatcher.BeginInvoke(() => {

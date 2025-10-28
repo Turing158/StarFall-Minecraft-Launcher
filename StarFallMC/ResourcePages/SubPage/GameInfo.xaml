@@ -7,12 +7,9 @@
       xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="GameInfo" Height="400" Width="800"
+      Title="GameInfo" MinHeight="400" MinWidth="800"
       Unloaded="GameInfo_OnUnloaded">
     <Page.Resources>
-        <util:NullObjectToVisibilityCollapsedConverter x:Key="NullObjectToVisibilityCollapsedConverter"/>
-        <util:ListEmptyToCollapsedConverter x:Key="ListEmptyToCollapsedConverter"/>
-        <util:MinecraftDownloaderTypeToLabelConverter x:Key="MinecraftDownloaderTypeToLabelConverter"/>
         <Style TargetType="component:CollapsePanel" BasedOn="{StaticResource {x:Type component:CollapsePanel}}">
             <Setter Property="Margin" Value="40 0"></Setter>
         </Style>
@@ -92,16 +89,21 @@
                                            Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
                             </Border>
                         </Grid>
-                        <Grid Margin="10" Height="30">
+                        <Grid Margin="10 5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                                 <ColumnDefinition Width="100"></ColumnDefinition>
                                 <ColumnDefinition Width="30"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30"></RowDefinition>
+                                <RowDefinition></RowDefinition>
+                            </Grid.RowDefinitions>
                             <component:TextInput VerticalContentAlignment="Center"
                                                  FontSize="15"
                                                  Padding="5 0"
                                                  PlaceholderText="请输入版本号"
+                                                 LostFocus="VersionNameInput_OnLostFocus"
                                                  Text="{Binding VersionName}"></component:TextInput>
                             <component:Button Grid.Column="1" 
                                               Margin="5 0" 
@@ -112,6 +114,13 @@
                                               Content="&#xe60c;"
                                               FontSize="16"
                                               Click="RefreshBtn_OnClick"></component:TextButton>
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding VersionTips}" Margin="10 0"
+                                       Foreground="{DynamicResource SecondaryBrush}"
+                                       Opacity="0.8"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Bottom"
+                                       Visibility="{Binding IsGoodName,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"></TextBlock>
                         </Grid>
                     </StackPanel>
                 </Border>

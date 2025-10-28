@@ -6,7 +6,7 @@
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       KeepAlive="True"
-      Title="SelectGame" Height="400" Width="800"
+      Title="SelectGame" MinHeight="400" MinWidth="800"
       Unloaded="SelectGame_OnUnloaded">
     <Page.Resources>
         <ResourceDictionary Source="Style/SelectGameStyle.xaml"></ResourceDictionary>
@@ -15,13 +15,16 @@
         <EventTrigger RoutedEvent="Loaded">
             <BeginStoryboard>
                 <Storyboard TargetName="DirSelectBorder" TargetProperty="Width">
-                    <DoubleAnimation From="0" To="305" Duration="0:0:0.5" 
+                    <DoubleAnimation From="0" 
+                                     To="{Binding ActualWidth,ElementName=DirSelectBorder}" 
+                                     FillBehavior="Stop" 
+                                     Duration="0:0:0.5"
                                      EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
                 </Storyboard>
             </BeginStoryboard>
             <BeginStoryboard>
                 <Storyboard TargetName="GameSelect" TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)">
-                    <DoubleAnimation From="-500" To="0" Duration="0:0:0.5" 
+                    <DoubleAnimation From="{Binding ActualHeight,ElementName=GameSelect}" To="0" Duration="0:0:0.5" 
                                      EasingFunction="{StaticResource ElasticEaseOut}"></DoubleAnimation>
                 </Storyboard>
             </BeginStoryboard>
@@ -29,98 +32,96 @@
     </Page.Triggers>
     <Grid Background="Transparent">
         <Border Style="{StaticResource FrameBg}"></Border>
-        <Border Name="DirSelectBorder" 
-                Width="305" 
-                HorizontalAlignment="Left" 
-                Style="{StaticResource Rect}"
-                Margin="20 20 0 15" >
-            <Grid>
-                <TextBlock 
-                    Text="选择文件夹:" 
-                    Foreground="{DynamicResource SecondaryBrush_2}"
-                    Margin="15 15"
-                    FontSize="15"
-                    Height="20" 
-                    VerticalAlignment="Top"></TextBlock>
-                <StackPanel Orientation="Horizontal" Height="25" Width="150" 
-                            HorizontalAlignment="Right" VerticalAlignment="Top" 
-                            Margin="10">
-                    <comp:PlainButton Width="25" 
-                            FontSize="18" 
-                            ToolTip="添加" Click="AddDir_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe95b;"></TextBlock>
-                    </comp:PlainButton>
-                    <comp:PlainButton Width="25" 
-                                      Margin="5 0 2.5 0" 
-                                      FontSize="18" 
-                                      ToolTip="删除该文件夹" Click="DelDir_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe959;"></TextBlock>
-                    </comp:PlainButton>
-                    <comp:PlainButton Width="25" 
-                                      Margin="2.5 0 5 0" 
-                                      FontSize="16" 
-                                      ToolTip="打开文件夹" Click="OpenDir_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe957;"></TextBlock>
-                    </comp:PlainButton>
-                    <comp:PlainButton Width="25" 
-                                      FontSize="16" 
-                                      ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick">
-                        <TextBlock Text="&#xe60c;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
-                    </comp:PlainButton>
-                    <comp:PlainButton Width="25"
-                                      FontSize="22" 
-                                      Margin="5 0 0 0"
-                                      ToolTip="查看Minecraft属性" Click="GameInfo_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe7f9;"></TextBlock>
-                    </comp:PlainButton>
-                </StackPanel>
-                <Border Margin="10 38"
-                        Height="1" 
-                        VerticalAlignment="Top" 
-                        Background="{DynamicResource SecondaryBrush_2}"></Border>
-                <ScrollViewer Width="300"
-                              HorizontalAlignment="Left"
-                              HorizontalScrollBarVisibility="Hidden"
-                              VerticalScrollBarVisibility="Auto"
-                              Margin="0 40 0 6">
-                    <ListView Name="DirSelect"
-                              Width="290"
-                              HorizontalAlignment="Left"
-                              ItemsSource="{Binding Dirs}"
-                              ItemContainerStyle="{StaticResource DirSelectStyle}"
-                              SelectionChanged="DirSelect_OnSelectionChanged"></ListView>
-                </ScrollViewer>
-            </Grid>
-        </Border>
-        
-        <Grid Name="GameSelectGrid"
-              Width="450"
-              HorizontalAlignment="Right"
-              Margin="0 20 15 10">
-            <Grid.RenderTransform>
-                <TranslateTransform Y="0"></TranslateTransform>
-            </Grid.RenderTransform>
-            <ScrollViewer HorizontalScrollBarVisibility="Hidden"
-                          VerticalScrollBarVisibility="Auto">
-                <ListView Name="GameSelect" 
-                          Width="420" 
-                          HorizontalAlignment="Right" 
-                          ItemsSource="{Binding Games}" 
-                          SelectionChanged="GameSelect_OnSelectionChanged"
-                          VirtualizingStackPanel.IsVirtualizing="False"
-                          ItemContainerStyle="{StaticResource GameSelectStyle}">
-                    <ListView.RenderTransform>
-                        <TranslateTransform></TranslateTransform>
-                    </ListView.RenderTransform>
-                </ListView>
-            </ScrollViewer>
-            <Border Name="NoGame" Width="300" Height="80" Style="{StaticResource Rect}">
-                <TextBlock HorizontalAlignment="Center" 
-                           VerticalAlignment="Center" 
-                           Text="未找到Minecraft版本"
-                           FontSize="25"
-                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="4.5*"/>
+            </Grid.ColumnDefinitions>
+            <Border Name="DirSelectBorder" 
+                    Style="{StaticResource Rect}"
+                    Margin="20 20 0 15" >
+                <Grid>
+                    <TextBlock 
+                        Text="选择文件夹:" 
+                        Foreground="{DynamicResource SecondaryBrush_2}"
+                        Margin="15 15"
+                        FontSize="15"
+                        Height="20" 
+                        VerticalAlignment="Top"></TextBlock>
+                    <StackPanel Orientation="Horizontal" Height="25" Width="150" 
+                                HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                Margin="10">
+                        <comp:PlainButton Width="25" 
+                                FontSize="18" 
+                                ToolTip="添加" Click="AddDir_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe95b;"></TextBlock>
+                        </comp:PlainButton>
+                        <comp:PlainButton Width="25" 
+                                          Margin="5 0 2.5 0" 
+                                          FontSize="18" 
+                                          ToolTip="删除该文件夹" Click="DelDir_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe959;"></TextBlock>
+                        </comp:PlainButton>
+                        <comp:PlainButton Width="25" 
+                                          Margin="2.5 0 5 0" 
+                                          FontSize="16" 
+                                          ToolTip="打开文件夹" Click="OpenDir_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe957;"></TextBlock>
+                        </comp:PlainButton>
+                        <comp:PlainButton Width="25" 
+                                          FontSize="16" 
+                                          ToolTip="刷新文件夹中的版本" Click="RefreshDir_OnClick">
+                            <TextBlock Text="&#xe60c;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                        </comp:PlainButton>
+                        <comp:PlainButton Width="25"
+                                          FontSize="22" 
+                                          Margin="5 0 0 0"
+                                          ToolTip="查看Minecraft属性" Click="GameInfo_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe7f9;"></TextBlock>
+                        </comp:PlainButton>
+                    </StackPanel>
+                    <Border Margin="10 38"
+                            Height="1" 
+                            VerticalAlignment="Top" 
+                            Background="{DynamicResource SecondaryBrush_2}"></Border>
+                    <Border Name="LimitPathTextBlock" Height="1" VerticalAlignment="Top" Margin="20 0"></Border>
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Margin="0 40 0 6">
+                        <ListView Name="DirSelect"
+                                  Margin="0 0 10 0"
+                                  ItemsSource="{Binding Dirs}"
+                                  ItemContainerStyle="{StaticResource DirSelectStyle}"
+                                  SelectionChanged="DirSelect_OnSelectionChanged"></ListView>
+                    </ScrollViewer>
+                </Grid>
             </Border>
+            
+            <Grid Grid.Column="1" Name="GameSelectGrid"
+                  Margin="40 20 15 10">
+                <Grid.RenderTransform>
+                    <TranslateTransform Y="0"></TranslateTransform>
+                </Grid.RenderTransform>
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Auto">
+                    <ListView Name="GameSelect" 
+                              ItemsSource="{Binding Games}" 
+                              SelectionChanged="GameSelect_OnSelectionChanged"
+                              VirtualizingStackPanel.IsVirtualizing="False"
+                              ItemContainerStyle="{StaticResource GameSelectStyle}">
+                        <ListView.RenderTransform>
+                            <TranslateTransform></TranslateTransform>
+                        </ListView.RenderTransform>
+                    </ListView>
+                </ScrollViewer>
+                <Border Name="NoGame" Width="300" Height="80" Style="{StaticResource Rect}">
+                    <TextBlock HorizontalAlignment="Center" 
+                               VerticalAlignment="Center" 
+                               Text="未找到Minecraft版本"
+                               FontSize="25"
+                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                </Border>
+            </Grid>
         </Grid>
         <comp:MaskControl x:Name="GameInfoMaskControl" ToolTip="{Binding CurrentGame.Path}">
             <Border Width="600" Height="190" Style="{StaticResource Rect}">
@@ -200,9 +201,9 @@
                                               Content="↺" Click="DefaultVersionIcon_OnClick"></comp:PlainButton>
                         </StackPanel>
                         <comp:PlainButton Grid.Row="1" Style="{StaticResource GameInfoBtn}" 
-                                          Content="查看模组文件夹" Click="OpenModDir_OnClick"></comp:PlainButton>
+                                          Content="补全资源文件" Click="FixResourceFile_OnClick"></comp:PlainButton>
                         <comp:PlainButton Grid.Row="1" Grid.Column="1" Style="{StaticResource GameInfoBtn}" 
-                                          Content="查看资源文件夹" Click="OpenResourcesDir_OnClick"></comp:PlainButton>
+                                          Content="查看Native文件夹" Click="OpenNativeDir_OnClick"></comp:PlainButton>
                         <comp:PlainButton Grid.Row="1" Grid.Column="2" Style="{StaticResource GameInfoBtn}" 
                                           Content="删除版本" Click="DelGame_OnClick"></comp:PlainButton>
                     </Grid>

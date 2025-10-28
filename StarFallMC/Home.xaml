@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Home" Height="395" Width="800" Background="Transparent"
+      Title="Home"  Background="Transparent"
       Loaded="Home_OnLoaded">
     <Page.Resources>
         <ResourceDictionary>
@@ -23,10 +23,10 @@
     </Page.Triggers>
     
     <Grid Background="Transparent">
-        <Border Background="#fff">
-            <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.9"></Border>
+        <Border Background="#fff" CornerRadius="0 0 5 5">
+            <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.9" CornerRadius="0 0 5 5"></Border>
         </Border>
-        <Border Name="Bg" CornerRadius="0 0 15 11"></Border>
+        <Border Name="Bg" CornerRadius="0 0 5 5"></Border>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
@@ -49,7 +49,7 @@
                 </Grid>
             </Grid>
             <Grid Row="1" Name="BottomFrame" VerticalAlignment="Bottom" Height="80">
-                <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 15 10" Opacity="0.65"></Border>
+                <Border Name="BottomFrameBg" Background="#f1f1f1" CornerRadius="0 0 5 5" Opacity="0.65"></Border>
                 <Grid Width="200" HorizontalAlignment="Left" Margin="10">
                     <comp:LittleTips x:Name="HomeTips" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>

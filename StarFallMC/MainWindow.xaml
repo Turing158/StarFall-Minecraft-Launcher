@@ -6,6 +6,8 @@
         xmlns:comp="clr-namespace:StarFallMC.Component"
         mc:Ignorable="d"
         Title="StarFall Minecraft Launcher" Height="450" Width="800"
+        MinHeight="450"
+        MinWidth="800"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -28,88 +30,103 @@
             <BeginStoryboard Storyboard="{StaticResource InitMainWindow}"></BeginStoryboard>
         </EventTrigger>
     </Window.Triggers>
+    <WindowChrome.WindowChrome>
+        <WindowChrome 
+            CaptionHeight="0"
+            CornerRadius="5"
+            ResizeBorderThickness="5"
+            GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
     <Grid>
-        <Grid.Clip>
-            <RectangleGeometry Rect="0,0,800,450" RadiusX="10" RadiusY="10"></RectangleGeometry>
-        </Grid.Clip>
-        <Frame Name="MainFrame" VerticalAlignment="Bottom" Source="Home.xaml">
-            <Frame.Effect>
-                <BlurEffect Radius="0"></BlurEffect>
-            </Frame.Effect>
-            <Frame.RenderTransform>
-                <TranslateTransform X="0"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
-        <Frame Name="SettingFrame" VerticalAlignment="Bottom" Source="Setting.xaml" Opacity="0">
-            <Frame.RenderTransform>
-                <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
-        <Frame Name="DownloadGameFrame" VerticalAlignment="Bottom" Source="ResourcePage.xaml" Opacity="0">
-            <Frame.RenderTransform>
-                <TranslateTransform X="{Binding ElementName=DownloadGameFrame,Path=ActualWidth}"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
-        <Frame Name="SubFrame" VerticalAlignment="Bottom" Source="SelectGame.xaml" Opacity="0">
-            <Frame.RenderTransform>
-                <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
-        <Frame Name="DownloadFrame" VerticalAlignment="Bottom" Source="DownloadPage.xaml" Opacity="0" IsHitTestVisible="False">
-            <Frame.RenderTransform>
-                <TranslateTransform Y="-50"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
-        <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" 
-                Background="{DynamicResource PrimaryBrush_3}" 
-                VerticalAlignment="Top" 
-                MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
-            <Grid>
-                <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" 
-                        Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
-                    <TextBlock Text="&#xea18;" FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
-                    <Button.RenderTransform>
-                        <TranslateTransform X="-50"></TranslateTransform>
-                    </Button.RenderTransform>
-                </Button>
-                <Image Name="Icon" Width="35" Height="35" Source="assets/ico.ico" HorizontalAlignment="Left" Margin="10">
-                    <Image.RenderTransform>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="55"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="1">
+                <Frame Name="MainFrame" Source="Home.xaml">
+                    <Frame.Effect>
+                        <BlurEffect Radius="0"></BlurEffect>
+                    </Frame.Effect>
+                    <Frame.RenderTransform>
                         <TranslateTransform X="0"></TranslateTransform>
-                    </Image.RenderTransform>
-                </Image>
-                <TextBlock Name="LauncherName" VerticalAlignment="Center" HorizontalAlignment="Left" 
-                           Foreground="{DynamicResource SecondaryBrush_2}" 
-                           FontSize="20" Margin="60 0 0 0" Text="SFMCL">
-                    <TextBlock.RenderTransform>
-                        <TranslateTransform></TranslateTransform>
-                    </TextBlock.RenderTransform>
-                </TextBlock>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
-                    <Button Name="MiniBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="MiniBtn_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe9ca;"></TextBlock>
-                    </Button>
-                    <Button Name="CloseBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="CloseBtn_OnClick">
-                        <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe90b;"></TextBlock>
-                    </Button>
-                </StackPanel>
-                <TextBlock Name="Title" TextAlignment="Center" FontSize="20" 
-                           Foreground="{DynamicResource SecondaryBrush_2}" 
-                           VerticalAlignment="Center" HorizontalAlignment="Center" 
-                           FontWeight="Bold" Text="Title">
-                    <TextBlock.RenderTransform>
-                        <TranslateTransform Y="-55"></TranslateTransform>
-                    </TextBlock.RenderTransform>
-                </TextBlock>
-                <comp:NavigationBar x:Name="OperateGrid" VerticalAlignment="Center" HorizontalAlignment="Center" 
-                                    ItemMargin="10 0" 
-                                    ItemsSource="{Binding Tabs}" SelectedIndex="0"
-                                    SelectionChanged="OperateGrid_OnSelectionChanged">
-                    <comp:NavigationBar.RenderTransform>
-                        <TranslateTransform></TranslateTransform>
-                    </comp:NavigationBar.RenderTransform>
-                </comp:NavigationBar>
+                    </Frame.RenderTransform>
+                </Frame>
+                <Frame Name="SettingFrame" Source="Setting.xaml" Opacity="0">
+                    <Frame.RenderTransform>
+                        <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
+                    </Frame.RenderTransform>
+                </Frame>
+                <Frame Name="DownloadGameFrame" Source="ResourcePage.xaml" Opacity="0">
+                    <Frame.RenderTransform>
+                        <TranslateTransform X="{Binding ElementName=DownloadGameFrame,Path=ActualWidth}"></TranslateTransform>
+                    </Frame.RenderTransform>
+                </Frame>
+                <Frame Name="SubFrame" Source="SelectGame.xaml" Opacity="0">
+                    <Frame.RenderTransform>
+                        <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
+                    </Frame.RenderTransform>
+                </Frame>
+                <Frame Name="DownloadFrame" Source="DownloadPage.xaml" Opacity="0" IsHitTestVisible="False">
+                    <Frame.RenderTransform>
+                        <TranslateTransform Y="-50"></TranslateTransform>
+                    </Frame.RenderTransform>
+                </Frame>
             </Grid>
-        </Border>
+            <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" 
+                    Background="{DynamicResource PrimaryBrush_3}" 
+                    VerticalAlignment="Top" 
+                    MouseLeftButtonDown="TopFrame_OnMouseLeftButtonDown">
+                <Grid>
+                    <Button Name="BackBtn" Width="35" Height="35" HorizontalAlignment="Left" 
+                            Style="{StaticResource OperateBtn}" Click="BackBtn_OnClick">
+                        <TextBlock Text="&#xea18;" FontFamily="{StaticResource IconFontFamily}" ></TextBlock>
+                        <Button.RenderTransform>
+                            <TranslateTransform X="-50"></TranslateTransform>
+                        </Button.RenderTransform>
+                    </Button>
+                    <Image Name="Icon" Width="35" Height="35" Source="assets/ico.ico" HorizontalAlignment="Left" Margin="10">
+                        <Image.RenderTransform>
+                            <TranslateTransform X="0"></TranslateTransform>
+                        </Image.RenderTransform>
+                    </Image>
+                    <TextBlock Name="LauncherName" VerticalAlignment="Center" HorizontalAlignment="Left" 
+                               Foreground="{DynamicResource SecondaryBrush_2}" 
+                               FontSize="20" Margin="60 0 0 0" Text="SFMCL">
+                        <TextBlock.RenderTransform>
+                            <TranslateTransform></TranslateTransform>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <Button Name="MiniBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="MiniBtn_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe9ca;"></TextBlock>
+                        </Button>
+                        <Button Name="CloseBtn" Width="35" Height="35" Style="{StaticResource OperateBtn}" Click="CloseBtn_OnClick">
+                            <TextBlock FontFamily="{StaticResource IconFontFamily}" Text="&#xe90b;"></TextBlock>
+                        </Button>
+                    </StackPanel>
+                    <Grid VerticalAlignment="Center" HorizontalAlignment="{Binding NaviHorizontalAlignment}" Margin="{Binding NaviMargin}">
+                        <TextBlock Name="Title" TextAlignment="Center" FontSize="20" 
+                                   Foreground="{DynamicResource SecondaryBrush_2}" 
+                                   VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                   FontWeight="Bold" Text="Title">
+                            <TextBlock.RenderTransform>
+                                <TranslateTransform Y="-55"></TranslateTransform>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                        <comp:NavigationBar x:Name="OperateGrid" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                            ItemMargin="10 0" 
+                                            ItemsSource="{Binding Tabs}" SelectedIndex="0"
+                                            SelectionChanged="OperateGrid_OnSelectionChanged">
+                            <comp:NavigationBar.RenderTransform>
+                                <TranslateTransform></TranslateTransform>
+                            </comp:NavigationBar.RenderTransform>
+                        </comp:NavigationBar>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+        
         <Grid Name="MessageBoxContainer"></Grid>
         <Grid Name="MessageTipContainer"></Grid>
     </Grid>

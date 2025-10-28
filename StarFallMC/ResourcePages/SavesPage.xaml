@@ -7,155 +7,158 @@
       xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="SavesPage" Height="380" Width="640"
+      Title="SavesPage" MinHeight="380" MinWidth="640"
       Loaded="SavesPage_OnLoaded"
       Unloaded="SavesPage_OnUnloaded">
     <Page.Resources>
-        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
-        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
-        <Style x:Key="ListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListViewItem">
-                        <Grid Height="40" Margin="10 0">
-                            <Border Background="{DynamicResource PrimaryBrush}"></Border>
-                            <Border Name="Bg" 
-                                    Width="562"
-                                    CornerRadius="5" 
-                                    BorderBrush="{DynamicResource SecondaryBrush}" 
-                                    BorderThickness="1" Opacity="0">
-                            </Border>
-                            <Border Name="Active" CornerRadius="5"
-                                    BorderBrush="{DynamicResource SecondaryBrush}" 
-                                    BorderThickness="1" Opacity="0" ></Border>
-                            <Grid>
-                                <Border Width="30" Height="30"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Margin="5 0"
-                                        CornerRadius="5"
-                                        Background="{DynamicResource PrimaryBrush_2}"
-                                        Visibility="{Binding Logo,Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}">
-                                    <TextBlock Text="&#xe61d;" 
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontSize="16"
-                                               FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+        <ResourceDictionary>
+            <Style x:Key="ListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Grid Height="40" Margin="10 0">
+                                <Border Background="{DynamicResource PrimaryBrush}"></Border>
+                                <Border Name="Bg"
+                                        CornerRadius="5" 
+                                        BorderBrush="{DynamicResource SecondaryBrush}" 
+                                        BorderThickness="1" Opacity="0">
                                 </Border>
-                                <Border Width="30" Height="30"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Margin="5 0">
-                                    <Image Width="30" Height="30"
-                                           Source="{Binding Icon}">
-                                    </Image>
-                                </Border>
-                                <StackPanel Name="ModTitle" HorizontalAlignment="Left" 
-                                            VerticalAlignment="Top"
-                                            Orientation="Horizontal"
-                                            Margin="40 2 0 0">
-                                    <TextBlock Text="{Binding WorldName}" 
-                                               FontSize="13"
-                                               Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                                    <Border Height="18" CornerRadius="5" 
-                                            Background="{DynamicResource PrimaryBrush_4}" 
-                                            Margin="5 0 5 2" 
-                                            Padding="4 0"
-                                            Visibility="{Binding RefreshDate, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
-                                        <TextBlock Text="{Binding RefreshDate}" 
-                                                   VerticalAlignment="Center" 
-                                                   HorizontalAlignment="Center" 
-                                                   FontSize="11" 
-                                                   Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                <Border Name="Active" CornerRadius="5"
+                                        BorderBrush="{DynamicResource SecondaryBrush}" 
+                                        BorderThickness="1" Opacity="0" ></Border>
+                                <Grid>
+                                    <Border Width="30" Height="30"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Margin="5 0"
+                                            CornerRadius="5"
+                                            Background="{DynamicResource PrimaryBrush_2}"
+                                            Visibility="{Binding Logo,Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}">
+                                        <TextBlock Text="&#xe61d;" 
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontSize="16"
+                                                   FontFamily="{StaticResource IconFontFamily}"></TextBlock>
                                     </Border>
-                                </StackPanel>
-                                <TextBlock MaxWidth="430"
-                                           HorizontalAlignment="Left"
-                                           VerticalAlignment="Bottom"
-                                           Margin="40 0 0 2"
-                                           FontSize="12"
-                                           TextWrapping="NoWrap"
-                                           TextTrimming="WordEllipsis"
-                                           Foreground="{DynamicResource SecondaryBrush_1}"
-                                           Opacity="0.6"
-                                           Text="{Binding DirName}">
-                                </TextBlock>
-                                <Grid Name="Operate" Width="100"
-                                      HorizontalAlignment="Right" 
-                                      VerticalAlignment="Center" 
-                                      Opacity="0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition></ColumnDefinition>
-                                        <ColumnDefinition></ColumnDefinition>
-                                        <ColumnDefinition></ColumnDefinition>
-                                        <ColumnDefinition></ColumnDefinition>
-                                    </Grid.ColumnDefinitions>
-                                    <comp:TextButton FontFamily="{StaticResource IconFontFamily}" 
-                                                     Content="&#xe8d1;"
-                                                     Focusable="False"
-                                                     Tag="{Binding}"
-                                                     FontSize="16" Click="SaveInfo_OnClick"
-                                                     ToolTip="查看详细">
-                                    </comp:TextButton>
-                                    <comp:TextButton Grid.Column="1"
-                                                     FontFamily="{StaticResource IconFontFamily}" 
-                                                     Content="&#xe957;"
-                                                     Tag="{Binding Path}"
-                                                     FontSize="16" Click="SavePosition_OnClick"
-                                                     ToolTip="打开所在文件夹">
-                                    </comp:TextButton>
-                                    <comp:TextButton Grid.Column="2"
-                                                     FontFamily="{StaticResource IconFontFamily}" 
-                                                     Content="&#xe95b;"
-                                                     Tag="{Binding }"
-                                                     FontSize="16" Click="SaveCopy_OnClick"
-                                                     ToolTip="备份地图">
-                                    </comp:TextButton>
-                                    <comp:TextButton Grid.Column="3"
-                                                     FontFamily="{StaticResource IconFontFamily}" 
-                                                     Content="&#xe926;"
-                                                     Tag="{Binding }"
-                                                     FontSize="16" Click="SavesDelete_OnClick"
-                                                     ToolTip="删除地图">
-                                    </comp:TextButton>
+                                    <Border Width="30" Height="30"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Margin="5 0">
+                                        <Image Width="30" Height="30"
+                                               Source="{Binding Icon}">
+                                        </Image>
+                                    </Border>
+                                    <StackPanel Name="ModTitle" HorizontalAlignment="Left" 
+                                                VerticalAlignment="Top"
+                                                Orientation="Horizontal"
+                                                Margin="40 2 0 0">
+                                        <TextBlock Text="{Binding WorldName}" 
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                        <Border Height="18" CornerRadius="5" 
+                                                Background="{DynamicResource PrimaryBrush_4}" 
+                                                Margin="5 0 5 2" 
+                                                Padding="4 0"
+                                                Visibility="{Binding RefreshDate, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                            <TextBlock Text="{Binding RefreshDate}" 
+                                                       VerticalAlignment="Center" 
+                                                       HorizontalAlignment="Center" 
+                                                       FontSize="11" 
+                                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock MaxWidth="430"
+                                               HorizontalAlignment="Left"
+                                               VerticalAlignment="Bottom"
+                                               Margin="40 0 0 2"
+                                               FontSize="12"
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="WordEllipsis"
+                                               Foreground="{DynamicResource SecondaryBrush_1}"
+                                               Opacity="0.6"
+                                               Text="{Binding DirName}">
+                                    </TextBlock>
+                                    <Grid Name="Operate" Width="100"
+                                          HorizontalAlignment="Right" 
+                                          VerticalAlignment="Center" 
+                                          Opacity="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                            <ColumnDefinition></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+                                        <comp:TextButton FontFamily="{StaticResource IconFontFamily}" 
+                                                         Content="&#xe8d1;"
+                                                         Focusable="False"
+                                                         Tag="{Binding}"
+                                                         FontSize="16" Click="SaveInfo_OnClick"
+                                                         ToolTip="查看详细">
+                                        </comp:TextButton>
+                                        <comp:TextButton Grid.Column="1"
+                                                         FontFamily="{StaticResource IconFontFamily}" 
+                                                         Content="&#xe957;"
+                                                         Tag="{Binding Path}"
+                                                         FontSize="16" Click="SavePosition_OnClick"
+                                                         ToolTip="打开所在文件夹">
+                                        </comp:TextButton>
+                                        <comp:TextButton Grid.Column="2"
+                                                         FontFamily="{StaticResource IconFontFamily}" 
+                                                         Content="&#xe95b;"
+                                                         Tag="{Binding }"
+                                                         FontSize="16" Click="SaveCopy_OnClick"
+                                                         ToolTip="备份地图">
+                                        </comp:TextButton>
+                                        <comp:TextButton Grid.Column="3"
+                                                         FontFamily="{StaticResource IconFontFamily}" 
+                                                         Content="&#xe926;"
+                                                         Tag="{Binding }"
+                                                         FontSize="16" Click="SavesDelete_OnClick"
+                                                         ToolTip="删除地图">
+                                        </comp:TextButton>
+                                    </Grid>
                                 </Grid>
                             </Grid>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetName="Operate" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetName="Operate" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="Bg" 
+                                                                 Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                                <DoubleAnimation Storyboard.TargetName="Operate" 
+                                                                 Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="Bg" 
+                                                                 Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                                <DoubleAnimation Storyboard.TargetName="Operate" 
+                                                                 Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="./Style/ResourcePageStyle.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <Border Background="#f1f1f1" CornerRadius="10" Width="620" HorizontalAlignment="Left"></Border>
-        <ScrollViewer Name="MainScrollViewer" Margin="0 5 10 5"
-                      HorizontalScrollBarVisibility="Hidden"
-                      VerticalScrollBarVisibility="Auto"
-                      CanContentScroll="False"
-                      Opacity="0">
-            <StackPanel>
+        <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
+        <ScrollViewer Name="MainScrollViewer"
+                      Style="{StaticResource ResourcePageScrollViewer}">
+            <StackPanel Margin="0 0 20 0">
                 <Border Height="100" Style="{StaticResource RectByMargin}">
                     <Grid>
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
@@ -179,13 +182,7 @@
                         <Grid>
                             <ListView Name="ListView" 
                                       ItemContainerStyle="{StaticResource ListViewStyle}"
-                                      ItemsSource="{Binding Saves}" Width="580"
-                                      VirtualizingStackPanel.IsVirtualizing="True"
-                                      VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                      VirtualizingPanel.IsContainerVirtualizable="True"
-                                      VirtualizingPanel.ScrollUnit="Pixel"
-                                      ScrollViewer.IsDeferredScrollingEnabled="True"
-                                      ScrollViewer.CanContentScroll="True"
+                                      ItemsSource="{Binding Saves}" 
                                       Margin="0 10">
                                 <ListView.ItemsPanel>
                                     <ItemsPanelTemplate>

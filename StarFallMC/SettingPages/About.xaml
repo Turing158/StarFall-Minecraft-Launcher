@@ -7,10 +7,8 @@
       xmlns:component="clr-namespace:StarFallMC.Component"
       xmlns:util="clr-namespace:StarFallMC.Util"
       mc:Ignorable="d"
-      Title="About" Height="380" Width="600">
+      Title="About" MinHeight="380" MinWidth="600">
     <Page.Resources>
-        <util:BooleanTrueToVisibilityVisibleConverter x:Key="BooleanTrueToVisibilityVisibleConverter"/>
-        <util:BooleanFalseToVisibilityVisibleConverter x:Key="BooleanFalseToVisibilityVisibleConverter"/>
         <Style x:Key="PublicThanksItem" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="Margin" Value="5"></Setter>
             <Setter Property="Template">
@@ -48,12 +46,12 @@
         </Style>
     </Page.Resources>
     <Grid>
-        <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
+        <Border Background="#f1f1f1" CornerRadius="10" Margin="0 0 40 0"></Border>
         <ScrollViewer Margin="0 5 10 5"
-                      HorizontalScrollBarVisibility="Hidden"
-                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" 
+                      VerticalScrollBarVisibility="Visible" 
                       CanContentScroll="False">
-            <StackPanel>
+            <StackPanel Margin="0 0 40 0">
                 <Border Style="{StaticResource RectByMargin}">
                     <StackPanel>
                         <TextBlock Text="关于" Style="{StaticResource RectTitle}"></TextBlock>

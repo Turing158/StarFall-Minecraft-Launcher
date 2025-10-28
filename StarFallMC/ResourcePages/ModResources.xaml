@@ -8,226 +8,227 @@
       xmlns:comp="clr-namespace:StarFallMC.Component"
       xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       mc:Ignorable="d"
-      Title="ModsPage" Height="380" Width="640"
+      Title="ModsPage" MinHeight="380" MinWidth="640"
       Loaded="ModResources_OnLoaded"
       Unloaded="ModResources_OnUnloaded">
     <Page.Resources>
-        <util:ListToLabelConverter x:Key="ListToLabelConverter" />
-        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter"/>
-        <util:ListCountTwoMoreConverter x:Key="ListCountTwoMoreConverter" />
-        <Style x:Key="SearchTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="FontSize" Value="15"></Setter>
-            <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
-            <Setter Property="VerticalAlignment" Value="Center"></Setter>
-            <Setter Property="HorizontalAlignment" Value="Right"></Setter>
-            <Setter Property="Margin" Value="10 0"></Setter>
-        </Style>
-        <Style x:Key="CateGoryLabel" TargetType="ListViewItem">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListViewItem">
-                        <Border Background="{DynamicResource PrimaryBrush_1}"
-                                CornerRadius="2" 
-                                Margin="2 0"
-                                Padding="0">
-                            <TextBlock Margin="2 0" 
-                                       Padding="0"
-                                       
-                                       Foreground="{DynamicResource SecondaryBrush}"
-                                       Text="{Binding}"></TextBlock>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
-            <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ListViewItem">
-                        <Grid Height="55" Margin="10 0">
-                            <Border Background="{DynamicResource PrimaryBrush}"></Border>
-                            <Border Name="Bg"
-                                    CornerRadius="5"
-                                    BorderBrush="{DynamicResource SecondaryBrush}"
-                                    BorderThickness="1" Opacity="0">
+        <ResourceDictionary>
+            <Style x:Key="SearchTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                <Setter Property="FontSize" Value="15"></Setter>
+                <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"></Setter>
+                <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                <Setter Property="HorizontalAlignment" Value="Right"></Setter>
+                <Setter Property="Margin" Value="10 0"></Setter>
+            </Style>
+            <Style x:Key="CateGoryLabel" TargetType="ListViewItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Border Background="{DynamicResource PrimaryBrush_1}"
+                                    CornerRadius="2" 
+                                    Margin="2 0"
+                                    Padding="0">
+                                <TextBlock Margin="2 0" 
+                                           Padding="0"
+                                           
+                                           Foreground="{DynamicResource SecondaryBrush}"
+                                           Text="{Binding}"></TextBlock>
                             </Border>
-                            <Grid>
-                                <Border Width="40" Height="40"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Margin="5 0"
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
+                <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Grid Height="55" Margin="10 0">
+                                <Border Background="{DynamicResource PrimaryBrush}"></Border>
+                                <Border Name="Bg"
                                         CornerRadius="5"
-                                        Background="{DynamicResource PrimaryBrush_2}">
-                                    <TextBlock Text="&#xe61d;"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontSize="16"
-                                               FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                                        BorderBrush="{DynamicResource SecondaryBrush}"
+                                        BorderThickness="1" Opacity="0">
                                 </Border>
-                                <Border Width="40" Height="40"
-                                        Background="{DynamicResource PrimaryBrush}"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Center"
-                                        Margin="5 0">
-                                    <Image Width="40" Height="40"
-                                           Source="{Binding Logo}"></Image>
-                                </Border>
-                                <Grid Margin="50 2 0 0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition></RowDefinition>
-                                        <RowDefinition></RowDefinition>
-                                        <RowDefinition></RowDefinition>
-                                    </Grid.RowDefinitions>
-                                    <Grid VerticalAlignment="Top">
-                                        <StackPanel Name="ModTitle" Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DisplayName}" 
-                                                       FontSize="13"
-                                                       MaxWidth="300"
-                                                       TextWrapping="NoWrap"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
-                                            <StackPanel Orientation="Horizontal" 
-                                                        Visibility="{Binding ChineseName,Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
-                                                <TextBlock FontSize="12"
-                                                           Text=" | "
-                                                           Foreground="{DynamicResource SecondaryBrush_1}"
-                                                           Opacity="0.8"></TextBlock>
-                                                <TextBlock FontSize="12"
-                                                           Text="{Binding EnglishName}"
-                                                           VerticalAlignment="Bottom"
-                                                           Foreground="{DynamicResource SecondaryBrush_1}"
-                                                           Opacity="0.8"></TextBlock>
+                                <Grid>
+                                    <Border Width="40" Height="40"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Margin="5 0"
+                                            CornerRadius="5"
+                                            Background="{DynamicResource PrimaryBrush_2}">
+                                        <TextBlock Text="&#xe61d;"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontSize="16"
+                                                   FontFamily="{StaticResource IconFontFamily}"></TextBlock>
+                                    </Border>
+                                    <Border Width="40" Height="40"
+                                            Background="{DynamicResource PrimaryBrush}"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Margin="5 0">
+                                        <Image Width="40" Height="40"
+                                               Source="{Binding Logo}"></Image>
+                                    </Border>
+                                    <Grid Margin="50 2 0 0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition></RowDefinition>
+                                            <RowDefinition></RowDefinition>
+                                            <RowDefinition></RowDefinition>
+                                        </Grid.RowDefinitions>
+                                        <Grid VerticalAlignment="Top">
+                                            <StackPanel Name="ModTitle" Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DisplayName}" 
+                                                           FontSize="13"
+                                                           MaxWidth="300"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
+                                                <StackPanel Orientation="Horizontal" 
+                                                            Visibility="{Binding ChineseName,Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                                    <TextBlock FontSize="12"
+                                                               Text=" | "
+                                                               Foreground="{DynamicResource SecondaryBrush_1}"
+                                                               Opacity="0.8"></TextBlock>
+                                                    <TextBlock FontSize="12"
+                                                               Text="{Binding EnglishName}"
+                                                               VerticalAlignment="Bottom"
+                                                               Foreground="{DynamicResource SecondaryBrush_1}"
+                                                               Opacity="0.8"></TextBlock>
+                                                </StackPanel>
                                             </StackPanel>
-                                        </StackPanel>
-                                        <Border CornerRadius="5" 
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Top"
-                                                Margin="5 1"
-                                                Padding="4 0"
-                                                Background="{DynamicResource PrimaryBrush_4}" 
-                                                Visibility="{Binding ResourceSource, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
-                                            <TextBlock Text="{Binding ResourceSource}" 
-                                                       VerticalAlignment="Center" 
-                                                       HorizontalAlignment="Center" 
-                                                       FontSize="11" 
-                                                       Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
-                                        </Border>
-                                    </Grid>
-                                    <TextBlock Grid.Row="1" Name="description"
-                                               MaxWidth="500"
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Bottom"
-                                               FontSize="11"
-                                               TextWrapping="NoWrap"
-                                               TextTrimming="WordEllipsis"
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               Opacity="0.6"
-                                               Text="{Binding Description}">
-                                    </TextBlock>
-                                    <Grid Grid.Row="2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition></ColumnDefinition>
-                                            <ColumnDefinition></ColumnDefinition>
-                                            <ColumnDefinition></ColumnDefinition>
-                                            <ColumnDefinition></ColumnDefinition>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Orientation="Horizontal" 
-                                                    HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding Loaders, Converter={StaticResource ListToLabelConverter}}" 
-                                                       Opacity="0.6"></TextBlock>
-                                            <TextBlock Margin="5 0" 
-                                                       Text="{Binding GameVersions, Converter={StaticResource ListToLabelConverter}}" 
-                                                       Opacity="0.6"></TextBlock>
-                                        </StackPanel>
-                                        <ListView Grid.Column="1" HorizontalAlignment="Left"
-                                                  ItemContainerStyle="{StaticResource CateGoryLabel}"
-                                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                                  ItemsSource="{Binding Categories,Converter={StaticResource ListCountTwoMoreConverter}}">
-                                            <ListView.ToolTip>
-                                                <ToolTip>
-                                                    <ListView ItemContainerStyle="{StaticResource CateGoryLabel}"
-                                                              ItemsSource="{Binding Categories}">
-                                                        <ListView.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <WrapPanel Orientation="Horizontal" MaxWidth="500"></WrapPanel>
-                                                            </ItemsPanelTemplate>
-                                                        </ListView.ItemsPanel>
-                                                    </ListView>
-                                                </ToolTip>
-                                            </ListView.ToolTip>
-                                            <ListView.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal"></StackPanel>
-                                                </ItemsPanelTemplate>
-                                            </ListView.ItemsPanel>
-                                        </ListView>
-                                        <StackPanel Grid.Column="2" 
-                                                    Orientation="Horizontal" 
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center">
-                                            <TextBlock Text="&#xe60c;" 
-                                                       FontSize="12"
-                                                       Margin="0 2 2 0"
-                                                       FontFamily="{StaticResource IconFontFamily}"
-                                                       Opacity="0.6"></TextBlock>
-                                            <TextBlock FontSize="12"
-                                                       Foreground="{DynamicResource SecondaryBrush_1}"
-                                                       Opacity="0.6"
-                                                       Text="{Binding UpdatedTimeAgo}">
-                                            </TextBlock>
-                                        </StackPanel>
-                                        
-                                        <StackPanel Grid.Column="3" 
-                                                    Orientation="Horizontal"
+                                            <Border CornerRadius="5" 
                                                     HorizontalAlignment="Right"
-                                                    Margin="5 0">
-                                            <TextBlock Text="&#xe92c;" 
-                                                       FontSize="14"
-                                                       FontFamily="{StaticResource IconFontFamily}"
-                                                       Opacity="0.6"
-                                                       Margin="0 2 0 0"></TextBlock>
-                                            <TextBlock Margin="5 0" 
-                                                       Text="{Binding DownloadCountText}" 
-                                                       Opacity="0.6"></TextBlock>
+                                                    VerticalAlignment="Top"
+                                                    Margin="5 1"
+                                                    Padding="4 0"
+                                                    Background="{DynamicResource PrimaryBrush_4}" 
+                                                    Visibility="{Binding ResourceSource, Converter={StaticResource StringEmptyToVisibilityCollapsedConverter}}">
+                                                <TextBlock Text="{Binding ResourceSource}" 
+                                                           VerticalAlignment="Center" 
+                                                           HorizontalAlignment="Center" 
+                                                           FontSize="11" 
+                                                           Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Grid.Row="1" Name="description"
+                                                   MaxWidth="{Binding ActualWidth,ElementName=LimitListViewItemDescriptionBorder}"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Bottom"
+                                                   FontSize="11"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="WordEllipsis"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   Opacity="0.6"
+                                                   Text="{Binding Description}">
+                                        </TextBlock>
+                                        <Grid Grid.Row="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition></ColumnDefinition>
+                                                <ColumnDefinition></ColumnDefinition>
+                                                <ColumnDefinition></ColumnDefinition>
+                                                <ColumnDefinition></ColumnDefinition>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" 
+                                                        HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Loaders, Converter={StaticResource ListToLabelConverter}}" 
+                                                           Opacity="0.6"></TextBlock>
+                                                <TextBlock Margin="5 0" 
+                                                           Text="{Binding GameVersions, Converter={StaticResource ListToLabelConverter}}" 
+                                                           Opacity="0.6"></TextBlock>
+                                            </StackPanel>
+                                            <ListView Grid.Column="1" HorizontalAlignment="Left"
+                                                      ItemContainerStyle="{StaticResource CateGoryLabel}"
+                                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                                      ItemsSource="{Binding Categories,Converter={StaticResource ListCountTwoMoreConverter}}">
+                                                <ListView.ToolTip>
+                                                    <ToolTip>
+                                                        <ListView ItemContainerStyle="{StaticResource CateGoryLabel}"
+                                                                  ItemsSource="{Binding Categories}">
+                                                            <ListView.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <WrapPanel Orientation="Horizontal" MaxWidth="500"></WrapPanel>
+                                                                </ItemsPanelTemplate>
+                                                            </ListView.ItemsPanel>
+                                                        </ListView>
+                                                    </ToolTip>
+                                                </ListView.ToolTip>
+                                                <ListView.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal"></StackPanel>
+                                                    </ItemsPanelTemplate>
+                                                </ListView.ItemsPanel>
+                                            </ListView>
+                                            <StackPanel Grid.Column="2" 
+                                                        Orientation="Horizontal" 
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="&#xe60c;" 
+                                                           FontSize="12"
+                                                           Margin="0 2 2 0"
+                                                           FontFamily="{StaticResource IconFontFamily}"
+                                                           Opacity="0.6"></TextBlock>
+                                                <TextBlock FontSize="12"
+                                                           Foreground="{DynamicResource SecondaryBrush_1}"
+                                                           Opacity="0.6"
+                                                           Text="{Binding UpdatedTimeAgo}">
+                                                </TextBlock>
+                                            </StackPanel>
                                             
-                                        </StackPanel>
+                                            <StackPanel Grid.Column="3" 
+                                                        Orientation="Horizontal"
+                                                        HorizontalAlignment="Right"
+                                                        Margin="5 0">
+                                                <TextBlock Text="&#xe92c;" 
+                                                           FontSize="14"
+                                                           FontFamily="{StaticResource IconFontFamily}"
+                                                           Opacity="0.6"
+                                                           Margin="0 2 0 0"></TextBlock>
+                                                <TextBlock Margin="5 0" 
+                                                           Text="{Binding DownloadCountText}" 
+                                                           Opacity="0.6"></TextBlock>
+                                                
+                                            </StackPanel>
+                                        </Grid>
                                     </Grid>
                                 </Grid>
                             </Grid>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Trigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.EnterActions>
-                                <Trigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </Trigger.ExitActions>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Trigger.EnterActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.EnterActions>
+                                    <Trigger.ExitActions>
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </Trigger.ExitActions>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="./Style/ResourcePageStyle.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <Border Background="#f1f1f1" CornerRadius="10" Width="620" HorizontalAlignment="Left"></Border>
-        <ScrollViewer Name="MainScrollViewer" Margin="0 5 10 5"
-                      HorizontalScrollBarVisibility="Hidden"
-                      VerticalScrollBarVisibility="Auto"
-                      CanContentScroll="False">
-            <StackPanel>
+        <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
+        <ScrollViewer Name="MainScrollViewer"
+                      Style="{StaticResource ResourcePageScrollViewer}"
+                      Opacity="1">
+            <StackPanel Margin="0 0 20 0">
                 <Border Style="{StaticResource RectByMargin}">
                     <StackPanel>
                         <Grid Margin="5 10">
@@ -257,43 +258,24 @@
                                             PlaceholderText="搜索版本，例如：1.16.5，为空表示搜索所有版本"
                                             Text="{Binding SelectedVersion}"
                                             VerticalContentAlignment="Center"></comp:TextInput>
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="来源:" 
+                            <TextBlock Grid.Row="0" Grid.Column="2" Text="分类:" 
                                        Style="{StaticResource SearchTextBlock}"></TextBlock>
-                            <comp:ToggleButton Grid.Row="0" Grid.Column="3" 
-                                               Click="Platform_OnClick"
-                                               IsChecked="{Binding UseCurseForge}"
-                                               HorizontalAlignment="Left"
-                                               VerticalAlignment="Center">
-                                <comp:ToggleButton.ToolTip>
-                                    <ToolTip>
-                                        <StackPanel>
-                                            <TextBlock Text="切换下载源" FontSize="13"></TextBlock>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Image Width="12" Height="12"
-                                                       VerticalAlignment="Center"
-                                                       Margin="5 0"
-                                                       Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
-                                                <TextBlock Text="Modrinth"></TextBlock>
-                                            </StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Image Width="12" Height="12"
-                                                       VerticalAlignment="Center"
-                                                       Margin="5 0"
-                                                       Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
-                                                <TextBlock Text="CurseForge"></TextBlock>
-                                            </StackPanel>
-                                        </StackPanel>
-                                    </ToolTip>
-                                </comp:ToggleButton.ToolTip>
-                                <comp:ToggleButton.LeftContent>
-                                    <Image Width="15" Height="15" 
-                                           Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
-                                </comp:ToggleButton.LeftContent>
-                                <comp:ToggleButton.RightContent>
-                                    <Image Width="15" Height="15" 
-                                           Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
-                                </comp:ToggleButton.RightContent>
-                            </comp:ToggleButton>
+                            <ComboBox Grid.Row="0" Grid.Column="3" Margin="0 5 20 5"
+                                      ItemsSource="{Binding Categories}"
+                                      SelectedItem="{Binding SelectedCategory}"
+                                      DropDownOpened="ComboBox_OnDropDownOpened"
+                                      DropDownClosed="ComboBox_OnDropDownClosed">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" 
+                                                   FontSize="14" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Left"
+                                                   Margin="5 0"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                             <TextBlock Grid.Row="1" Grid.Column="2" Text="加载器:" 
                                        Style="{StaticResource SearchTextBlock}"></TextBlock>
                             <ComboBox Grid.Row="1" Grid.Column="3" Margin="0 5 20 5"
@@ -319,6 +301,45 @@
                                 <ColumnDefinition></ColumnDefinition>
                                 <ColumnDefinition></ColumnDefinition>
                             </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="来源:" 
+                                           Style="{StaticResource SearchTextBlock}"></TextBlock>
+                                <comp:ToggleButton 
+                                                   Click="Platform_OnClick"
+                                                   IsChecked="{Binding UseCurseForge}"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center">
+                                    <comp:ToggleButton.ToolTip>
+                                        <ToolTip>
+                                            <StackPanel>
+                                                <TextBlock Text="切换下载源" FontSize="13"></TextBlock>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="12" Height="12"
+                                                           VerticalAlignment="Center"
+                                                           Margin="5 0"
+                                                           Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                                    <TextBlock Text="Modrinth"></TextBlock>
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="12" Height="12"
+                                                           VerticalAlignment="Center"
+                                                           Margin="5 0"
+                                                           Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                                    <TextBlock Text="CurseForge"></TextBlock>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </ToolTip>
+                                    </comp:ToggleButton.ToolTip>
+                                    <comp:ToggleButton.LeftContent>
+                                        <Image Width="15" Height="15" 
+                                               Source="../../assets/DefaultGameIcon/modrinth.png"></Image>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <Image Width="15" Height="15" 
+                                               Source="../../assets/DefaultGameIcon/curseForge.png"></Image>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
+                            </StackPanel>
                             <comp:Button Grid.Column="1" 
                                          Margin="5"
                                          Click="Search_OnClick">搜索</comp:Button>
@@ -339,9 +360,10 @@
                                            Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                             </Grid>
                             <StackPanel>
+                                <Border Name="LimitListViewItemDescriptionBorder" Height="1" Margin="75 0 10 0"></Border>
                                 <ListView Name="ListView" 
                                           ItemContainerStyle="{StaticResource ModsListViewStyle}"
-                                          ItemsSource="{Binding Mods}" Width="580"
+                                          ItemsSource="{Binding Mods}"
                                           SelectionChanged="ListView_OnSelectionChanged"
                                           ScrollViewer.IsDeferredScrollingEnabled="True"
                                           ScrollViewer.CanContentScroll="True"
@@ -357,7 +379,7 @@
                                                  PageNumVisibility="Collapsed"
                                                  GoToButtonVisibility="Visible"
                                                  HorizontalAlignment="Right" 
-                                                 Margin="0 5"
+                                                 Margin="10 5"
                                                  PageChanged="Pagination_OnPageChanged"></comp:Pagination>
                             </StackPanel>
                         </Grid>

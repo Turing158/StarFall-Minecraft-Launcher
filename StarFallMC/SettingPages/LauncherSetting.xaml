@@ -6,17 +6,17 @@
       xmlns:local="clr-namespace:StarFallMC.SettingPages"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="LauncherSetting" Height="380" Width="600">
+      Title="LauncherSetting" MinHeight="380" MinWidth="600">
     <Page.Resources>
         <ResourceDictionary Source="Style/LauncherSettingStyle.xaml"></ResourceDictionary>
     </Page.Resources>
     <Grid>
-        <Border Background="#f1f1f1" CornerRadius="10" Width="580" HorizontalAlignment="Left"></Border>
+        <Border Background="#f1f1f1" CornerRadius="10" Margin="0 0 40 0"></Border>
         <ScrollViewer Margin="0 5 10 5"
-                      HorizontalScrollBarVisibility="Hidden"
-                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" 
+                      VerticalScrollBarVisibility="Visible" 
                       CanContentScroll="False">
-            <StackPanel>
+            <StackPanel Margin="0 0 40 0">
                 <Border Style="{StaticResource RectByMargin}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource RectTitle}" Text="主题"></TextBlock>

@@ -64,7 +64,7 @@ public partial class ModResources : Page {
                     viewModel.SearchText,
                     viewModel.SelectedLoader,
                     viewModel.SelectedVersion,
-                    viewModel.SelectedCategory
+                    ResourceCategory.CurseForgeCategoriesToInt(viewModel.SelectedCategory)
                 );
             }
             else {
@@ -74,7 +74,7 @@ public partial class ModResources : Page {
                     viewModel.SearchText,
                     viewModel.SelectedLoader,
                     viewModel.SelectedVersion,
-                    viewModel.SelectedCategory
+                    ResourceCategory.ModrinthCategoryToString(viewModel.SelectedCategory)
                 );
             }
 
@@ -148,6 +148,23 @@ public partial class ModResources : Page {
             "LiteLoader",
             "NeoForge",
             "Quilt"
+        };
+        
+        public List<string> Categories { get; set; } = new List<string> {
+            "全部",
+            "美食",
+            "装饰", 
+            "生物",
+            "魔法",
+            "支持库",
+            "科技",
+            "装备",
+            "运输",
+            "世界元素",
+            "服务器",
+            "存储",
+            "实用",
+            "冒险"
         };
         
         public event PropertyChangedEventHandler? PropertyChanged;

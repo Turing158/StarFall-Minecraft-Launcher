@@ -8,11 +8,8 @@
       xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       xmlns:component="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="ModInfo" Height="400" Width="800">
+      Title="ModInfo" MinHeight="400" MinWidth="800">
     <Page.Resources>
-        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
-        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
-        <util:ListCountTwoMoreConverter x:Key="ListCountTwoMoreConverter" />
         <Style x:Key="LoaderLabel" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -251,15 +248,19 @@
                                         BorderBrush="{DynamicResource SecondaryBrush}" 
                                         BorderThickness="0 1 0 0"
                                         Margin="0 0 5 0"></Border>
-                                <StackPanel Height="40" Orientation="Horizontal" Margin="0 2 0 0">
+                                <Grid Height="40" Margin="0 2 10 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                    </Grid.ColumnDefinitions>
                                     <TextBlock HorizontalAlignment="Left" 
-                                               Height="40" Width="510" 
+                                               Height="40"
                                                Foreground="{DynamicResource SecondaryBrush}"
                                                Opacity="0.8"
                                                TextWrapping="Wrap" 
                                                Text="{Binding Resource.Description}"
                                                TextTrimming="WordEllipsis"></TextBlock> 
-                                    <Border Background="{DynamicResource PrimaryBrush_2}" 
+                                    <Border Grid.Column="1" Background="{DynamicResource PrimaryBrush_2}" 
                                             CornerRadius="5" 
                                             Width="150" Height="40">
                                         <StackPanel Orientation="Horizontal">
@@ -277,7 +278,7 @@
                                             </component:Button>
                                         </StackPanel>
                                     </Border>
-                                </StackPanel>
+                                </Grid>
                             </StackPanel>
                         </Grid>
                         <Grid>

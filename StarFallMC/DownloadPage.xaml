@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="Download" Height="400" Width="800" Background="Transparent">
+      Title="Download" MinHeight="400" MinWidth="800" Background="Transparent">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -18,7 +18,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="230"></ColumnDefinition>
-                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <Grid>
                 <Border Style="{StaticResource Rect}" Margin="40 20 20 20">

@@ -1,9 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Loader;
@@ -186,6 +187,18 @@ public partial class GameInfo : Page {
             get => _versionName;
             set => SetField(ref _versionName, value);
         }
+
+        private bool _isGoodName = true;
+        public bool IsGoodName {
+            get => _isGoodName;
+            set => SetField(ref _isGoodName, value);
+        }
+        
+        private string _versionTips;
+        public string VersionTips {
+            get => _versionTips;
+            set => SetField(ref _versionTips, value);
+        }
         
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -210,6 +223,8 @@ public partial class GameInfo : Page {
             cts = new CancellationTokenSource();
             viewModel.Downloader = downloader;
             viewModel.VersionName = $"{viewModel.Downloader.Name}";
+            viewModel.VersionTips = "";
+            viewModel.IsGoodName = true;
             InitLoader().ConfigureAwait(false);
             Console.WriteLine($"选择{downloader.Name}");
         });
@@ -303,7 +318,7 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedForgeLoader.DisplayName}";
+            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedForgeLoader.DisplayName)}";
             var enableOptifineLoader = new List<OptifineLoader>();
             enableOptifineLoader.AddRange(viewModel.OptifineLoader.Where(x => x.NeedForge == null || x.NeedForge.Build == forgeLoader.Build));
             viewModel.EnabledOptifineLoader = new ObservableCollection<OptifineLoader>(enableOptifineLoader);
@@ -314,7 +329,7 @@ public partial class GameInfo : Page {
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedLiteLoader.DisplayName}";
+            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedLiteLoader.DisplayName)}";
         }
         else if (item.CurrentItem is NeoForgeLoader neoForgeLoader) {
             viewModel.EnableForge = false;
@@ -322,7 +337,7 @@ public partial class GameInfo : Page {
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedNeoForgeLoader.DisplayName}";
+            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedNeoForgeLoader.DisplayName)}";
         }
         else if (item.CurrentItem is OptifineLoader optifineLoader) {
             viewModel.EnableLiteLoader = false;
@@ -330,7 +345,7 @@ public partial class GameInfo : Page {
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
             if (viewModel.SelectedForgeLoader == null) {
-                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{viewModel.SelectedOptifineLoader.DisplayName}";
+                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedOptifineLoader.DisplayName)}";
             }
             var enableForgeLoader = new List<ForgeLoader>();
             enableForgeLoader.AddRange(viewModel.ForgeLoader.Where(x => optifineLoader.NeedForge == null || optifineLoader.NeedForge.Build == x.Build));
@@ -342,7 +357,7 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableOptifine = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedFabricLoader.DisplayName}";
+            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedFabricLoader.DisplayName)}";
         }
         else if (item.CurrentItem is QuiltLoader quiltLoader) {
             viewModel.EnableForge = false;
@@ -350,15 +365,15 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedQuiltLoader.DisplayName}";
+            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedQuiltLoader.DisplayName)}";
         }
         else {
             if (viewModel.SelectedOptifineLoader != null) {
-                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{viewModel.SelectedOptifineLoader.DisplayName}";
+                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedOptifineLoader.DisplayName)}";
                 viewModel.EnabledOptifineLoader = new ObservableCollection<OptifineLoader>(viewModel.OptifineLoader);
             }
             else if (viewModel.SelectedForgeLoader != null) {
-                viewModel.VersionName = $"{viewModel.Downloader.Name}-{viewModel.SelectedForgeLoader.DisplayName}";
+                viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedForgeLoader.DisplayName)}";
                 viewModel.EnabledForgeLoader = new ObservableCollection<ForgeLoader>(viewModel.ForgeLoader);
             }
             else {
@@ -376,13 +391,58 @@ public partial class GameInfo : Page {
         }
     }
 
-    private void StartInstall_OnClick(object sender, RoutedEventArgs e) {
-        MessageTips.Show("暂未开发");
+    private string secureVersionName(string versionName) {
+        return versionName.TrimStart(' ').TrimEnd(' ').TrimEnd('.')
+            .Replace("\\","-").Replace("/","-").Replace(":", "-").Replace("*","-")
+            .Replace("?","_").Replace("\"","_").Replace("<","_").Replace(">","_").Replace("|","_");
     }
 
     private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
         cts?.Cancel();
         cts = new CancellationTokenSource();
         InitLoader();
+    }
+    private void VersionNameInput_OnLostFocus(object sender, RoutedEventArgs e) {
+        var tb = sender as TextInput;
+        viewModel.IsGoodName = true;
+        if (string.IsNullOrEmpty(tb.Text) || tb.Text.Length == 0) {
+            viewModel.VersionTips = "版本名称不能为空";
+            viewModel.IsGoodName = false;
+        }
+        else if (tb.Text.StartsWith(' ')) {
+            viewModel.VersionTips = "版本名称不能以'空格'开头";
+            viewModel.IsGoodName = false;
+        }
+        else if (tb.Text.EndsWith(" ") || tb.Text.EndsWith(".")) {
+            viewModel.VersionTips = "版本名称不能以'空格或.'结尾";
+            viewModel.IsGoodName = false;
+        }
+        else if (!Regex.IsMatch(tb.Text,@"^[^\\/:*?""<>|]+$")) {
+            viewModel.VersionTips = "版本名称不能包含[\\ / : * ? \" < > |]";
+            viewModel.IsGoodName = false;
+        }
+        else {
+            var sgvm = SelectGame.GetViewModel?.Invoke();
+            if (sgvm != null) {
+                var path = Path.Combine(sgvm.CurrentDir.Path, "versions", tb.Text);
+                Console.WriteLine(path);
+                if (Directory.Exists(path)) {
+                    viewModel.VersionTips = "版本名称已存在";
+                    viewModel.IsGoodName = false;
+                }
+            }
+            else {
+                var dir = PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>();
+                var path = Path.Combine(dir.Path, "versions", tb.Text);
+                Console.WriteLine(path);
+                if (Directory.Exists(path)) {
+                    viewModel.VersionTips = "版本名称已存在";
+                    viewModel.IsGoodName = false;
+                }
+            }
+        }
+        if (viewModel.IsGoodName) {
+            viewModel.VersionTips = "";
+        }
     }
 }

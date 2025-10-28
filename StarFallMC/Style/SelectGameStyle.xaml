@@ -98,7 +98,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
-                    <Grid Height="50" Margin="5" MaxWidth="285">
+                    <Grid Height="50" Margin="5">
                         <Border
                             Name="bg"
                             Width="{TemplateBinding Width}"
@@ -111,7 +111,8 @@
                             Width="{TemplateBinding Width}" 
                             Height="{TemplateBinding Height}"  
                             Background="Transparent" 
-                            CornerRadius="10">
+                            CornerRadius="10"
+                            ClipToBounds="True">
                             <Grid>
                                 <TextBlock Text="{Binding Name}" 
                                            Foreground="{DynamicResource SecondaryBrush_2}"
@@ -121,12 +122,12 @@
                                            Margin="10"></TextBlock>
                                 <TextBlock Text="{Binding Path}" 
                                            Foreground="{DynamicResource SecondaryBrush}"
-                                           HorizontalAlignment="Left" 
-                                           VerticalAlignment="Bottom" 
                                            Margin="10 5" 
-                                           TextTrimming="WordEllipsis"
+                                           TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Bottom"
                                            FontFamily="微软雅黑"
                                            FontWeight="Black"
+                                           MaxWidth="{Binding ActualWidth,ElementName=LimitPathTextBlock}"
                                            FontSize="10"></TextBlock>
                             </Grid>
                         </Border>

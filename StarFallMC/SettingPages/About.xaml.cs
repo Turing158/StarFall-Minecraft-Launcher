@@ -50,7 +50,6 @@ public partial class About : Page {
     }
     
     public class ViewModel : INotifyPropertyChanged {
-
         public List<PublicThanksItem> PublicThanksItems {
             get => new () { 
                 new PublicThanksItem() {
@@ -58,6 +57,12 @@ public partial class About : Page {
                     Role = "感谢 @Turing158 把我创造出来",
                     Link = "https://turing158.github.io/",
                     Avatar = "https://foruda.gitee.com/avatar/1682216074543204020/12834578_turing-ice_1682216074.png!avatar60"
+                },
+                new PublicThanksItem() {
+                    Name = "PCL",
+                    Role = "感谢 @PCL 提供的模组中文文件",
+                    Link = "https://afdian.com/a/LTCat",
+                    Avatar = "https://attachment.mczwlt.net/mczwlt/public/resource/icon/Bt1x1ABmR5KYbyccrNNQL.png"
                 },
                 new PublicThanksItem() {
                     Name = "bangbang93",

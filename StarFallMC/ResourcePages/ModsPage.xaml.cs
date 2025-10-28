@@ -256,7 +256,7 @@ public partial class ModsPage : Page {
     private void SetModsPages() {
         var tmp = NetworkUtil.GetPageList(viewModel.TotalMods, Pagination.CurrentPage, 20);
         viewModel.Mods = new ObservableCollection<ModResource>(tmp);
-        Pagination.TotalCount = viewModel.TotalMods.Count;
+        Pagination.TotalCount = viewModel.TotalMods?.Count ?? 0;
     }
 
     private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {

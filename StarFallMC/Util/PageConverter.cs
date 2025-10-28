@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace StarFallMC.Util;
+namespace StarFallMC.Util.Converters;
 
 public class StringEmptyToVisibilityCollapsedConverter : IValueConverter {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -142,12 +142,7 @@ public class ListCountTwoMoreConverter : IValueConverter {
             if (strs.Count > 2) {
                 return new List<string>() { strs[0] , strs[1] , "+" };
             }
-            else if (strs.Count > 1) {
-                return new List<string>() { strs[0] , "+" };
-            }
-            else {
-                return strs;
-            }
+            return strs;
         }
         return new List<string>();
     }

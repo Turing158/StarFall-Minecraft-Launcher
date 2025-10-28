@@ -8,12 +8,8 @@
       xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       mc:Ignorable="d"
-      Title="SaveInfo" Height="400" Width="800">
+      Title="SaveInfo" MinHeight="400" MinWidth="800">
     <Page.Resources>
-        <util:StringEmptyToVisibilityCollapsedConverter x:Key="StringEmptyToVisibilityCollapsedConverter" />
-        <util:StringEmptyToVisibilityVisibleConverter x:Key="StringEmptyToVisibilityVisibleConverter" />
-        <util:BooleanTrueToVisibilityVisibleConverter x:Key="BooleanTrueToVisibilityVisibleConverter"/>
-        <util:BooleanFalseToVisibilityVisibleConverter x:Key="BooleanFalseToVisibilityVisibleConverter"/>
         <Style x:Key="GameRuleItem" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
@@ -73,7 +69,7 @@
                                 VerticalAlignment="Center"
                                 Margin="10"
                                 CornerRadius="5"
-                                Visibility="{Binding Resource.Icon, Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}"
+                                Visibility="{Binding Resource.IconPath, Converter={StaticResource StringEmptyToVisibilityVisibleConverter}}"
                                 Background="{DynamicResource PrimaryBrush_2}">
                             <TextBlock Text="&#xe61d;" 
                                        HorizontalAlignment="Center"
@@ -123,94 +119,114 @@
                                     BorderThickness="0 1 0 0"
                                     Margin="0 0 5 0"></Border>
                             <Grid Height="40">
-                                <StackPanel Height="20" Orientation="Horizontal" VerticalAlignment="Top">
-                                    <TextBlock Text="天气：" 
-                                               VerticalAlignment="Center" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="{Binding Resource.WeatherIcon}" 
-                                               VerticalAlignment="Center" 
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               ToolTip="{Binding Resource.Weather}" 
-                                               FontSize="16"></TextBlock>
-                                    <TextBlock Text=" | 游戏模式：" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="{Binding Resource.GameType}" 
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text=" | 难度：" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="{Binding Resource.Difficulty}" 
-                                               VerticalAlignment="Center" 
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="&#xe601;" FontFamily="{StaticResource IconFontFamily}" 
-                                               VerticalAlignment="Center" 
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               Margin="0 2 0 0"
-                                               FontSize="12"
-                                               Visibility="{Binding Resource.Difficulty, Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"></TextBlock>
-                                    <TextBlock Text=" | 作弊：" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="&#xe651;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               VerticalAlignment="Center" 
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.AllowCheats,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
-                                               FontSize="8"
-                                               ToolTip="开启作弊"></TextBlock>
-                                    <TextBlock Text="&#xe90b;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.AllowCheats,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="17"
-                                               ToolTip="关闭作弊"></TextBlock>
-                                    <TextBlock Text=" | 死亡不掉落：" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="&#xe651;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               VerticalAlignment="Center" 
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.KeepInventory,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
-                                               FontSize="8"
-                                               ToolTip="开启死亡不掉落"></TextBlock>
-                                    <TextBlock Text="&#xe90b;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.KeepInventory,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="17"
-                                               ToolTip="关闭死亡不掉落"></TextBlock>
-                                    <TextBlock Text=" | 奖励箱：" 
-                                               Foreground="{DynamicResource SecondaryBrush_1}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="14"></TextBlock>
-                                    <TextBlock Text="&#xe651;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               VerticalAlignment="Center" 
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.SpawnBonusChest,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
-                                               FontSize="8"
-                                               ToolTip="开启奖励箱"></TextBlock>
-                                    <TextBlock Text="&#xe90b;"
-                                               Foreground="{DynamicResource SecondaryBrush}"
-                                               FontFamily="{StaticResource IconFontFamily}"
-                                               Visibility="{Binding Resource.SpawnBonusChest,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
-                                               VerticalAlignment="Center" 
-                                               FontSize="17"
-                                               ToolTip="关闭奖励箱"></TextBlock>
-                                </StackPanel>
+                                <Grid Height="20" VerticalAlignment="Top" Margin="0 0 40 0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                        <ColumnDefinition></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <TextBlock Text="天气：" 
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="{Binding Resource.WeatherIcon}" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   ToolTip="{Binding Resource.Weather}" 
+                                                   VerticalAlignment="Center"
+                                                   FontSize="16"></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <TextBlock Text="游戏模式：" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="{Binding Resource.GameType}" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontSize="14"></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="难度：" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="{Binding Resource.Difficulty}" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="&#xe601;" FontFamily="{StaticResource IconFontFamily}" 
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   Margin="0 2 0 0"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="{Binding Resource.Difficulty, Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="作弊：" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="&#xe651;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.AllowCheats,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
+                                                   FontSize="8"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="开启作弊"></TextBlock>
+                                        <TextBlock Text="&#xe90b;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.AllowCheats,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
+                                                   FontSize="17"
+                                                   ToolTip="关闭作弊"
+                                                   VerticalAlignment="Center"></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <TextBlock Text="死亡不掉落：" 
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   FontSize="14"
+                                                   VerticalAlignment="Center"></TextBlock>
+                                        <TextBlock Text="&#xe651;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.KeepInventory,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
+                                                   FontSize="8"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="开启死亡不掉落"></TextBlock>
+                                        <TextBlock Text="&#xe90b;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.KeepInventory,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
+                                                   FontSize="17"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="关闭死亡不掉落"></TextBlock>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="奖励箱：" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource SecondaryBrush_1}"
+                                                   FontSize="14"></TextBlock>
+                                        <TextBlock Text="&#xe651;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.SpawnBonusChest,Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}"
+                                                   FontSize="8"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="开启奖励箱"></TextBlock>
+                                        <TextBlock Text="&#xe90b;"
+                                                   Foreground="{DynamicResource SecondaryBrush}"
+                                                   FontFamily="{StaticResource IconFontFamily}"
+                                                   Visibility="{Binding Resource.SpawnBonusChest,Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}"
+                                                   FontSize="17"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="关闭奖励箱"></TextBlock>
+                                    </StackPanel>
+                                </Grid>
                                 <StackPanel Height="20" Orientation="Horizontal" VerticalAlignment="Bottom">
                                     <TextBlock Text="种子：" 
                                                VerticalAlignment="Center" 
