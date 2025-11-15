@@ -7,6 +7,6 @@ public class ForgeLoader {
     public DateTime Modified { get; set; }
 
     public string DisplayName {
-        get => $"forge-{Mcversion}-{Version}";
+        get => $"forge-{Version}";
     }
 }

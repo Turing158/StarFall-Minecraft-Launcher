@@ -276,6 +276,8 @@ public partial class SelectGame : Page {
         }
         MessageTips.Show($"不存在 resources 文件夹");
     }
+    private bool isFixing = false;
+    private string isFixingVersion = string.Empty;
 
     private void OpenResourcesDir_OnClick(object sender, RoutedEventArgs e) {
         string path = MinecraftUtil.GetMinecraftGameDir(viewModel.CurrentDir.Path,viewModel.CurrentGame.Name) == Path.GetFullPath(viewModel.CurrentGame.Path) ?
@@ -289,6 +291,10 @@ public partial class SelectGame : Page {
     }
 
     private void RenameVersion_OnKeyDown(object sender, KeyEventArgs e) {
+        if (isFixing && isFixingVersion == viewModel.CurrentGame.Name) {
+            MessageTips.Show($"当前正在补全 {isFixingVersion} 的资源文件，不能修改版本名称");
+            return;
+        }
         var tb = sender as TextBox;
         viewModel.RenameVersionText = tb.Text;
         if (tb.Text.Length == 0) {

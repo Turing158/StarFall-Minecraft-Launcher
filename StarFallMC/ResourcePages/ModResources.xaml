@@ -226,6 +226,7 @@
     <Grid>
         <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
         <ScrollViewer Name="MainScrollViewer"
+                      Margin="0 0 2 0"
                       Style="{StaticResource ResourcePageScrollViewer}"
                       Opacity="1">
             <StackPanel Margin="0 0 20 0">

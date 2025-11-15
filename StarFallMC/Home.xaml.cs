@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,6 +10,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
 
@@ -114,7 +114,7 @@ public partial class Home : Page {
         string iconPath = "/assets/DefaultGameIcon/unknowGame.png";
         if (item == null) {
             GameName.Text = "未选择版本";
-            viewModel.CurrentGame = new MinecraftItem("未选择版本","","","/assets/DefaultGameIcon/unknowGame.png");
+            viewModel.CurrentGame = new MinecraftItem("未选择版本",MinecraftLoader.Unknown,"","/assets/DefaultGameIcon/unknowGame.png");
         } else {
             GameName.Text = item.Name;
             iconPath = item.Icon;
@@ -241,7 +241,7 @@ public partial class Home : Page {
         DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
         DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
     }
-
+    
     private void downloadState(bool isDownloading) {
         if (isDownloading) {
             Downloading.RepeatBehavior = RepeatBehavior.Forever;
@@ -310,13 +310,15 @@ public partial class Home : Page {
         Duration = TimeSpan.FromMilliseconds(200),
         EasingFunction = new CubicEase()
     };
-    private void DownloadBtn_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseDownAnimation);
-        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseDownAnimation);
+    private void HomeBtn_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        var btn = sender as FrameworkElement;
+        btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseDownAnimation);
+        btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseDownAnimation);
     }
 
-    private void DownloadBtn_OnMouseLeave(object sender, MouseEventArgs e) {
-        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
-        DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
+    private void HomeBtn_OnMouseLeave(object sender, MouseEventArgs e) {
+        var btn = sender as FrameworkElement;
+        btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
+        btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
     }
 }

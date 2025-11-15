@@ -35,11 +35,12 @@
             <Grid Name="TopFrame">
                 <comp:Notices HorizontalAlignment="Left" Width="310" ></comp:Notices>
                 <Grid Name="DownloadBtn" Width="50" Height="50" 
-                      HorizontalAlignment="Right" 
-                      VerticalAlignment="Bottom" 
-                      Margin="10" RenderTransformOrigin="0.5,0.5"
-                      PreviewMouseLeftButtonDown="DownloadBtn_OnMouseLeftButtonDown"
-                      MouseLeave="DownloadBtn_OnMouseLeave">
+                      RenderTransformOrigin="0.5,0.5"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      Margin="10"
+                      PreviewMouseLeftButtonDown="HomeBtn_OnMouseLeftButtonDown"
+                      MouseLeave="HomeBtn_OnMouseLeave">
                     <Grid.RenderTransform>
                         <ScaleTransform ScaleX="1" ScaleY="1"></ScaleTransform>
                     </Grid.RenderTransform>

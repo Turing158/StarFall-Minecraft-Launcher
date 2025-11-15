@@ -107,6 +107,7 @@
     <Grid>
         <Border Style="{StaticResource ResourcePageBgBorder}" Margin="0 0 40 0"></Border>
         <ScrollViewer Name="MainScrollViewer" 
+                      Margin="0 0 2 0"
                       Style="{StaticResource ResourcePageScrollViewer}">
             <StackPanel Margin="0 0 40 0">
                 <Border Style="{StaticResource Rect}" Margin="20 10 20 5">

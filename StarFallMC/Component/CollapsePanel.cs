@@ -56,6 +56,13 @@ public class CollapsePanel : UserControl{
     public static readonly DependencyProperty MainHeightProperty = DependencyProperty.Register(nameof(MainHeight),
         typeof(double), typeof(CollapsePanel), new PropertyMetadata(45.0));
     
+    public CornerRadius MainRadius {
+        get => (CornerRadius)GetValue(MainRadiusProperty);
+        set => SetValue(MainRadiusProperty, value);
+    }
+    public static readonly DependencyProperty MainRadiusProperty = DependencyProperty.Register(nameof(MainRadius),
+        typeof(CornerRadius), typeof(CollapsePanel), new PropertyMetadata(new CornerRadius(10, 10, 10, 10)));
+    
     public event RoutedEventHandler Opened {
         add => AddHandler(OpenedEvent, value);
         remove => RemoveHandler(OpenedEvent, value);

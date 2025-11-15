@@ -26,7 +26,6 @@ public partial class MainWindow : Window {
     
     private Storyboard SubFrameShow;
     private Storyboard SubFrameHide;
-    private Timer SubFrameTimer;
 
     private Storyboard DownloadShow;
     private Storyboard DownloadOnlyHide;
@@ -37,6 +36,7 @@ public partial class MainWindow : Window {
     public static Action<string,string> SubFrameNavigate;
     public static Action<string,Action> ReloadSubFrame;
     public static Action DownloadPageShow;
+    public static Action BackHandle;
     
     private ViewModel viewModel = new ViewModel();
     public MainWindow() {
@@ -60,6 +60,7 @@ public partial class MainWindow : Window {
         SubFrameNavigate = SubFrameNavigateFunc;
         ReloadSubFrame = reloadSubFrame;
         DownloadPageShow = downloadPageShow;
+        BackHandle = backHandle;
     }
     
     public class ViewModel : INotifyPropertyChanged{
@@ -185,17 +186,15 @@ public partial class MainWindow : Window {
         SubFrameShow.Begin();
         SubFrame.IsHitTestVisible = true;
     }
-    ~MainWindow() => SubFrameNavigate -= SubFrameNavigateFunc;
 
     private void BackBtn_OnClick(object sender, RoutedEventArgs e) {
+        backHandle();
+    }
+
+    private void backHandle() {
         if (DownloadFrame.Opacity == 0) {
+            SubFrameHide.Completed += SubFrameHideOnCompleted;
             SubFrameHide.Begin();
-            SubFrameTimer = new Timer(o => {
-                this.Dispatcher.BeginInvoke(() => {
-                    SubFrame.RenderTransform = new TranslateTransform(0, SubFrame.ActualHeight+10);
-                    SubFrameTimer.Dispose();
-                });
-            }, null, 200, 0);
             SubFrame.IsHitTestVisible = false;
         }
         else {
@@ -212,6 +211,14 @@ public partial class MainWindow : Window {
                 });
             }, null, 300, 0);
         }
+    }
+    
+
+    private void SubFrameHideOnCompleted(object? sender, EventArgs e) {
+        this.Dispatcher.BeginInvoke(() => {
+            SubFrame.RenderTransform = new TranslateTransform(0, SubFrame.ActualHeight + 10);
+            SubFrameHide.Completed -= SubFrameHideOnCompleted;
+        });
     }
 
     private void downloadPageShow() {

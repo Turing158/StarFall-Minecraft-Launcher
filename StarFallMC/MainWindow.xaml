@@ -129,5 +129,8 @@
         
         <Grid Name="MessageBoxContainer"></Grid>
         <Grid Name="MessageTipContainer"></Grid>
+        <Border CornerRadius="5" 
+                BorderThickness="2"
+                BorderBrush="{DynamicResource PrimaryBrush_3}"></Border>
     </Grid>
 </Window>

@@ -1,8 +1,10 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:component="clr-namespace:StarFallMC.Component">
+                    xmlns:component="clr-namespace:StarFallMC.Component"
+                    xmlns:extension="clr-namespace:StarFallMC.Util.Extension">
     <Style x:Key="GameSelectStyle" TargetType="ListViewItem" 
            BasedOn="{StaticResource {x:Type ListViewItem}}">
+        <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -23,7 +25,7 @@
                                        FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
                             <TextBlock Name="GameLoader" Foreground="{DynamicResource SecondaryBrush_2}" 
                                        HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                                       FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
+                                       FontSize="12" Text="{Binding LoaderName}" Margin="5"></TextBlock>
                         </Grid>
                         <Border
                             Name="Active"
@@ -38,7 +40,7 @@
                                 <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Left" VerticalAlignment="Center" 
                                            FontSize="15" Text="{Binding Name}" Margin="60 0"></TextBlock>
                                 <TextBlock Foreground="#f1f1f1" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                                           FontSize="12" Text="{Binding Loader}" Margin="5"></TextBlock>
+                                           FontSize="12" Text="{Binding LoaderName}" Margin="5"></TextBlock>
                             </Grid>
                         </Border>
                         <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" 
@@ -94,6 +96,7 @@
     
     <Style x:Key="DirSelectStyle" TargetType="ListViewItem" 
            BasedOn="{StaticResource {x:Type ListViewItem}}">
+        <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="True"></Setter>
         <Setter Property="ToolTip" Value="{Binding Path}"></Setter>
         <Setter Property="Template">
             <Setter.Value>

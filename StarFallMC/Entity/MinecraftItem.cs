@@ -1,14 +1,29 @@
-﻿namespace StarFallMC.Entity;
+﻿using StarFallMC.Entity.Enum;
+
+namespace StarFallMC.Entity;
 
 public class MinecraftItem {
     public string Name { get; set; }
-    public string Loader { get; set; }
+    public MinecraftLoader Loader { get; set; }
+
+    public string LoaderName {
+        get => Loader switch {
+            MinecraftLoader.Minecraft => "Minecraft",
+            MinecraftLoader.Forge => "Forge",
+            MinecraftLoader.Fabric => "Fabric",
+            MinecraftLoader.Quilt => "Quilt",
+            MinecraftLoader.NeoForge => "NeoForge",
+            MinecraftLoader.LiteLoader => "LiteLoader",
+            MinecraftLoader.Optifine => "Optifine",
+            _ => "Unknown"
+        };
+    }
     public string Path { get; set; }
     public string Icon { get; set; }
     
     public MinecraftItem(){}
     
-    public MinecraftItem(string name, string loader, string path, string icon) {
+    public MinecraftItem(string name, MinecraftLoader loader, string path, string icon) {
         Name = name;
         Loader = loader;
         Path = path;

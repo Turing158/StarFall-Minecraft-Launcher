@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Management;
-using System.Runtime.InteropServices; //Nuget安装 System.Management
+using System.Runtime.InteropServices;
+using System.Text; //Nuget安装 System.Management
 
 namespace StarFallMC.Util;
 
@@ -25,8 +26,11 @@ public class ProcessUtil {
     // 委托类型，用于枚举窗口的回调函数
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     
+    public static StringBuilder lastOutput;
+    
     // 运行命令行命令，分为两个部分，命令和参数，命令如：java，参数如：-jar minecraft.jar
     public static async Task<Process> RunCmd(string cmd,string arg, bool showOutput = true, bool waitExit = true) {
+        lastOutput = new StringBuilder();
         var processInfo = new ProcessStartInfo(cmd) {
             Arguments = arg,
             RedirectStandardOutput = true,
@@ -36,14 +40,19 @@ public class ProcessUtil {
         };
         var process = new Process();
         process.StartInfo = processInfo;
+        process.EnableRaisingEvents = true;
         process.OutputDataReceived += (s, e) => {
             if (!string.IsNullOrEmpty(e.Data)) {
-                Console.WriteLine("[输出] " + e.Data);
+                string output = $"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}-输出] {e.Data}";
+                Console.WriteLine(output);
+                lastOutput.AppendLine($"\n{e.Data}");
             }
         };
         process.ErrorDataReceived += (s, e) => {
             if (!string.IsNullOrEmpty(e.Data)) {
-                Console.WriteLine("[错误] " + e.Data);
+                string output = $"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}-错误] {e.Data}";
+                Console.WriteLine(output);
+                lastOutput.AppendLine($"\n{e.Data}");
             }
         };
         process.Start();

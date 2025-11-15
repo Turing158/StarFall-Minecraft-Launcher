@@ -47,7 +47,7 @@
     </Page.Resources>
     <Grid>
         <Border Background="#f1f1f1" CornerRadius="10" Margin="0 0 40 0"></Border>
-        <ScrollViewer Margin="0 5 10 5"
+        <ScrollViewer Margin="0 5 2 5"
                       HorizontalScrollBarVisibility="Disabled" 
                       VerticalScrollBarVisibility="Visible" 
                       CanContentScroll="False">

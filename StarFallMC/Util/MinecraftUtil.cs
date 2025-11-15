@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
+using StarFallMC.Entity.Loader;
 using StarFallMC.SettingPages;
 using MessageBox = StarFallMC.Component.MessageBox;
 
@@ -187,7 +188,7 @@ public class MinecraftUtil {
         if (patches.Count() != 0) {
             string loaderName = patches[patches.Count()-1]["id"].ToString().ToLower();
             if (loaderName.Contains("game")) {
-                item.Loader = "Minecraft";
+                item.Loader = MinecraftLoader.Minecraft;
                 if (root["type"].ToString() == "release") {
                     item.Icon = "/assets/DefaultGameIcon/Minecraft.png";
                 }
@@ -196,31 +197,31 @@ public class MinecraftUtil {
                 }
             }
             else if (loaderName.Contains("optifine")) {
-                item.Loader = "OptiFine";
+                item.Loader = MinecraftLoader.Optifine;
                 item.Icon = "/assets/DefaultGameIcon/Optifine.png";
             }
             else if (loaderName.Contains("liteloader")) {
-                item.Loader = "LiteLoader";
+                item.Loader = MinecraftLoader.LiteLoader;
                 item.Icon = "/assets/DefaultGameIcon/Liteloader.png";
             }
             else if (loaderName.Contains("neoforge")) {
-                item.Loader = "NeoForge";
+                item.Loader = MinecraftLoader.NeoForge;
                 item.Icon = "/assets/DefaultGameIcon/NeoForge.png";
             }
              else if (loaderName.Contains("forge")) {
-                item.Loader = "Forge";
+                item.Loader = MinecraftLoader.Forge;
                 item.Icon = "/assets/DefaultGameIcon/Forge.png";
             }
              else if (loaderName.Contains("fabric")) {
-                item.Loader = "Fabric";
+                item.Loader = MinecraftLoader.Fabric;
                 item.Icon = "/assets/DefaultGameIcon/Fabric.png";
             }
              else if (loaderName.Contains("quilt")) {
-                item.Loader = "Quilt";
+                item.Loader = MinecraftLoader.Quilt;
                 item.Icon = "/assets/DefaultGameIcon/quiltmc.png";
             }
             else {
-                item.Loader = "Unknown";
+                item.Loader = MinecraftLoader.Unknown;
                 item.Icon = "/assets/DefaultGameIcon/unknowGame.png";
             }
         }
@@ -230,12 +231,12 @@ public class MinecraftUtil {
             if (lib != null) {
                 if (lib.ToString().Contains("neoforge")) {
                     isOnlyMinecraft = false;
-                    item.Loader = "NeoForge";
+                    item.Loader = MinecraftLoader.NeoForge;
                     item.Icon = "/assets/DefaultGameIcon/NeoForge.png";
                 }
                 else if (lib.ToString().Contains("minecraftforge")) {
                     isOnlyMinecraft = false;
-                    item.Loader = "Forge";
+                    item.Loader = MinecraftLoader.Forge;
                     item.Icon = "/assets/DefaultGameIcon/Forge.png";
                 }
                 else if (lib.ToString().Contains("fabricmc")) {
@@ -245,13 +246,13 @@ public class MinecraftUtil {
                 }
                 else if (lib.ToString().Contains("quiltmc")) {
                     isOnlyMinecraft = false;
-                    item.Loader = "Quilt";
+                    item.Loader = MinecraftLoader.Quilt;
                     item.Icon = "/assets/DefaultGameIcon/quiltmc.png";
                 }
             }
             if (isOnlyMinecraft) {
                 if (root["type"] != null) {
-                    item.Loader = "Minecraft";
+                    item.Loader = MinecraftLoader.Minecraft;
                     if (root["type"].ToString() == "release") {
                         item.Icon = "/assets/DefaultGameIcon/Minecraft.png";
                     }
@@ -260,7 +261,7 @@ public class MinecraftUtil {
                     }
                 }
                 else {
-                    item.Loader = "Unknown";
+                    item.Loader = MinecraftLoader.Unknown;
                     item.Icon = "/assets/DefaultGameIcon/unknowGame.png";
                 }
             }
@@ -436,85 +437,43 @@ public class MinecraftUtil {
                 var rules = lib["rules"];
                 if (rules != null) {
                     libRules.Clear();
-                    // isNativeLinux = false;
-                    // isNativeWindows = false;
-                    // isNativeMacos = false;
                     foreach (var rule in rules) {
                         var action = rule["action"]?.ToString();
                         var os = rule["os"];
                         var osName = rule["os"]?["name"]?.ToString();
                         if (action == "allow") {
                             if (os  == null) {
-                                // isNativeLinux = true;
-                                // isNativeWindows = true;
-                                // isNativeMacos = true;
-                                libRules.Add(new LibRule() {
-                                    IsAllow = true,
-                                    Os = DeviceOs.Linux
-                                });
-                                libRules.Add(new LibRule() {
-                                    IsAllow = true,
-                                    Os = DeviceOs.Windows
-                                });
-                                libRules.Add(new LibRule() {
-                                    IsAllow = true,
-                                    Os = DeviceOs.MacOs
-                                });
+                                RuleToLib(ref libRules, DeviceOs.Linux, true);
+                                RuleToLib(ref libRules, DeviceOs.Windows, true);
+                                RuleToLib(ref libRules, DeviceOs.MacOs, true);
                             }
                             else {
                                 if (osName == "linux") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = true,
-                                        Os = DeviceOs.Linux
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.Linux, true);
                                 }
                                 if (osName == "windows") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = true,
-                                        Os = DeviceOs.Windows
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.Windows, true);
                                 }
                                 if (osName == "osx") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = true,
-                                        Os = DeviceOs.MacOs
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.MacOs, true);
                                 }
                             }
                         }
                         else {
                             if (os == null) {
-                                libRules.Add(new LibRule() {
-                                    IsAllow = false,
-                                    Os = DeviceOs.Linux
-                                });
-                                libRules.Add(new LibRule() {
-                                    IsAllow = false,
-                                    Os = DeviceOs.Windows
-                                });
-                                libRules.Add(new LibRule() {
-                                    IsAllow = false,
-                                    Os = DeviceOs.MacOs
-                                });
+                                RuleToLib(ref libRules, DeviceOs.Linux, false);
+                                RuleToLib(ref libRules, DeviceOs.Windows, false);
+                                RuleToLib(ref libRules, DeviceOs.MacOs, false);
                             }
                             else {
                                 if (osName == "linux") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = false,
-                                        Os = DeviceOs.Linux
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.Linux, false);
                                 }
                                 if (osName == "windows") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = false,
-                                        Os = DeviceOs.Windows
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.Windows, false);
                                 }
                                 if (osName == "osx") {
-                                    libRules.Add(new LibRule() {
-                                        IsAllow = false,
-                                        Os = DeviceOs.MacOs
-                                    });
+                                    RuleToLib(ref libRules, DeviceOs.MacOs, false);
                                 }
                             }
                         }
@@ -533,6 +492,19 @@ public class MinecraftUtil {
             }
         }
         return re;
+    }
+    
+    public static void RuleToLib(ref List<LibRule> libRules, DeviceOs os, bool isAllow) {
+        if (libRules.Any(x => x.Os == os)) {
+            var rule = libRules.FindIndex(x => x.Os == os);
+            libRules[rule].IsAllow = isAllow;
+        }
+        else {
+            libRules.Add(new LibRule() {
+                IsAllow = isAllow,
+                Os = os
+            });
+        }
     }
     
     // 获取Json中所有的Libs
@@ -578,6 +550,9 @@ public class MinecraftUtil {
         HashSet<string> classPaths = new HashSet<string>();
         List<Lib> alreadyAdd = new List<Lib>();
         foreach (var i in libs) {
+            if (i.rules.Count > 0 && !i.rules.Any(x => x.Os == DeviceOs.Windows && x.IsAllow)) {
+                continue;
+            }
             if (!classPaths.Contains(i.path) && !string.IsNullOrEmpty(i.path)) {
                 if (!i.name.Contains("natives") 
                     && alreadyAdd.FindIndex(x => x.nameOutVersion == i.nameOutVersion) is int index
@@ -588,20 +563,18 @@ public class MinecraftUtil {
                         && NetworkUtil.IsValidVersion(i.nameLast)) {
                         if (NetworkUtil.GetNewerVersion(oldLib.nameLast,i.nameLast) == i.nameLast) {
                             alreadyAdd[index] = i;
+                            classPaths.Remove(oldLib.path);
+                            classPaths.Add(i.path);
                         }
                         continue;
                     }
-                }
-                if (i.rules.Count > 0 && !i.rules.Any(x => x.Os == DeviceOs.Windows && x.IsAllow)) {
-                    continue;
                 }
                 alreadyAdd.Add(i);
                 classPaths.Add(i.path);
             }
         }
-        foreach (var i in alreadyAdd) {
-            // Console.WriteLine(i.name);
-            sb.Append(Path.GetFullPath(currentDir+"/libraries/"+i.path));
+        foreach (var i in classPaths) {
+            sb.Append(Path.GetFullPath(currentDir + "/libraries/" + i));
             sb.Append(";");
         }
         sb.Append(Path.GetFullPath($"{currentDir}/versions/{versionName}/{versionName}.jar"));
@@ -612,7 +585,7 @@ public class MinecraftUtil {
     public static string JvmArgs(string json,JvmArg jvmArg,string os = "windows",string arch = "x64") {
         StringBuilder sb = new StringBuilder();
         JObject args = JObject.Parse(json);
-        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile=\"{Path.GetFullPath($"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.versionName}.xml")}\" -Dminecraft.client.jar=\"{Path.GetFullPath($".minecraft/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}")}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32m -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
+        string defaultArgs = $"-Dfile.encoding=GB18030 -Dstdout.encoding=GB18030 -Dsun.stdout.encoding=GB18030 -Dstderr.encoding=GB18030 -Dsun.stderr.encoding=GB18030 -Djava.rmi.server.useCodebaseOnly=true -Dcom.sun.jndi.rmi.object.trustURLCodebase=false -Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false -Dlog4j2.formatMsgNoLookups=true -Dlog4j.configurationFile=\"{Path.GetFullPath($"{jvmArg.currentDir}/versions/{jvmArg.versionName}/{jvmArg.versionName}.xml")}\" -Dminecraft.client.jar=\"{Path.GetFullPath($".minecraft/versions/{jvmArg.versionName}/{jvmArg.primaryJarName}")}\" -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -XX:-DontCompileHugeMethods -Dfml.ignoreInvalidMinecraftCertificates=true -Dfml.ignorePatchDiscrepancies=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path=\"{jvmArg.nativesDirectory}\" -Dminecraft.launcher.brand=\"{jvmArg.launcherName}\" -Dminecraft.launcher.version=\"{jvmArg.launcherVersion}\" -cp \"{jvmArg.classpath}\"";
         JArray jvm = args["arguments"]?["jvm"] as JArray;
         if (jvm != null) {
             foreach (var i in jvm) {
@@ -674,15 +647,8 @@ public class MinecraftUtil {
         ArgReplace(ref sb,"primary_jar_name",jvmArg.primaryJarName);
         ArgReplace(ref sb,"version_name",jvmArg.versionName);
         ArgReplace(ref sb,"classpath_separator",";");
-        if (args["assets"].ToString().Equals("1.7.10")) {
-            var javaWarpper = Path.Combine(DirFileUtil.LauncherSettingsDir, "java-wrapper.jar");
-            if (!File.Exists(javaWarpper)) {
-                var stream = Application.GetResourceStream(new Uri("pack://application:,,,/;component/assets/java-wrapper.jar"));
-                using (var fileStream = new FileStream(javaWarpper, FileMode.Create, FileAccess.Write)) {
-                    stream.Stream.CopyTo(fileStream);
-                }
-            }
-
+        if (args["assets"]?.ToString() is string assets && (assets.Equals("1.7.10") || assets.Equals("legacy"))) {
+            var javaWarpper = DirFileUtil.GetAndCompressAssetResource("java-wrapper.jar");
             sb.Append($" -jar \"{javaWarpper}\"");
         }
         return sb.ToString();
@@ -845,46 +811,97 @@ public class MinecraftUtil {
     }
 
     // 安装Optifine,并解压出Launchwrapper
-    public static async Task InstallOptifine(Lib OptiFineLib, Lib LaunchwrapperLib, MinecraftItem minecraft, bool isForce = false) {
-        string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
-        string installerPath = Path.GetFullPath($"{DirFileUtil.GetParentPath($"{currentDir}/libraries/{OptiFineLib.path}")}/{Path.GetFileNameWithoutExtension(OptiFineLib.path)}-installer.jar");
-        var (mcVersion, type, patch) = FormatOptifineName(OptiFineLib.name);
-        if (!File.Exists(installerPath) || isForce) {
-            DownloadUtil.SingalDownload(new DownloadFile(OptiFineLib.name,installerPath,$"{bmclapiOptifine}/{mcVersion}/{type}/{patch}"));
+    public static async Task<bool> InstallOptifine(Lib OptiFineLib, Lib LaunchwrapperLib, MinecraftItem minecraft, bool isForce = false) {
+        try {
+            string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraft.Path));
+            string installerPath =
+                Path.GetFullPath(
+                    $"{DirFileUtil.GetParentPath($"{currentDir}/libraries/{OptiFineLib.path}")}/{Path.GetFileNameWithoutExtension(OptiFineLib.path)}-installer.jar");
+            var (mcVersion, type, patch) = FormatOptifineName(OptiFineLib.name);
+            if (!File.Exists(installerPath) || isForce) {
+                DownloadUtil.SingalDownload(new DownloadFile(OptiFineLib.name, installerPath,
+                    $"{bmclapiOptifine}/{mcVersion}/{type}/{patch}"));
+            }
+
+            string optifineJarPath = Path.GetFullPath($"{currentDir}/libraries/{OptiFineLib.path}");
+            if (!File.Exists(optifineJarPath) || isForce) {
+                string versionJarPath = Path.GetFullPath($"{minecraft.Path}/{minecraft.Name}.jar");
+                string args =
+                    $"-cp \"{installerPath}\" optifine.Patcher \"{versionJarPath}\" \"{installerPath}\" \"{optifineJarPath}\"";
+                await ProcessUtil.RunCmd("java", args);
+            }
+
+            var launchwrapperJarPath = Path.GetFullPath($"{currentDir}/libraries/{LaunchwrapperLib.path}");
+            if (!Directory.Exists(Path.GetDirectoryName(launchwrapperJarPath))) {
+                Directory.CreateDirectory(Path.GetDirectoryName(launchwrapperJarPath));
+            }
+
+            //寻找
+            if (!File.Exists(launchwrapperJarPath) || isForce) {
+                DirFileUtil.GetZipFileToOrder(optifineJarPath, Path.GetFileName(launchwrapperJarPath),
+                    launchwrapperJarPath);
+            }
+
+            return true;
         }
-        string optifineJarPath = Path.GetFullPath($"{currentDir}/libraries/{OptiFineLib.path}");
-        if (!File.Exists(optifineJarPath) || isForce) {
-            string versionJarPath = Path.GetFullPath($"{minecraft.Path}/{minecraft.Name}.jar");
-            string args = $"-cp \"{installerPath}\" optifine.Patcher \"{versionJarPath}\" \"{installerPath}\" \"{optifineJarPath}\"";
-            await ProcessUtil.RunCmd("java",args);
+        catch (Exception e){
+            Console.WriteLine(e);
         }
-        var launchwrapperJarPath = Path.GetFullPath($"{currentDir}/libraries/{LaunchwrapperLib.path}");
-        if (!Directory.Exists(Path.GetDirectoryName(launchwrapperJarPath))) {
-        Directory.CreateDirectory(Path.GetDirectoryName(launchwrapperJarPath));
-        }
-        //寻找
-        if (!File.Exists(launchwrapperJarPath) || isForce) {
-            DirFileUtil.GetZipFileToOrder(optifineJarPath, Path.GetFileName(launchwrapperJarPath), launchwrapperJarPath);
-        }
+        return false;
     }
 
     // 安装Forge
-    public static async Task InstallForge(DownloadFile forgeInstaller,string currentDir,bool delExtraArgsFile = true) {
-        var forgeInstallerPath = Path.Combine(DirFileUtil.LauncherSettingsDir, "forge-installer");
-        if (!File.Exists(forgeInstallerPath)) {
-            var stream = Application.GetResourceStream(new Uri("pack://application:,,,/;component/assets/forge-install.jar"));
-            using (var fileStream = new FileStream(forgeInstallerPath, FileMode.Create, FileAccess.Write)) {
-                stream.Stream.CopyTo(fileStream);
-            }
-        }
+    public static async Task InstallForge(string json,DownloadFile forgeInstaller,string currentDir,string versionName) {
+        var forgeInstallerPath = DirFileUtil.GetAndCompressAssetResource("forge-install.jar");
         // string args = $"-jar \"{forgeInstaller.FilePath}\" net.minecraftforge.installer.SimpleInstaller --installClient \"{currentDir}\"";
         string args = $"-cp \"{forgeInstallerPath};{forgeInstaller.FilePath}\" com.bangbang93.ForgeInstaller \"{currentDir}\"";
-        await ProcessUtil.RunCmd("java",args);
-        
-        var fileNameSplit = forgeInstaller.Name.Split('-').ToList();
-        string ForgeArgsDir = $"{currentDir}/versions/{fileNameSplit[1]}-{fileNameSplit[0]}-{fileNameSplit[2]}";
-        if (Directory.Exists(ForgeArgsDir) && delExtraArgsFile) {
-            Directory.Delete(ForgeArgsDir, true);
+        bool isSuccess = false;
+        while (!isSuccess) {
+            await ProcessUtil.RunCmd("java",args);
+            var outputStrs = ProcessUtil.lastOutput.ToString().Split("\n");
+            if (outputStrs.Length >= 1 && outputStrs[^1].Contains("true")) {
+                isSuccess = true;
+            }
+        }
+        try {
+            //因为有两种安装的地方，而且传入的forgeInstaller的名字不一样，需要这个方法去解析并清除安装器安装的多余文件夹，并且防止被安装器输出的json覆盖掉原来的json
+            File.WriteAllText(Path.Combine(currentDir, "versions", versionName, versionName + ".json"), json);
+            using var forgeInstallerZip = ZipFile.OpenRead(forgeInstaller.FilePath);
+            var profileJson = forgeInstallerZip.GetEntry("install_profile.json");
+            if (profileJson != null) {
+                using var reader = new StreamReader(profileJson.Open());
+                string profileJsonStr = reader.ReadToEnd();
+                JObject root = JObject.Parse(profileJsonStr);
+                string tmpMinecraftVersionName;
+                string tmpVersionName;
+                var installData = root["install"];
+                if (installData != null) {
+                    tmpVersionName = installData["version"]?.ToString();
+                    tmpMinecraftVersionName = installData["minecraft"]?.ToString();
+                }
+                else {
+                    tmpVersionName = root["version"]?.ToString();
+                    tmpMinecraftVersionName = root["minecraft"]?.ToString();
+                }
+                var tmpMinecraftVersionDir = Path.Combine(currentDir, "versions", tmpMinecraftVersionName);
+                var tmpVersionDir = Path.Combine(currentDir, "versions", tmpVersionName);
+                Console.WriteLine($"尝试删除tmpVersionName:{tmpVersionName}");
+                if (!string.IsNullOrEmpty(tmpVersionName) && Directory.Exists(tmpVersionDir)) {
+                    if (!File.Exists(Path.Combine(tmpVersionDir, tmpVersionName + ".json")) ||
+                        !File.Exists(Path.Combine(tmpVersionDir, tmpVersionName + ".jar"))) {
+                        Directory.Delete(tmpVersionDir, true);
+                    }
+                }
+                if (!string.IsNullOrEmpty(tmpMinecraftVersionName) && Directory.Exists(tmpMinecraftVersionDir)) {
+                    if (!File.Exists(Path.Combine(tmpMinecraftVersionDir, tmpMinecraftVersionName + ".json")) ||
+                        !File.Exists(Path.Combine(tmpMinecraftVersionDir, tmpMinecraftVersionName + ".jar"))) {
+                        Directory.Delete(tmpMinecraftVersionDir, true);
+                    }
+                }
+            }
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
         }
     }
     
@@ -941,6 +958,65 @@ public class MinecraftUtil {
         return null;
     }
     
+    //某些forge的安装前提，获取映射文件下载
+    public static (JToken, string, DownloadFile) GetMappingsDownloadFile(string json, string currentDir,string minecraftVersion = null) {
+        JObject versionJson = JObject.Parse(json);
+        if (string.IsNullOrEmpty(minecraftVersion)) {
+            if (versionJson["inheritsFrom"] != null) {
+                minecraftVersion = versionJson["inheritsFrom"].ToString();
+            }
+            else {
+                var patches = versionJson["patches"] as JArray;
+                if (patches != null && patches.Count > 1) {
+                    var tmpVersion = patches[patches.Count - 1]["inheritsFrom"]?.ToString();
+                    if (!string.IsNullOrEmpty(tmpVersion)) {
+                        minecraftVersion = tmpVersion;
+                    }
+                    else {
+                        (_, minecraftVersion, _) = GetForgeFmlArgs(json);
+                    }
+                }
+                else {
+                    (_, minecraftVersion, _) = GetForgeFmlArgs(json);
+                }
+            }
+        }
+        var mappingTxt = versionJson["downloads"]?["client_mappings"];
+        string mappingsTxtPath = Path.Combine(currentDir, "libraries", "net\\minecraft\\client", minecraftVersion,
+            $"client-{minecraftVersion}-mappings.tsrg");
+        if (mappingTxt != null) {
+            return (mappingTxt,mappingsTxtPath,new () {
+                Name = $"{minecraftVersion}-mappings",
+                UrlPath = mappingTxt["url"].ToString(),
+                FilePath = mappingsTxtPath
+            });
+        }
+        return (null,null,null);
+    }
+
+    // 获取客户端映射文件,某些forge的安装前提
+    public async static Task HandleClientMappingsTxt(string json,string currentDir, JToken mappingTxt, string mappingsTxtPath) {    
+        var (forgeVersion, mcVersion, mcpVersion) = GetForgeFmlArgs(json);
+        if (mappingTxt != null && !string.IsNullOrEmpty(forgeVersion) && !string.IsNullOrEmpty(mcVersion) && !string.IsNullOrEmpty(mcpVersion)) {
+            string clientMappingsTxtPath = Path.Combine(currentDir, "libraries", "net\\minecraft\\client", $"{mcVersion}-{mcpVersion}", $"client-{mcVersion}-{mcpVersion}-mappings.txt");
+            if (File.Exists(mappingsTxtPath)) {
+                string clientMappingsTxtDir = Path.GetDirectoryName(clientMappingsTxtPath);
+                if (!Directory.Exists(clientMappingsTxtDir)) {
+                    Directory.CreateDirectory(clientMappingsTxtDir);
+                }
+                File.Copy(mappingsTxtPath,clientMappingsTxtPath,true);
+            }
+            else {
+                Console.WriteLine("单独下载映射文件");
+                await DownloadUtil.SingalDownload(new() {
+                    Name = $"{mcVersion}-mappings",
+                    UrlPath = mappingTxt["url"].ToString(),
+                    FilePath = clientMappingsTxtPath
+                });
+            }
+        }
+    }
+    
     // 获取需要的Libraries文件
     public static List<DownloadFile> GetNeedLibrariesFile(List<Lib> libs,string currentDir) {
         if (!currentDir.EndsWith(".minecraft")) {
@@ -948,10 +1024,51 @@ public class MinecraftUtil {
         }
         List<DownloadFile> downloadFiles = new();
         HashSet<string> set = new HashSet<string>();
+        HashSet<string> addedLibsNames = new HashSet<string>();
         foreach (var i in libs) {
+            if (addedLibsNames.Contains(i.name)) {
+                continue;
+            }
             //跳过这个b，他没得下载，只能通过Forge安装器安装
             if (i.name.Contains("forge") && i.name.EndsWith("client")) {
                 continue;
+            }
+            if (i.rules.Count > 0 && i.rules.Any(x => x.Os == DeviceOs.Windows && x.IsAllow)) {
+                if (i.classifiers != null && i.classifiers.Count > 0) {
+                    foreach (var (key, value) in i.classifiers) {
+                        if (key.Contains("windows")) {
+                            string classifiersPath = currentDir + "/libraries/" + value.path;
+                            if (!set.Contains(classifiersPath)) {
+                                set.Add(classifiersPath);
+                                var item =  new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path);
+                                if (!string.IsNullOrEmpty(value.url)) {
+                                    item.UrlPaths.Add(value.url);
+                                }
+                                downloadFiles.Add(item);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (i.path != "") {
+                    string name = i.name;
+                    string path = currentDir + "/libraries/" + i.path;
+                    string urlPath = bmclapiMaven + i.path;
+                    string url = i.artifact?.url ?? "";
+                    if (i.artifact != null && i.artifact.path != "") {
+                        path = currentDir + "/libraries/" + i.artifact.path;
+                        urlPath = bmclapiMaven + i.artifact.path;
+                    }
+                    if (!set.Contains(path)) {
+                        set.Add(path);
+                        var item =  new DownloadFile(name, path, urlPath);
+                        if (!string.IsNullOrEmpty(url)) {
+                            item.UrlPaths.Add(url);
+                        }
+                        downloadFiles.Add(item);
+                        
+                    }
+                }
             }
             if (i.rules.Count == 0) {
                 string name = i.name;
@@ -986,45 +1103,15 @@ public class MinecraftUtil {
                     downloadFiles.Add(item);
                 }
             }
-            if (i.rules.Count > 0 && i.rules.Any(x => x.Os == DeviceOs.Windows && x.IsAllow)) {
-                if (i.path != "") {
-                    string name = i.name;
-                    string path = currentDir + "/libraries/" + i.path;
-                    string urlPath = bmclapiMaven + i.path;
-                    string url = i.artifact?.url ?? "";
-                    if (i.artifact != null && i.artifact.path != "") {
-                        path = currentDir + "/libraries/" + i.artifact.path;
-                        urlPath = bmclapiMaven + i.artifact.path;
-                    }
-                    if (!set.Contains(path)) {
-                        set.Add(path);
-                        var item =  new DownloadFile(name, path, urlPath);
-                        if (!string.IsNullOrEmpty(url)) {
-                            item.UrlPaths.Add(url);
-                        }
-                        downloadFiles.Add(item);
-                    }
-                    
-                }
-                if (i.classifiers != null && i.classifiers.Count > 0) {
-                    foreach (var (key, value) in i.classifiers) {
-                        if (key.Contains("windows")) {
-                            string classifiersPath = currentDir + "/libraries/" + value.path;
-                            if (!set.Contains(classifiersPath)) {
-                                set.Add(classifiersPath);
-                                var item =  new DownloadFile(Path.GetFileName(value.path), classifiersPath, bmclapiMaven + value.path);
-                                if (!string.IsNullOrEmpty(value.url)) {
-                                    item.UrlPaths.Add(value.url);
-                                }
-                                downloadFiles.Add(item);
-                            }
-                            break;
-                        }
-                    }
-                }
+            addedLibsNames.Add(i.name);
+        }
+        var result = new List<DownloadFile>();
+        foreach (var i in downloadFiles) {
+            if (i.UrlPath != bmclapiMaven) {
+                result.Add(i);
             }
         }
-        return downloadFiles;
+        return result;
     }
     
     // 获取AssetsIndex中所需要文件
@@ -1086,7 +1173,7 @@ public class MinecraftUtil {
     }
 
     // 获取Java路径和内存参数
-    public static (string,string) JavaArgs(string json) {
+    public static (string,string) JavaArgs(string json,int suitJavaVersionNum = -1) {
         string java = "java";
         //内存自动分配2/3内存
         var gsvm = GameSetting.GetViewModel?.Invoke();
@@ -1099,12 +1186,20 @@ public class MinecraftUtil {
         }
         else {
             JObject jsonRoot = JObject.Parse(json);
-            var suitJavaVersionNum = jsonRoot["javaVersion"]["majorVersion"].ToObject<int>();
-            string suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
+            if (suitJavaVersionNum == -1) {
+                var javaVersion = jsonRoot["javaVersion"];
+                if (javaVersion != null && javaVersion.HasValues) {
+                    suitJavaVersionNum = javaVersion["majorVersion"]?.ToObject<int>() ?? 7;
+                }
+                else {
+                    suitJavaVersionNum = 7;
+                }
+            }
+            var suitJavaVersion = suitJavaVersionNum < 10 ? ("1." + suitJavaVersionNum) : suitJavaVersionNum.ToString();
             if ((gsvm == null && javaList.Count == 0) || (gsvm != null && javaList.Count == 1)) {
                 javaList = GetJavaVersions();
             }
-            var suitJava = javaList.First(i => i.Version.Contains(suitJavaVersion));
+            var suitJava = javaList.FirstOrDefault(i => i.Version.Contains(suitJavaVersion));
             if (suitJava != null) {
                 var suitJavaPath = Path.GetFullPath(suitJava.Path + "/bin/java.exe");
                 java = suitJavaPath.Contains(" ") ? $"\"{suitJavaPath}\"" : suitJavaPath;
@@ -1112,14 +1207,14 @@ public class MinecraftUtil {
         }
         bool isAuto = gsvm == null ? root["gameArgs"]["memory"]["auto"].ToObject<bool>() : !gsvm.AutoMemoryDisable;
         string xms = "-Xms";
+        int tmpXms = 0;
         if (isAuto) {
             Dictionary<MemoryName,double> memoryAllInfo = GetMemoryAllInfo();
             var freeMemory = memoryAllInfo[MemoryName.FreeMemory];
             xms += (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3) + "m";
         }
         else {
-            int memory = gsvm == null ? root["gameArgs"]["memory"]["value"].ToObject<int>() : gsvm.MemoryValue;
-            xms += memory + "m";
+            xms += (gsvm == null ? root["gameArgs"]["memory"]["value"].ToObject<int>() : gsvm.MemoryValue) + "m";
         }
         return (java, xms);
     }
@@ -1133,6 +1228,29 @@ public class MinecraftUtil {
         var result = await ProcessUtil.RunCmd($"{javaHome}/bin/java.exe", "-version",showOutput:false);
         var javaVersion = result.StandardError.ReadToEnd().Split("\"")[1];
         return string.IsNullOrEmpty(javaVersion) ? null : javaVersion;
+    }
+
+    public async static Task<string> IsAssetsEqualLegacy(string json,string javaArg) {
+        JObject root = JObject.Parse(json);
+        var assets = root["assets"];
+        if (assets != null) {
+            if (assets.ToString().Equals("legacy")) {
+                var result = await ProcessUtil.RunCmd(javaArg, "-version",showOutput:false);
+                var javaVersion = result.StandardError.ReadToEnd().Split("\"")[1];
+                if (javaVersion.Contains("1.7")) {
+                    return javaArg;
+                }
+                var (java1p7,_) = JavaArgs(json,7);
+                result = await ProcessUtil.RunCmd(java1p7, "-version",showOutput:false);
+                javaVersion = result.StandardError.ReadToEnd().Split("\"")[1];
+                if (javaVersion.Contains("1.7")) {
+                    return java1p7;
+                }
+                return string.Empty;
+            }
+            return javaArg;
+        }
+        return javaArg;
     }
 
     // 获取Minecraft游戏目录
@@ -1186,9 +1304,16 @@ public class MinecraftUtil {
             Home.StartingState?.Invoke("检查文件完整性...");
             var libFiles = GetNeedLibrariesFile(libs, currentDir);
             var forgeFmlFile = GetForgeFmlDownloadFile(json, currentDir);
-            if (forgeFmlFile != null && minecraft.Loader == "Forge") {
+            // 检测Forge是否需要Fml文件
+            if (forgeFmlFile != null && minecraft.Loader == MinecraftLoader.Forge) {
                 libFiles.Add(forgeFmlFile);
             }
+            //检测是否需要下载映射文件，高版本forge安装需要
+            var (mappingTxt,mappingsTxtPath,mappingsDownloadFile) = GetMappingsDownloadFile(json, currentDir);
+            if (mappingsDownloadFile != null) {
+                libFiles.Add(mappingsDownloadFile);
+            }
+            
             var forgeClientLib = libs.FirstOrDefault(x => x.name.Contains("forge") && x.name.EndsWith("client"));
             if (forgeClientLib != null && !File.Exists(Path.Combine(currentDir, "libraries", forgeClientLib.path))) {
                 string name = forgeClientLib.name.Replace(":client", ":installer");
@@ -1222,7 +1347,7 @@ public class MinecraftUtil {
             }
             cancellationToken.ThrowIfCancellationRequested();
             //防止OptiFine所需文件发病
-            if (minecraft.Loader == "OptiFine") {
+            if (minecraft.Loader == MinecraftLoader.Optifine) {
                 Home.StartingState?.Invoke("补全OptiFine文件中...");
                 var OptiFineLib = libs.FirstOrDefault(i => i.name.Contains("OptiFine"));
                 var launchwrapperLib = libs.FirstOrDefault(i => i.name.Contains("launchwrapper"));
@@ -1233,10 +1358,15 @@ public class MinecraftUtil {
                 }
             }
             cancellationToken.ThrowIfCancellationRequested();
+            
+            //添加检测是否需要复制映射文件,forge高版本安装需要的
+            if (mappingTxt != null) {
+                await HandleClientMappingsTxt(json,currentDir, mappingTxt, mappingsTxtPath);
+            }
             // 补全高版本Forge，防止发病
-            if (forgeFmlFile != null && minecraft.Loader == "Forge") {
+            if (forgeFmlFile != null && minecraft.Loader == MinecraftLoader.Forge) {
                 Home.StartingState?.Invoke("补全Forge文件中...");
-                await InstallForge(forgeFmlFile, currentDir);
+                await InstallForge(json,forgeFmlFile, currentDir,minecraft.Name);
             }
             cancellationToken.ThrowIfCancellationRequested();
             player.AccessToken = "00000FFFFFFFFFFFFFFFFFFFFFF1414F";
@@ -1268,8 +1398,8 @@ public class MinecraftUtil {
             string jvmArgs = JvmArgs(json, new JvmArg(
                 currentDir: currentDir,
                 versionName: minecraft.Name,
-                launcherName: "StarFallMC",
-                launcherVersion: "1.0.0",
+                launcherName: PropertiesUtil.LauncherName,
+                launcherVersion: PropertiesUtil.LauncherVersion,
                 classpath: GetClassPaths(libs, currentDir, minecraft.Name)
             ),platform,RuntimeInformation.ProcessArchitecture.ToString().ToLower());
             string minecraftArgs = MinecraftArgs(json, new MinecraftArg(
@@ -1281,9 +1411,24 @@ public class MinecraftUtil {
                 accessToken: player.AccessToken
             ));
             cancellationToken.ThrowIfCancellationRequested();
+            
+            //处理特别版本（1.7.2-forge）
+            if (minecraft.Loader == MinecraftLoader.Forge) {
+                var legacy = await IsAssetsEqualLegacy(json, java);
+                Console.WriteLine(legacy);
+                if (string.IsNullOrEmpty(legacy)) {
+                    MessageBox.Show(
+                        $"当前版本 {minecraft.Name} 需要使用 Java1.7 版本启动，或使用Legacy，无法启动！\n建议前往下载！",
+                        "未获取到合适的Java版本");
+                    throw new Exception($"当前版本 {minecraft.Name} 需要使用 Java1.7 版本启动，或使用Legacy，无法启动！\n建议前往下载！");
+                }
+                java = legacy;
+            }
+            
             if (!java.Contains(".exe")) {
+                string extraInfo = java != "java" ? $"当前版本 {minecraft.Name} 最适合的Java版本为 Java{java}，" : "";
                 MessageBox.Show(
-                    $"未获取到合适的java版本，是否还要坚持启动！\n继续启动可能会出现不可描述的错误！\n当前版本 {minecraft.Name} 最适合的Java版本为 Java{java} ，建议前往下载！",
+                    $"未获取到合适的java版本，是否还要坚持启动！\n继续启动可能会出现不可描述的错误！\n{extraInfo}建议前往下载！",
                     "未获取到合适的Java版本",
                     MessageBox.BtnType.ConfirmAndCancelAndCustom, r => {
                         if (r == MessageBox.Result.Confirm) {
@@ -1329,7 +1474,6 @@ public class MinecraftUtil {
                     // Console.WriteLine("窗口出现");
                     GameSetting.ViewModel gsvm = GameSetting.GetViewModel?.Invoke();
                     ProcessUtil.SetWindowTitle(MinecraftProcess.Id,gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
-                    Console.WriteLine(gsvm == null ? PropertiesUtil.loadJson["window"]["title"].ToString() : gsvm.WindowTitle);
                     Home.HideLaunching?.Invoke(false);
                 }
             }, null, 500, 1000);
