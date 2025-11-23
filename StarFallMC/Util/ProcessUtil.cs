@@ -26,11 +26,11 @@ public class ProcessUtil {
     // 委托类型，用于枚举窗口的回调函数
     private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
     
-    public static StringBuilder lastOutput;
+    public static List<string> lastOutput;
     
     // 运行命令行命令，分为两个部分，命令和参数，命令如：java，参数如：-jar minecraft.jar
     public static async Task<Process> RunCmd(string cmd,string arg, bool showOutput = true, bool waitExit = true) {
-        lastOutput = new StringBuilder();
+        lastOutput = new List<string>();
         var processInfo = new ProcessStartInfo(cmd) {
             Arguments = arg,
             RedirectStandardOutput = true,
@@ -45,16 +45,17 @@ public class ProcessUtil {
             if (!string.IsNullOrEmpty(e.Data)) {
                 string output = $"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}-输出] {e.Data}";
                 Console.WriteLine(output);
-                lastOutput.AppendLine($"\n{e.Data}");
+                lastOutput.Add(e.Data);
             }
         };
         process.ErrorDataReceived += (s, e) => {
             if (!string.IsNullOrEmpty(e.Data)) {
                 string output = $"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}-错误] {e.Data}";
                 Console.WriteLine(output);
-                lastOutput.AppendLine($"\n{e.Data}");
+                lastOutput.Add(e.Data);
             }
         };
+        Console.WriteLine($"运行命令: {cmd} {arg}");
         process.Start();
         if (showOutput) {
             process.BeginOutputReadLine();

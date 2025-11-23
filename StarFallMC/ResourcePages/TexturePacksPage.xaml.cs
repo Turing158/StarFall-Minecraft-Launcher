@@ -5,9 +5,11 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using StarFallMC.Component;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.ResourcePages;
 
@@ -100,8 +102,8 @@ public partial class TexturePacksPage : Page {
     private void PackDelete_OnClick(object sender, RoutedEventArgs e) {
         var item = (sender as TextButton).Tag as TexturePackResource;
         if (item == null) return;
-        MessageBox.Show($"确定删除材质包 {item.Name} 吗？", "确认删除", MessageBox.BtnType.ConfirmAndCancel, (result) => {
-            if (result == MessageBox.Result.Confirm) {
+        MessageBox.Show($"确定删除材质包 {item.Name} 吗？", "确认删除", MessageBoxBtnType.ConfirmAndCancel, (result) => {
+            if (result == MessageBoxResult.Confirm) {
                 ResourceUtil.LocalTexturePackResources.Remove(item);
                 viewModel.TexturePacks.Remove(item);
                 File.Delete(item.Path);

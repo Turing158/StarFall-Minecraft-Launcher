@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 
 namespace StarFallMC.Util;
 
@@ -14,7 +15,7 @@ public class DownloadUtil {
     
     private static List<ThreadDownloader> downloaders = new ();
     public static ConcurrentQueue<DownloadFile> waitDownloadFiles { get; private set; }
-    public static ConcurrentBag<DownloadFile> errorDownloadFiles { get; private set; } = new ();
+    public static ConcurrentBag<DownloadFile> errorDownloadFiles { get; set; } = new ();
     public static int TotalCount { get; private set; }
     public static int RetryCount { get;private set; }
     public static int FinishCount {
@@ -36,12 +37,12 @@ public class DownloadUtil {
         if (waitDownloadFiles != null && waitDownloadFiles.Count != 0) {
             Console.WriteLine(waitDownloadFiles.Count);
             await MessageBox.ShowAsync("下载队列不为空，请选择你想要的操作。\n    1.单独下载：将当前的下载队列取消，只下载当前任务。\n    2.下载：将下载任务追加到正在下载的队列中。\n    3.取消：暂时不下载",
-                "提示",MessageBox.BtnType.ConfirmAndCancelAndCustom,
+                "提示",MessageBoxBtnType.ConfirmAndCancelAndCustom,
                 callback:r => {
-                    if (r == MessageBox.Result.Confirm) {
+                    if (r == MessageBoxResult.Confirm) {
                         mode = DownloadMode.Single;
                     }
-                    else if (r == MessageBox.Result.Custom) {
+                    else if (r == MessageBoxResult.Custom) {
                         mode = DownloadMode.Append;
                     }
                     else {
@@ -189,7 +190,7 @@ public class DownloadUtil {
     
     
     private static readonly HttpClient httpClient = new HttpClient();
-    public static async Task<bool> SingalDownload(DownloadFile downloadFile) {
+    public static async Task<bool> SingalDownload(DownloadFile downloadFile,CancellationToken ct = default) {
         var dir = Path.GetDirectoryName(downloadFile.FilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
             Directory.CreateDirectory(dir);
@@ -199,14 +200,24 @@ public class DownloadUtil {
         }
         for (int i = 0; i < RetryCount * 2; i++) {
             try {
+                ct.ThrowIfCancellationRequested();
                 using var req = new HttpRequestMessage(HttpMethod.Get, downloadFile.UrlPath);
                 req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
+                ct.ThrowIfCancellationRequested();
                 using var download =
                     await httpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead);
+                ct.ThrowIfCancellationRequested();
                 download.EnsureSuccessStatusCode();
+                ct.ThrowIfCancellationRequested();
                 using var fileStream = new FileStream(downloadFile.FilePath, FileMode.Create);
+                ct.ThrowIfCancellationRequested();
                 await download.Content.CopyToAsync(fileStream);
+                ct.ThrowIfCancellationRequested();
                 return true;
+            }
+            catch (OperationCanceledException e){
+                Console.WriteLine($"下载任务取消    路径：{downloadFile.UrlPath}");
+                return false;
             }
             catch (Exception e){
                 if (i == RetryCount) {
@@ -256,6 +267,7 @@ public class DownloadUtil {
                 //     // Console.WriteLine(size);
                 // }
                 // 添加User-Agent
+                Console.WriteLine($"下载中：{item.UrlPath}");
                 using var req = new HttpRequestMessage(HttpMethod.Get, item.UrlPath);
                 req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
                 using var download =

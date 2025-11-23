@@ -5,10 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using StarFallMC.Component;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.ResourcePages;
 
@@ -118,9 +120,9 @@ public partial class SavesPage : Page {
         if (resource == null) {
            return;
         }
-        MessageBox.Show($"确定删除下面的地图文件吗？它会永久消失不见喔\n\n {resource.WorldName} ({resource.DirName}) ","删除提示",MessageBox.BtnType.ConfirmAndCancel,
+        MessageBox.Show($"确定删除下面的地图文件吗？它会永久消失不见喔\n\n {resource.WorldName} ({resource.DirName}) ","删除提示",MessageBoxBtnType.ConfirmAndCancel,
             r => {
-                if (r == MessageBox.Result.Confirm) {
+                if (r == MessageBoxResult.Confirm) {
                     viewModel.Saves.Remove(resource);
                     ResourceUtil.LocalSavesResources?.Remove(resource);
                     Directory.Delete(resource.Path,true);

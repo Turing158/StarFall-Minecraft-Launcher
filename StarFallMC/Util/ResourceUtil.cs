@@ -521,7 +521,7 @@ public class ResourceUtil {
             //获取Forge列表，返回Json的数组，数组为空则为Forge不支持该版本
             //需要单独Object的build[下载forge标识之一]，version[forge版本]，mcversion[游戏版本]和modified[时间字段]
             //GET https://bmclapi2.bangbang93.com/forge/minecraft/:id
-            var forgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/forge/minecraft/{version}");
+            var forgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/forge/minecraft/{version}",cancellationToken:ct);
             if (forgeResult.IsSuccess) {
                 try {
                     var forgeJson = JArray.Parse(forgeResult.Content);
@@ -550,7 +550,7 @@ public class ResourceUtil {
             //需要version[Liteloader版本]，mcversion[游戏版本]和build-timestamp[时间字段]
             //GET https://bmclapi2.bangbang93.com/liteloader/list?mcversion=:id
             var liteloaderResult =
-                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/liteloader/list?mcversion={version}");
+                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/liteloader/list?mcversion={version}",cancellationToken:ct);
             if (liteloaderResult.IsSuccess) {
                 if (!string.IsNullOrEmpty(liteloaderResult.Content)) {
                     try {
@@ -559,6 +559,7 @@ public class ResourceUtil {
                             Version = liteJson["version"]?.ToString(),
                             Mcversion = liteJson["mcversion"]?.ToString(),
                             Timestamp = liteJson["build"]?["timestamp"]?.ToObject<long>() ?? 1,
+                            IsStable = liteJson["type"]?.ToString() == "RELEASE"
                         });
                     }
                     catch (Exception e) {
@@ -576,7 +577,7 @@ public class ResourceUtil {
             //获取Neoforge，返回Json的数组，数组为空则为Neoforge不支持该版本
             //需要单独Object的rawVersion[下载neoforge标识之一]，version[forge版本]，mcversion[游戏版本]
             //GET https://bmclapi2.bangbang93.com/neoforge/list/:id
-            var neoforgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/neoforge/list/{version}");
+            var neoforgeResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/neoforge/list/{version}",cancellationToken:ct);
             if (neoforgeResult.IsSuccess) {
                 try {
                     var neoJson = JArray.Parse(neoforgeResult.Content);
@@ -603,7 +604,7 @@ public class ResourceUtil {
             //获取Optifine，返回Json的数组，数组为空则为Optifine不支持该版本
             //需要单独Object的mcversion[游戏版本]，patch[下载optifine标识之一]，type[Optifine版本类型]，forge[需要forge版本]
             //GET https://bmclapi2.bangbang93.com/optifine/:id
-            var optifineResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/optifine/{version}");
+            var optifineResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/optifine/{version}",cancellationToken:ct);
             if (optifineResult.IsSuccess) {
                 try {
                     var optJson = JArray.Parse(optifineResult.Content);
@@ -638,7 +639,7 @@ public class ResourceUtil {
             //需要单独Object的loader-maven[fabric loader版本]
             //GET https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/:id
             var fabricLoaderResult =
-                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/{version}");
+                await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/{version}",cancellationToken:ct);
             if (fabricLoaderResult.IsSuccess) {
                 try {
                     var fabricJson = JArray.Parse(fabricLoaderResult.Content);
@@ -669,7 +670,7 @@ public class ResourceUtil {
                 //GET https://api.modrinth.com/v2/project/P7dR8mSH/version
                 //获取到json的数组
                 var fabricApiModrinthResult =
-                    await HttpRequestUtil.Get("https://api.modrinth.com/v2/project/P7dR8mSH/version");
+                    await HttpRequestUtil.Get("https://api.modrinth.com/v2/project/P7dR8mSH/version",cancellationToken:ct);
                 if (fabricApiModrinthResult.IsSuccess) {
                     try {
                         var fabricApiJson = JArray.Parse(fabricApiModrinthResult.Content);
@@ -725,7 +726,7 @@ public class ResourceUtil {
                         "https://api.curseforge.com/v1/mods/306612/files",
                         headers: new Dictionary<string, string>() {
                             { "X-API-KEY", KeyUtil.CURSEFORGE_API_KEY }
-                        });
+                        },cancellationToken:ct);
                     if (fabricApiCurseForgeResult.IsSuccess) {
                         try {
                             var fabricApiCurseForgeJson = JObject.Parse(fabricApiCurseForgeResult.Content);
@@ -777,7 +778,7 @@ public class ResourceUtil {
             //暂时无法使用BMCLAPI获取Quilt Loader
             //需要单独Object的loader-maven[quilt loader版本]
             //GET https://meta.quiltmc.org/v3/versions/loader/:id
-            var quiltLoaderResult = await HttpRequestUtil.Get($"https://meta.quiltmc.org/v3/versions/loader/{version}");
+            var quiltLoaderResult = await HttpRequestUtil.Get($"https://meta.quiltmc.org/v3/versions/loader/{version}",cancellationToken:ct);
             if (quiltLoaderResult.IsSuccess) {
                 try {
                     var quiltJson = JArray.Parse(quiltLoaderResult.Content);
@@ -820,7 +821,7 @@ public class ResourceUtil {
         progress.Report(5);
         try {
             ct.ThrowIfCancellationRequested();
-            var result = await HttpRequestUtil.Get("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json");
+            var result = await HttpRequestUtil.Get("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json",cancellationToken:ct);
             ct.ThrowIfCancellationRequested();
             JObject root;
             if (result.IsSuccess) {

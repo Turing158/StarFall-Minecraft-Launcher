@@ -10,8 +10,10 @@ using System.Windows.Media.Animation;
 using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
@@ -142,8 +144,8 @@ public partial class SelectGame : Page {
     private void DelDir_OnClick(object sender, RoutedEventArgs e) {
         if (DirSelect.SelectedIndex != 0) {
             var dirItem = DirSelect.SelectedItem as DirItem;
-            MessageBox.Show($"是否要删除当前选中文件夹[{dirItem.Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
-                if (result == MessageBox.Result.Confirm) {
+            MessageBox.Show($"是否要删除当前选中文件夹[{dirItem.Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBoxBtnType.ConfirmAndCancel, result => {
+                if (result == MessageBoxResult.Confirm) {
                     var index = DirSelect.SelectedIndex;
                     DirSelect.SelectedIndex = 0;
                     MessageTips.Show($"成功移除列表中文件夹 {dirItem.Name}");
@@ -210,8 +212,8 @@ public partial class SelectGame : Page {
     
     private void DelGame_OnClick(object sender, RoutedEventArgs e) {
         if (viewModel.Games != null && viewModel.Games.Count != 0 && GameSelect.SelectedIndex != -1) {
-            MessageBox.Show($"是否要删除当前选中Minecraft版本[{viewModel.CurrentGame.Name}]，真的会消失很久的喔！\n注意：会直接删除版本文件夹内的所有内容", "提示", MessageBox.BtnType.ConfirmAndCancel, result => {
-                if (result == MessageBox.Result.Confirm) {
+            MessageBox.Show($"是否要删除当前选中Minecraft版本[{viewModel.CurrentGame.Name}]，真的会消失很久的喔！\n注意：会直接删除版本文件夹内的所有内容", "提示", MessageBoxBtnType.ConfirmAndCancel, result => {
+                if (result == MessageBoxResult.Confirm) {
                     DirFileUtil.DeleteDirAllContent(viewModel.CurrentGame.Path);
                     var index = GameSelect.SelectedIndex;
                     MessageTips.Show($"成功删除Minecraft版本 {viewModel.CurrentGame.Name}");
@@ -266,28 +268,91 @@ public partial class SelectGame : Page {
         }
     }
 
-    private void OpenModDir_OnClick(object sender, RoutedEventArgs e) {
-        string path = MinecraftUtil.GetMinecraftGameDir(viewModel.CurrentDir.Path,viewModel.CurrentGame.Name) == Path.GetFullPath(viewModel.CurrentGame.Path) ?
-            $"{viewModel.CurrentGame.Path}/mods" :
-            $"{viewModel.CurrentDir.Path}/resourcepacks";
-        if (Directory.Exists(path)) {
-            DirFileUtil.openDirByExplorer(path);
-            return;
-        }
-        MessageTips.Show($"不存在 resources 文件夹");
-    }
     private bool isFixing = false;
     private string isFixingVersion = string.Empty;
+    private void FixResourceFile_OnClick(object sender, RoutedEventArgs e) {
+        if (!isFixing && string.IsNullOrEmpty(isFixingVersion)) {
+            FixResource().ConfigureAwait(false);
+        }
+        else {
+            MessageTips.Show($"当前正在补全 {isFixingVersion} 的资源文件");
+        }
+    }
 
-    private void OpenResourcesDir_OnClick(object sender, RoutedEventArgs e) {
-        string path = MinecraftUtil.GetMinecraftGameDir(viewModel.CurrentDir.Path,viewModel.CurrentGame.Name) == Path.GetFullPath(viewModel.CurrentGame.Path) ?
-            $"{viewModel.CurrentGame.Path}/resourcepacks" :
-            $"{viewModel.CurrentDir.Path}/resourcepacks";
+    private async Task FixResource() {
+        MinecraftItem minecraftItem = viewModel.CurrentGame.Clone();
+        isFixingVersion = minecraftItem.Name;
+        isFixing = true;
+        try {
+            string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraftItem.Path));
+            string json = File.ReadAllText($"{minecraftItem.Path}/{minecraftItem.Name}.json");
+            List<Lib> libs = MinecraftUtil.GetLibs(json);
+            MessageTips.Show("检查文件完整性...");
+            var libFiles = MinecraftUtil.GetNeedLibrariesFile(libs, currentDir);
+            var forgeFmlFile = MinecraftUtil.GetForgeFmlDownloadFile(json, currentDir);
+            if (forgeFmlFile != null && minecraftItem.Loader == MinecraftLoader.Forge) {
+                libFiles.Add(forgeFmlFile);
+            }
+
+            var assetFiles = await MinecraftUtil.GetAssetsFile(json, currentDir);
+            var needDownloadFiles = MinecraftUtil.GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
+            
+            if (needDownloadFiles.Count != 0) {
+                MessageTips.Show("补全文件中...");
+                await DownloadUtil.StartDownload(needDownloadFiles);
+                while (DownloadUtil.errorDownloadFiles.Count != 0) {
+                    bool retry = false;
+                    await MessageBox.ShowAsync(
+                        $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
+                        "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
+                        confirmBtnText: "重新下载", cancelBtnText: "跳过");
+                    if (retry) {
+                        await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
+                    }
+                    else {
+                        MessageTips.Show($"补全 {minecraftItem.Name} 的资源文件时出现问题");
+                        isFixingVersion = string.Empty;
+                        isFixing = false;
+                        return;
+                    }
+                }
+            }
+
+            if (minecraftItem.Loader == MinecraftLoader.Optifine) {
+                MessageTips.Show("补全OptiFine文件中...");
+                var OptiFineLib = libs.FirstOrDefault(i => i.name.Contains("OptiFine"));
+                var launchwrapperLib = libs.FirstOrDefault(i => i.name.Contains("launchwrapper"));
+                if ((launchwrapperLib != null && OptiFineLib != null) &&
+                    (!File.Exists($"{currentDir}/libraries/{OptiFineLib.path}") ||
+                     !File.Exists($"{currentDir}/libraries/{launchwrapperLib.path}"))) {
+                    await MinecraftUtil.InstallOptifine(OptiFineLib, launchwrapperLib, minecraftItem);
+                }
+            }
+
+            if (forgeFmlFile != null && minecraftItem.Loader == MinecraftLoader.Forge) {
+                MessageTips.Show("补全Forge文件中...");
+                await MinecraftUtil.InstallForge(json,forgeFmlFile.FilePath, currentDir, minecraftItem.Name);
+            }
+
+            await Task.Delay(500);
+            MessageTips.Show($"补全 {minecraftItem.Name} 的资源文件完成");
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+            MessageTips.Show($"补全 {minecraftItem.Name} 的资源文件时出现问题");
+        }
+        isFixing = false;
+        isFixingVersion = string.Empty;
+    }
+
+    private void OpenNativeDir_OnClick(object sender, RoutedEventArgs e) {
+        string path = $"{viewModel.CurrentGame.Path}/{viewModel.CurrentGame.Name}-natives";
+        Console.WriteLine($"Native 文件夹路径：{path}");
         if (Directory.Exists(path)) {
             DirFileUtil.openDirByExplorer(path);
             return;
         }
-        MessageTips.Show($"不存在 resources 文件夹");
+        MessageTips.Show($"不存在 {viewModel.CurrentGame.Name}-natives 文件夹");
     }
 
     private void RenameVersion_OnKeyDown(object sender, KeyEventArgs e) {

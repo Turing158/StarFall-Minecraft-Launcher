@@ -7,16 +7,13 @@ namespace StarFallMC.Util;
 
 public class HttpRequestUtil {
     public readonly static HttpClient client = new ();
-    
-    private static CancellationTokenSource globalCts = new ();
-    private static readonly object _lock = new ();
     public enum RequestDataType{
         Query,
         Form,
         Json,
     }
     
-    public static async Task<HttpResult> Get(string url,Dictionary<string,Object> args = null,Dictionary<string,string> headers = null,RequestDataType dataType = RequestDataType.Query) {
+    public static async Task<HttpResult> Get(string url,Dictionary<string,Object> args = null,Dictionary<string,string> headers = null,RequestDataType dataType = RequestDataType.Query,CancellationToken cancellationToken = default) {
         string queryString = "";
         if (args != null && args.Count > 0) {
             queryString += "?";
@@ -25,7 +22,6 @@ public class HttpRequestUtil {
             }
             queryString = queryString.TrimEnd('&');
         }
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(globalCts.Token);
         try {
             Console.WriteLine($"GET {url + queryString}");
             using var req = new HttpRequestMessage(HttpMethod.Get, url + queryString);
@@ -35,12 +31,12 @@ public class HttpRequestUtil {
                 }
             }
             req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
-            using var resp = await client.SendAsync(req, cts.Token);
+            using var resp = await client.SendAsync(req, cancellationToken);
             var content = await resp.Content.ReadAsStringAsync();
             
             return HttpResult.Success(resp,content,"Get");
         }
-        catch (TaskCanceledException e) when (cts.IsCancellationRequested) {
+        catch (TaskCanceledException e) when (cancellationToken.IsCancellationRequested) {
             return HttpResult.Cancel("Get");
         }
         catch (HttpRequestException e) {
@@ -56,7 +52,7 @@ public class HttpRequestUtil {
     }
 
 
-    public static async Task<HttpResult> Post(string url,Dictionary<string,Object> args,Dictionary<string, string> headers = null,RequestDataType dataType = RequestDataType.Json) {
+    public static async Task<HttpResult> Post(string url,Dictionary<string,Object> args,Dictionary<string, string> headers = null,RequestDataType dataType = RequestDataType.Json,CancellationToken cancellationToken = default) {
         HttpContent content;
         if (dataType == RequestDataType.Json) {
             var json = JsonConvert.SerializeObject(args);
@@ -71,7 +67,6 @@ public class HttpRequestUtil {
                 .ToList();
             content = new FormUrlEncodedContent(formData);
         }
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(globalCts.Token);
         try {
             using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
             if (headers != null && headers.Count > 0) {
@@ -80,11 +75,11 @@ public class HttpRequestUtil {
                 }
             }
             req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
-            using var resp = await client.SendAsync(req,cts.Token);
+            using var resp = await client.SendAsync(req,cancellationToken);
             var respContent = await resp.Content.ReadAsStringAsync();
             return HttpResult.Success(resp, respContent,"Post");
         }
-        catch (TaskCanceledException e) when (cts.IsCancellationRequested) {
+        catch (TaskCanceledException e) when (cancellationToken.IsCancellationRequested) {
             return HttpResult.Cancel("Post");
         }
         catch (HttpRequestException e){
@@ -95,14 +90,6 @@ public class HttpRequestUtil {
         }
         catch (Exception e) {
             return HttpResult.UnknownError(e,"Post");
-        }
-    }
-    
-    public static void StopRequest() {
-        lock (_lock) {
-            globalCts.Cancel();
-            globalCts.Dispose();
-            globalCts = new CancellationTokenSource();
         }
     }
 }

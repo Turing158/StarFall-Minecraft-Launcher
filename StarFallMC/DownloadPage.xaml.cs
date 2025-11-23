@@ -4,10 +4,13 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
@@ -18,12 +21,28 @@ public partial class DownloadPage : Page {
     public static Action<List<DownloadFile>,bool> ProgressInit;
     public static Action<DownloadFile,int,int> ProgressUpdate;
     public static Action<bool> DownloadingAnimState;
+    public static Action<string,ProcessStatus,bool> ChangeProcessStatus;
+    public static Action<string,ProcessStatus,int,string> ChangeProcessStatusWithIndex;
+    public static Action<string,bool> ResetProcessStatus;
+    public static Func<string,List<string>,bool,string> AppendProcessProgress;
+    public static Action<string, Action<ProcessProgress>, bool> ChangeProcessProgressCallback;
     
     private Storyboard DownloadingAnim;
     private Storyboard ListScrollViewerChange;
 
     private Timer listScrollViewerChangeTimer;
     private List<DownloadFile> TotalDownloads = new ();
+
+    private DoubleAnimation ValueTo1 = new() {
+        To = 1,
+        Duration = TimeSpan.FromSeconds(0.2),
+        EasingFunction = new CubicEase()
+    };
+    private DoubleAnimation ValueTo0 = new() {
+        To = 0,
+        Duration = TimeSpan.FromSeconds(0.2),
+        EasingFunction = new CubicEase()
+    };
     public DownloadPage() {
         InitializeComponent();
         DataContext = viewModel;
@@ -33,10 +52,16 @@ public partial class DownloadPage : Page {
         ProgressInit = progressInit;
         ProgressUpdate = progressUpdate;
         DownloadingAnimState = downloadingAnimState;
+        ChangeProcessStatus = changeProcessStatus;
+        ChangeProcessStatusWithIndex = changeProcessStatusWithIndex;
+        ResetProcessStatus = resetProcessStatus;
+        AppendProcessProgress = appendProcessProgress;
+        ChangeProcessProgressCallback = changeProcessProgressCallback;
+        
 
         OperateBtn.Visibility = Visibility.Collapsed;
     }
-    
+
     public class ViewModel : INotifyPropertyChanged {
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -56,6 +81,12 @@ public partial class DownloadPage : Page {
         public ObservableCollection<DownloadFile> Downloads {
             get => _downloads;
             set => SetField(ref _downloads, value);
+        }
+
+        private ObservableCollection<ProcessProgress> _progresses = new();
+        public ObservableCollection<ProcessProgress> Progresses {
+            get => _progresses;
+            set => SetField(ref _progresses, value);
         }
         
         private int _speed;
@@ -108,10 +139,10 @@ public partial class DownloadPage : Page {
 
     private void ProgressGrid_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
         if (ProgressGrid.Opacity == 0) {
-            ProgressGrid.BeginAnimation(OpacityProperty,new DoubleAnimation(1,new Duration(TimeSpan.FromSeconds(0.2))));
+            ProgressGrid.BeginAnimation(OpacityProperty, ValueTo1);
         }
         else {
-            ProgressGrid.BeginAnimation(OpacityProperty, new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.2))));
+            ProgressGrid.BeginAnimation(OpacityProperty, ValueTo0);
         }
     }
 
@@ -278,8 +309,8 @@ public partial class DownloadPage : Page {
         if (DownloadUtil.IsCancel || DownloadUtil.IsFinished) {
             Console.WriteLine("清空下载列表");
             try {
-                MessageBox.Show("确定要清除当前的所有下载任务嘛！可能会造成某些事情的出现。", "清除当前下载任务", MessageBox.BtnType.ConfirmAndCancel, r => {
-                    if (r == MessageBox.Result.Confirm) {
+                MessageBox.Show("确定要清除当前的所有下载任务嘛！可能会造成某些事情的出现。", "清除当前下载任务", MessageBoxBtnType.ConfirmAndCancel, r => {
+                    if (r == MessageBoxResult.Confirm) {
                         DownloadUtil.ClearDownload();
                         viewModel.Downloads.Clear();
                         viewModel.Total = 0;
@@ -311,7 +342,6 @@ public partial class DownloadPage : Page {
                 Console.WriteLine(exception);
             }
         }
-        
     }
 
     private void RetryAndContinueDownload_OnClick(object sender, RoutedEventArgs e) {
@@ -356,4 +386,47 @@ public partial class DownloadPage : Page {
             RetryAndContinueDownload.ToolTip = "重试下载失败的任务";
         }
     }
+    
+    
+
+    private void Download_OnClick(object sender, RoutedEventArgs e) {
+        ProcessInfo.BeginAnimation(OpacityProperty, ValueTo0);
+        ProcessAllInfo.BeginAnimation(OpacityProperty, ValueTo0);
+        ProcessInfo.RenderTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(ProcessInfo.ActualWidth, TimeSpan.FromSeconds(0.2)));
+        ProcessAllInfo.RenderTransform.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(-ProcessAllInfo.ActualWidth, TimeSpan.FromSeconds(0.2)));
+        ProcessInfo.IsHitTestVisible = false;
+        ProcessAllInfo.IsHitTestVisible = false;
+    }
+
+    private void Progress_OnClick(object sender, RoutedEventArgs e) {
+        ProcessInfo.BeginAnimation(OpacityProperty, ValueTo1);
+        ProcessAllInfo.BeginAnimation(OpacityProperty, ValueTo1);
+        ProcessInfo.RenderTransform.BeginAnimation(TranslateTransform.XProperty, ValueTo0);
+        ProcessAllInfo.RenderTransform.BeginAnimation(TranslateTransform.XProperty, ValueTo0);
+        ProcessInfo.IsHitTestVisible = true;
+        ProcessAllInfo.IsHitTestVisible = true;
+    }
+
+    // 关于流程进度的方法
+    
+    public void changeProcessStatus(string key,ProcessStatus status,bool ChangeNextStep) {
+        ProcessProgresses.ChangeProcessStatus(key,status,ChangeNextStep);
+    }
+
+    public void changeProcessStatusWithIndex(string key,ProcessStatus status,int progressIndex, string progressName = null) {
+        ProcessProgresses.ChangeProcessStatusWithIndex(key,status,progressIndex,progressName);
+    }
+    
+    public void resetProcessStatus(string key, bool autoDoingFirst = false) {
+        ProcessProgresses.ResetProcessStatus(key,autoDoingFirst);
+    }
+    
+    public string appendProcessProgress(string name, List<string> progressNames,bool autoDoingFirst = false) {
+        return ProcessProgresses.AppendProcessProgress(name,progressNames,autoDoingFirst);
+    }
+    
+    public void changeProcessProgressCallback(string key, Action<ProcessProgress> callback, bool isOnDelete = false) {
+        ProcessProgresses.ChangeProcessProgressCallback(key,callback, isOnDelete);
+    }
+    
 }

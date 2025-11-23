@@ -167,6 +167,7 @@
                                     SourceEmptyText="该版本不支持Neoforge"
                                     CurrentItem="{Binding SelectedNeoForgeLoader,Mode=OneWayToSource}"
                                     SelectionChanged="LoaderComboBox_OnSelectionChanged"
+                                    MouseLeftButtonUp="NeoForgeSelectComboBox_OnMouseLeftButtonUp"
                                     Visibility="{Binding NeoForgeLoader,Converter={StaticResource ListEmptyToCollapsedConverter}}">
                     <component:ComboBox.CustomTitleContent>
                         <Image Width="25" Height="25" HorizontalAlignment="Left" 

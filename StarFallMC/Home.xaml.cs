@@ -13,6 +13,7 @@ using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
@@ -226,10 +227,10 @@ public partial class Home : Page {
                 content:
                 $"当前版本：{item.Name} 出现游戏崩溃！无法正常运行，崩溃可能由多种原因引起，以下为常见解决方案：\n    1.检查Minecraft内存分配是否合理\n    2.检查Java版本是否能够当前Minecraft的启动\n    3.检查Minecraft模组中是否存在模组冲突\n    4.查看崩溃日志文件，若有需要，建议保存",
                 title: "Minecraft 运行失败",
-                btnType: MessageBox.BtnType.ConfirmAndCustom,
+                btnType: MessageBoxBtnType.ConfirmAndCustom,
                 customBtnText: "查看日志",
                 callback: r => {
-                    if (r == MessageBox.Result.Custom) {
+                    if (r == MessageBoxResult.Custom) {
                         DirFileUtil.openDirByExplorer(DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(item.Path)));
                     }
                 });

@@ -3,27 +3,14 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using StarFallMC.Entity.Enum;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.Component;
 
 public partial class MessageBox : UserControl,INotifyPropertyChanged {
     
-    public enum BtnType {
-        None,
-        Confirm,
-        Cancel,
-        ConfirmAndCancel,
-        Custom,
-        ConfirmAndCustom,
-        CustomAndCancel,
-        ConfirmAndCancelAndCustom
-    }
-    public enum Result {
-        Confirm,
-        Cancel,
-        Custom
-    }
-    private Action<Result> _callback;
+    private Action<MessageBoxResult> _callback;
     
     private Timer HideTimer;
     private Storyboard HighlightBox;
@@ -91,7 +78,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
 
     // 同步显示消息框,但是不等待用户操作完成
     public static MessageBox Show(string content,string title = "提示",
-        BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
+        MessageBoxBtnType btnType = MessageBoxBtnType.Confirm, Action<MessageBoxResult>? callback = null,
         string customBtnText = "",string confirmBtnText = "确定",string cancelBtnText = "取消",
         bool showCloseBtn = false) {
         var box = new MessageBox();
@@ -100,22 +87,22 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
         box.Title = title;
         box._callback = callback;
         box.ConfirmBtnVisibility = 
-            btnType == BtnType.Confirm || 
-            btnType == BtnType.ConfirmAndCancel || 
-            btnType == BtnType.ConfirmAndCustom || 
-            btnType == BtnType.ConfirmAndCancelAndCustom 
+            btnType == MessageBoxBtnType.Confirm || 
+            btnType == MessageBoxBtnType.ConfirmAndCancel || 
+            btnType == MessageBoxBtnType.ConfirmAndCustom || 
+            btnType == MessageBoxBtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
         box.CancelBtnVisibility =
-            btnType == BtnType.Cancel ||
-            btnType == BtnType.ConfirmAndCancel || 
-            btnType == BtnType.CustomAndCancel || 
-            btnType == BtnType.ConfirmAndCancelAndCustom 
+            btnType == MessageBoxBtnType.Cancel ||
+            btnType == MessageBoxBtnType.ConfirmAndCancel || 
+            btnType == MessageBoxBtnType.CustomAndCancel || 
+            btnType == MessageBoxBtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
         box.CustomBtnVisibility =
-            btnType == BtnType.CustomAndCancel ||
-            btnType == BtnType.ConfirmAndCustom ||
-            btnType == BtnType.Custom ||
-            btnType == BtnType.ConfirmAndCancelAndCustom 
+            btnType == MessageBoxBtnType.CustomAndCancel ||
+            btnType == MessageBoxBtnType.ConfirmAndCustom ||
+            btnType == MessageBoxBtnType.Custom ||
+            btnType == MessageBoxBtnType.ConfirmAndCancelAndCustom 
             ? Visibility.Visible : Visibility.Collapsed;
         box.CloseBtnVisibility = showCloseBtn ? Visibility.Visible : Visibility.Collapsed;
         box.ConfirmBtnText = confirmBtnText;
@@ -131,7 +118,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     }
     
     public static async Task<MessageBox> ShowAsync(string content, string title = "提示",
-        BtnType btnType = BtnType.Confirm, Action<Result>? callback = null,
+        MessageBoxBtnType btnType = MessageBoxBtnType.Confirm, Action<MessageBoxResult>? callback = null,
         string customBtnText = "", string confirmBtnText = "确定", string cancelBtnText = "取消",
         bool showCloseBtn = false) {
         var box = Show(content, title, btnType, callback, customBtnText, confirmBtnText, cancelBtnText, showCloseBtn);
@@ -144,18 +131,18 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     }
 
     private void Confirm_OnClick(object sender, RoutedEventArgs e) {
-        CloseFunc(Result.Confirm);
+        CloseFunc(MessageBoxResult.Confirm);
     }
     
     private void Cancel_OnClick(object sender, RoutedEventArgs e) {
-        CloseFunc(Result.Cancel);
+        CloseFunc(MessageBoxResult.Cancel);
     }
     
     private void Custom_OnClick(object sender, RoutedEventArgs e) {
-        CloseFunc(Result.Custom);
+        CloseFunc(MessageBoxResult.Custom);
     }
 
-    private void CloseFunc(Result result) {
+    private void CloseFunc(MessageBoxResult result) {
         Mask.Hide();
         HideTimer = new Timer((s) => {
             this.Dispatcher.Invoke(() => {

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Windows;
 using StarFallMC.Component;
 
 namespace StarFallMC.Util;
@@ -9,6 +10,7 @@ public class DirFileUtil {
     
     public static string CurrentDirPosition = System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
     public static string LauncherSettingsDir = Path.Combine(CurrentDirPosition, "SFMCL");
+    public static string RoamingPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     
     //通过资源管理器打开文件夹
     public static bool openDirByExplorer(string path) {
@@ -194,4 +196,88 @@ public class DirFileUtil {
     
         return $"{sizeDouble:0.##} {suffixes[unitIndex]}";
     }
+    
+    // 自然排序比较器(更贴合正常人的排序习惯)
+    public class NaturalComparer : IComparer<string> {
+        private readonly bool _desc;
+        public NaturalComparer(bool desc = false) {
+            _desc = desc;
+        }
+        
+        public int Compare(string x, string y) {
+            if (x == null && y == null) return 0;
+            if (x == null) return _desc ? 1 : -1;
+            if (y == null) return _desc ? -1 : 1;
+            int i = 0, j = 0;
+            while (i < x.Length && j < y.Length) {
+                if (char.IsDigit(x[i]) && char.IsDigit(y[j])) {
+                    string num1 = ExtractNumber(x, ref i);
+                    string num2 = ExtractNumber(y, ref j);
+                
+                    int compare = long.Parse(num1).CompareTo(long.Parse(num2));
+                    if (compare != 0) return _desc ? -compare : compare;
+                }
+                else {
+                    int compare = char.ToLowerInvariant(x[i]).CompareTo(char.ToLowerInvariant(y[j]));
+                    if (compare != 0) return _desc ? -compare : compare;
+                    i++;
+                    j++;
+                }
+            }
+            int lengthCompare = x.Length.CompareTo(y.Length);
+            return _desc ? -lengthCompare : lengthCompare;
+        }
+        
+        private string ExtractNumber(string s, ref int index) {
+            int start = index;
+            while (index < s.Length && char.IsDigit(s[index])) {
+                index++;
+            }
+            return s.Substring(start, index - start);
+        }
+    }
+
+    public static string GetAndCompressAssetResource(string relativePath) {
+        var absolutePath = Path.Combine(LauncherSettingsDir, relativePath);
+        if (!File.Exists(absolutePath)) {
+            if (!Directory.Exists(Path.GetDirectoryName(absolutePath))) {
+                Directory.CreateDirectory(Path.GetDirectoryName(absolutePath) ?? string.Empty);
+            }
+            var stream = Application.GetResourceStream(new Uri($"pack://application:,,,/;component/assets/{relativePath}"));
+            using (var fileStream = new FileStream(absolutePath, FileMode.Create, FileAccess.Write)) {
+                stream.Stream.CopyTo(fileStream);
+            }
+        }
+
+        return absolutePath;
+    }
+    
+    // 辅助安装Forge Installer的函数1
+    public static bool MoveExistVersionDirToTmpDir(string versionDir, string tmpVersionsDir) {
+        if (string.IsNullOrEmpty(versionDir)) {
+            return false;
+        }
+        bool exist = Directory.Exists(versionDir);
+        if (exist) {
+            if (Directory.Exists(tmpVersionsDir)) {
+                Directory.Delete(tmpVersionsDir, true);
+            }
+            Directory.CreateDirectory(tmpVersionsDir);
+            Directory.Move(versionDir, Path.Combine(tmpVersionsDir,Path.GetFileName(versionDir)));
+        }
+        return exist;
+    }
+    // 辅助安装Forge Installer的函数2
+    public static void MoveTmpVersionDirToVersionDir(string versionDir, string tmpVersionsDir, bool exist) {
+        if (Directory.Exists(versionDir)) {
+            Directory.Delete(versionDir, true);
+        }
+        if (exist) {
+            string tmpDir = Path.Combine(tmpVersionsDir, Path.GetFileName(versionDir));
+            if (Directory.Exists(tmpDir)) {
+                Directory.Move(tmpDir, versionDir);
+            }
+        }
+    }
+    
 }

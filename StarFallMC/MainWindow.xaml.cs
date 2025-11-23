@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
 
 namespace StarFallMC;
@@ -196,6 +197,8 @@ public partial class MainWindow : Window {
             SubFrameHide.Completed += SubFrameHideOnCompleted;
             SubFrameHide.Begin();
             SubFrame.IsHitTestVisible = false;
+
+            GameInfo.CancelLoading?.Invoke();
         }
         else {
             if (SubFrame.Opacity == 0) {

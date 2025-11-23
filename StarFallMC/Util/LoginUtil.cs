@@ -18,18 +18,18 @@ public class LoginUtil {
         }
 
         //获取Microsoft Token
-        public static async Task<HttpResult> GetMicrosoftToken(string deviceCode) {
+        public static async Task<HttpResult> GetMicrosoftToken(string deviceCode,CancellationToken cancellationToken) {
             Console.WriteLine("获取Microsoft Token");
             Dictionary<string,Object> args = new () {
                 {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
                 {"device_code",deviceCode},
                 {"grant_type","urn:ietf:params:oauth:grant-type:device_code"}
             };
-            return await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form).ConfigureAwait(true);
+            return await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form,cancellationToken:cancellationToken).ConfigureAwait(true);
         }
 
         //刷新Microsoft Token
-        public static async Task<Player> RefreshMicrosoftToken(Player player) {
+        public static async Task<Player> RefreshMicrosoftToken(Player player,CancellationToken cancellationToken) {
             Console.WriteLine("刷新Microsoft Token");
             Dictionary<string,Object> args = new () {
                 {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
@@ -37,11 +37,11 @@ public class LoginUtil {
                 {"grant_type","refresh_token"},
                 {"scope","XboxLive.signin offline_access"}
             };
-            var r =await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form).ConfigureAwait(true);
+            var r =await HttpRequestUtil.Post("https://login.microsoftonline.com/consumers/oauth2/v2.0/token",args,null,HttpRequestUtil.RequestDataType.Form,cancellationToken:cancellationToken).ConfigureAwait(true);
             if(r.IsSuccess){
                 JObject jo = JObject.Parse(r.Content);
                 var refreshToken = jo["refresh_token"].ToString();
-                var result = await GetXboxLiveToken(jo["access_token"].ToString()).ConfigureAwait(true);
+                var result = await GetXboxLiveToken(jo["access_token"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
                 if (!string.IsNullOrEmpty(result)) {
                     var jo2 = JObject.Parse(result);
                     if (jo2["error"] == null) {
@@ -85,7 +85,7 @@ public class LoginUtil {
         }
         
         //获取Xbox Live Token
-        public static async Task<string> GetXboxLiveToken(string accessToken) {
+        public static async Task<string> GetXboxLiveToken(string accessToken,CancellationToken cancellationToken) {
             Console.WriteLine("获取Xbox Live Token");
             PlayerManage.SetLoadingText?.Invoke("获取Xbox Live Token中...");
             Dictionary<string,Object> args = new (){
@@ -97,10 +97,10 @@ public class LoginUtil {
                 {"RelyingParty","http://auth.xboxlive.com"},
                 {"TokenType","JWT"},
             };
-            var r = await HttpRequestUtil.Post("https://user.auth.xboxlive.com/user/authenticate",args).ConfigureAwait(true);
+            var r = await HttpRequestUtil.Post("https://user.auth.xboxlive.com/user/authenticate",args,cancellationToken:cancellationToken).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetXSTSToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString()).ConfigureAwait(true);
+                return await GetXSTSToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
@@ -108,7 +108,7 @@ public class LoginUtil {
 
         
         //获取XSTS Token
-        private static async Task<string> GetXSTSToken(string xboxLiveToken,string uhs) {
+        private static async Task<string> GetXSTSToken(string xboxLiveToken,string uhs,CancellationToken cancellationToken) {
             Console.WriteLine("获取XSTS Token");
             PlayerManage.SetLoadingText?.Invoke("获取XSTS Token中...");
             Dictionary<string,Object> args = new () {
@@ -119,26 +119,26 @@ public class LoginUtil {
                 {"RelyingParty","rp://api.minecraftservices.com/"},
                 {"TokenType","JWT"},
             };
-            var r = await HttpRequestUtil.Post("https://xsts.auth.xboxlive.com/xsts/authorize",args);
+            var r = await HttpRequestUtil.Post("https://xsts.auth.xboxlive.com/xsts/authorize",args,cancellationToken:cancellationToken);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetMinecraftToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString()).ConfigureAwait(true);
+                return await GetMinecraftToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
         }
 
         //获取Minecraft Token
-        public static async Task<string> GetMinecraftToken(string XTSTtoken,string uhs) {
+        public static async Task<string> GetMinecraftToken(string XTSTtoken,string uhs,CancellationToken cancellationToken) {
             Console.WriteLine("获取Minecraft Token");
             PlayerManage.SetLoadingText?.Invoke("获取Minecraft Token中...");
             Dictionary<string,Object> args = new () {
                     {"identityToken",$"XBL3.0 x={uhs};{XTSTtoken}"}
                 };
-            var r = await HttpRequestUtil.Post("https://api.minecraftservices.com/authentication/login_with_xbox",args).ConfigureAwait(true);
+            var r = await HttpRequestUtil.Post("https://api.minecraftservices.com/authentication/login_with_xbox",args,cancellationToken:cancellationToken).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetMinecraftInfo(jo["access_token"].ToString()).ConfigureAwait(true);
+                return await GetMinecraftInfo(jo["access_token"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
             }
             else {
                 MessageTips.Show("获取Minecraft Token失败");
@@ -148,13 +148,13 @@ public class LoginUtil {
         }
 
         //获取Minecraft用户信息
-        public static async Task<string> GetMinecraftInfo(string accessToken) {
+        public static async Task<string> GetMinecraftInfo(string accessToken,CancellationToken cancellationToken) {
             Console.WriteLine("获取Minecraft用户信息");
             PlayerManage.SetLoadingText?.Invoke("获取Minecraft用户信息中...");
             Dictionary<string,string> headers = new () {
                 {"Authorization",$"Bearer {accessToken}"}
             };
-            var r = await HttpRequestUtil.Get("https://api.minecraftservices.com/minecraft/profile",null,headers).ConfigureAwait(true);
+            var r = await HttpRequestUtil.Get("https://api.minecraftservices.com/minecraft/profile",null,headers,cancellationToken:cancellationToken).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
                 jo["access_token"] = accessToken;

@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using StarFallMC.Entity.Enum;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.Component;
 
@@ -160,6 +162,10 @@ public partial class ComboBox : UserControl {
     }
     public static readonly RoutedEvent SelectionChangedEvent = EventManager.RegisterRoutedEvent(
         nameof(SelectionChanged), RoutingStrategy.Bubble, typeof(SelectionChangedEventHandler), typeof(ComboBox));
+
+    public bool IsOpened {
+        get => ComboBoxPanel.IsOpen;
+    }
     
     private DoubleAnimation ShowAnim;
     private DoubleAnimation HideAnim;
@@ -230,9 +236,9 @@ public partial class ComboBox : UserControl {
         if (NeedConfirmMessageBox) {
             MessageBox.Show(MessageBoxContent, 
                 MessageBoxTitle,
-                MessageBox.BtnType.ConfirmAndCancel,
+                MessageBoxBtnType.ConfirmAndCancel,
                 callback: r => {
-                if (r == MessageBox.Result.Confirm) {
+                if (r == MessageBoxResult.Confirm) {
                     DeleteItem(sender);
                 } });
         }

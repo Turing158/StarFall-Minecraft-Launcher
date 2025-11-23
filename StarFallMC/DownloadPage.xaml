@@ -17,11 +17,26 @@
         <Border Style="{StaticResource FrameBg}"></Border>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="230"></ColumnDefinition>
+                <ColumnDefinition Width="50"></ColumnDefinition>
+                <ColumnDefinition Width="160"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Grid>
-                <Border Style="{StaticResource Rect}" Margin="40 20 20 20">
+            <StackPanel Grid.Column="0"
+                        Margin="10 20 5 20">
+                <comp:Button Width="25" Height="50" 
+                             HorizontalAlignment="Right"
+                             Click="Progress_OnClick">
+                    <TextBlock Text="进度" TextWrapping="WrapWithOverflow"></TextBlock>
+                </comp:Button>
+                <comp:Button Width="25" Height="50" 
+                             Margin="0 5"
+                             HorizontalAlignment="Right"
+                             Click="Download_OnClick">
+                    <TextBlock Text="下载" TextWrapping="WrapWithOverflow"></TextBlock>
+                </comp:Button>
+            </StackPanel>
+            <Grid Grid.Column="1" ClipToBounds="True">
+                <Border Style="{StaticResource Rect}" Margin="0 20 10 20">
                     <Grid>
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Top" 
                               Margin="0 20">
@@ -115,8 +130,30 @@
                         </StackPanel>
                     </Grid>
                 </Border>
+                <Border Name="ProcessInfo" 
+                        Style="{StaticResource Rect}" 
+                        Margin="0 20 10 20"
+                        RenderTransformOrigin="1,0">
+                    <Border.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </Border.RenderTransform>
+                    <Grid>
+                        <TextBlock FontSize="18" Foreground="{DynamicResource SecondaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Run Text="进"></Run>
+                            <LineBreak></LineBreak>
+                            <Run Text="度"></Run>
+                            <LineBreak></LineBreak>
+                            <Run Text="测"></Run>
+                            <LineBreak></LineBreak>
+                            <Run Text="试"></Run>
+                            <LineBreak></LineBreak>
+                            <Run Text="中"></Run>
+                        </TextBlock>
+                    </Grid>
+                </Border>
             </Grid>
-            <Grid Grid.Column="1" Margin="20 20 40 20">
+            <Grid Grid.Column="2" Margin="10 20 30 20" ClipToBounds="True">
                 <Border Height="50" VerticalAlignment="Top" 
                         Background="{DynamicResource PrimaryBrush_2}" 
                         Style="{StaticResource Rect}">
@@ -129,7 +166,7 @@
                 <Border Style="{StaticResource Rect}" Margin="0 40 0 0">
                     <Grid Name="DownloadList">
                         <TextBlock Name="EmptyList" FontSize="18" 
-                                   Foreground="{DynamicResource SecondaryBrush_2}" 
+                                   Foreground="{DynamicResource SecondaryBrush}" 
                                    Text="没有任何下载项" 
                                    HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
                         <ListView Name="ListScrollViewer" Margin="0 5" 
@@ -141,6 +178,14 @@
                             </ListView.ItemsPanel>
                         </ListView>
                     </Grid>
+                </Border>
+                <Border Name="ProcessAllInfo" 
+                        Style="{StaticResource Rect}"
+                        RenderTransformOrigin="0,0">
+                    <Border.RenderTransform>
+                        <TranslateTransform></TranslateTransform>
+                    </Border.RenderTransform>
+                    <comp:ProcessProgresses x:Name="ProcessProgresses" Progresses="{Binding Progresses}"></comp:ProcessProgresses>
                 </Border>
             </Grid>
         </Grid>

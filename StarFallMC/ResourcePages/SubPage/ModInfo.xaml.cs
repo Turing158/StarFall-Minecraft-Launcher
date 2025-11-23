@@ -6,10 +6,12 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
 using Button = StarFallMC.Component.Button;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.ResourcePages.SubPage;
 
@@ -185,10 +187,10 @@ public partial class ModInfo : Page {
             if (result) {
                 MessageBox.Show(
                     $"文件 {download.Name} 下载完成，已保存至({download.FilePath})",
-                    "下载成功",btnType:MessageBox.BtnType.ConfirmAndCustom,
+                    "下载成功",btnType:MessageBoxBtnType.ConfirmAndCustom,
                     customBtnText:"前往文件夹",
                     callback: r => {
-                        if (r == MessageBox.Result.Custom) {
+                        if (r == MessageBoxResult.Custom) {
                             DirFileUtil.OpenContainingFolder(download.FilePath);
                         }
                     });

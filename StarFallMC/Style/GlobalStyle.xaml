@@ -27,6 +27,7 @@
     <converters:NullObjectToVisibilityVisibleConverter x:Key="NullObjectToVisibilityVisibleConverter"/>
     <converters:MinecraftDownloaderTypeToLabelConverter x:Key="MinecraftDownloaderTypeToLabelConverter"/>
     <converters:ListEmptyToCollapsedConverter x:Key="ListEmptyToCollapsedConverter"/>
+    <converters:ListEmptyToVisibleConverter x:Key="ListEmptyToVisibleConverter"/>
     <converters:ListToLabelConverter x:Key="ListToLabelConverter"/>
     <converters:ListCountTwoMoreConverter x:Key="ListCountTwoMoreConverter"/>
     

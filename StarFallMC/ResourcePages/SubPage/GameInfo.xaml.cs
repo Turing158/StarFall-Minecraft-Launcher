@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Loader;
@@ -21,12 +22,14 @@ public partial class GameInfo : Page {
     private ViewModel viewModel = new();
     
     public static Action<MinecraftDownloader> SetMinecraftDownloader;
+    public static Action CancelLoading;
     private CancellationTokenSource cts;
     
     public GameInfo() {
         InitializeComponent();
         DataContext = viewModel;
         cts = new CancellationTokenSource();
+        CancelLoading = cancelLoading;
         SetMinecraftDownloader = setMinecraftDownloader;
     }
     
@@ -219,7 +222,6 @@ public partial class GameInfo : Page {
             if (downloader == null) {
                 return;
             }
-            cts?.Cancel();
             cts = new CancellationTokenSource();
             viewModel.Downloader = downloader;
             viewModel.VersionName = $"{viewModel.Downloader.Name}";
@@ -235,7 +237,13 @@ public partial class GameInfo : Page {
             return;
         }
         
-        viewModel.SelectedFabricLoader = new();
+        viewModel.SelectedFabricLoader = null;
+        viewModel.SelectedForgeLoader = null;
+        viewModel.SelectedLiteLoader = null;
+        viewModel.SelectedOptifineLoader = null;
+        viewModel.SelectedQuiltLoader = null;
+        viewModel.SelectedNeoForgeLoader = null;
+        viewModel.SelectedFabricApiIndex = -1;
         
         viewModel.ForgeLoader?.Clear();
         viewModel.LiteLoader?.Clear();
@@ -244,6 +252,14 @@ public partial class GameInfo : Page {
         viewModel.FabricLoader?.Clear();
         viewModel.FabricApiVersions?.Clear();
         viewModel.QuiltLoader?.Clear();
+
+        viewModel.EnableFabric = true;
+        viewModel.EnableForge = true;
+        viewModel.EnableLiteLoader = true;
+        viewModel.EnableNeoForge = true;
+        viewModel.EnableOptifine = true;
+        viewModel.EnableQuilt = true;
+        
         ResourcePageExtension.ReloadList(ScrollViewer,LoadingBorder);
         var progress = new Progress<int>(percent => {
             if (percent > 96) {
@@ -444,5 +460,109 @@ public partial class GameInfo : Page {
         if (viewModel.IsGoodName) {
             viewModel.VersionTips = "";
         }
+    }
+    
+    private bool isInstalling = false;
+    public static CancellationTokenSource installCts;
+    
+    private void StartInstall_OnClick(object sender, RoutedEventArgs e) {
+        if (viewModel.IsGoodName) {
+            if (!isInstalling) {
+                if (viewModel.SelectedOptifineLoader != null && viewModel.SelectedOptifineLoader.NeedForge != null && viewModel.SelectedForgeLoader == null) {
+                    MessageTips.Show("Optifine版本需要Forge支持，请选择对应的Forge版本后再安装", MessageTips.MessageType.Error);
+                    return;
+                }
+
+                if (viewModel.SelectedFabricLoader != null && viewModel.SelectedFabricApiIndex == -1) {
+                    MessageTips.Show("请选择Fabric API版本", MessageTips.MessageType.Error);
+                    return;
+                }
+                isInstalling = true;
+                PrepareInstall();
+            }
+            else {
+                MessageTips.Show("请先完成当前安装任务", MessageTips.MessageType.Error);
+            }
+        }
+        else {
+            MessageTips.Show(viewModel.VersionTips, MessageTips.MessageType.Error);
+        }
+    }
+
+    public async void PrepareInstall() {
+        installCts = new CancellationTokenSource();
+        string currentDir;
+        var sgvm = SelectGame.GetViewModel?.Invoke();
+        if (sgvm != null) {
+            currentDir = sgvm.CurrentDir.Path;
+        }
+        else {
+            var dir = PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>();
+            currentDir = dir.Path;
+        }
+
+        if (viewModel.SelectedQuiltLoader != null) {
+            MessageTips.Show("暂不支持安装QuiltLoader");
+            return;
+        }
+        MainWindow.BackHandle.Invoke();
+        MainWindow.DownloadPageShow.Invoke();
+        if (viewModel.SelectedForgeLoader != null) {
+            string forgeDownloadUrl = $"https://bmclapi2.bangbang93.com/forge/download/{viewModel.SelectedForgeLoader.Build}";
+            await MinecraftUtil.StartDownloadInstallForge(
+                viewModel.Downloader.Name,
+                viewModel.VersionName,
+                currentDir, 
+                forgeDownloadUrl,
+                viewModel.SelectedOptifineLoader);
+        }
+        else if (viewModel.SelectedOptifineLoader != null) {
+            await MinecraftUtil.StartDownloadInstallOptiFine(
+                viewModel.Downloader.Name,
+                viewModel.VersionName,
+                currentDir, 
+                viewModel.SelectedOptifineLoader,
+                installCts.Token);
+        }
+        else if (viewModel.SelectedLiteLoader != null) {
+            await MinecraftUtil.StartDownloadInstallLiteloader(
+                viewModel.Downloader.Name,
+                viewModel.VersionName,
+                currentDir, 
+                viewModel.SelectedLiteLoader,
+                installCts.Token);
+        }
+        else if (viewModel.SelectedNeoForgeLoader != null) {
+            await MinecraftUtil.StartDownloadInstallNeoForge(
+                viewModel.Downloader.Name,
+                viewModel.VersionName,
+                currentDir, 
+                viewModel.SelectedNeoForgeLoader,
+                installCts.Token);
+        }                                                  
+        else if (viewModel.SelectedFabricLoader != null) {
+            await MinecraftUtil.StartDownloadInstallFabric(
+                viewModel.Downloader.Name,
+                viewModel.VersionName,
+                currentDir, 
+                viewModel.SelectedFabricLoader,
+                viewModel.FabricApiVersions[viewModel.SelectedFabricApiIndex],
+                installCts.Token);
+        }
+        else {
+            await MinecraftUtil.StartDownloadInstallMinecraft(viewModel.Downloader.Name, viewModel.VersionName,currentDir, installCts.Token);
+        }
+        isInstalling = false;
+        installCts.Cancel();
+    }
+
+    private void NeoForgeSelectComboBox_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
+        if (viewModel.Downloader.Name == "1.20.1" && (sender as ComboBox).IsOpened) {
+            MessageTips.Show("请你别怀疑，这真的是NeoForge的加载器版本列表！");
+        }
+    }
+
+    private void cancelLoading() {
+        cts?.Cancel();
     }
 }

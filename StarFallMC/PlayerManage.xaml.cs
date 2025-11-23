@@ -9,8 +9,10 @@ using System.Windows.Media.Animation;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
@@ -43,6 +45,7 @@ public partial class PlayerManage : Page {
     private string tmpDeviceCode ="";
     private Timer Logintimer;
     private int retryCount = 0;
+    private CancellationTokenSource loginCts;
     
     public PlayerManage() {
         InitializeComponent();
@@ -132,11 +135,12 @@ public partial class PlayerManage : Page {
     }
 
     private void loginTimerStart() {
+        loginCts = new CancellationTokenSource();
         Logintimer = new Timer(new TimerCallback( (state) => {
             Dispatcher.BeginInvoke( async () => {
                 if (tmpDeviceCode != "") {
                     retryCount++;
-                    var result = await LoginUtil.GetMicrosoftToken(tmpDeviceCode).ConfigureAwait(true);
+                    var result = await LoginUtil.GetMicrosoftToken(tmpDeviceCode,loginCts.Token).ConfigureAwait(true);
                     if (result.IsSuccess) {
                         JObject jo = JObject.Parse(result.Content);
                         var accessToken = jo["access_token"].ToString();
@@ -144,7 +148,7 @@ public partial class PlayerManage : Page {
                         OnlineLoadingShow.Begin();
                         Loading.Visibility = Visibility.Visible;
                         Logintimer.DisposeAsync();
-                        var info = await LoginUtil.GetXboxLiveToken(accessToken).ConfigureAwait(true);
+                        var info = await LoginUtil.GetXboxLiveToken(accessToken,loginCts.Token).ConfigureAwait(true);
                         if (info != "") {
                             JObject joInfo = JObject.Parse(info);
                             Loading.Visibility = Visibility.Hidden;
@@ -183,6 +187,7 @@ public partial class PlayerManage : Page {
                             MessageBox.Show("出现问题，请重新认证\n    1.您未拥有Minecraft正版。    2.前往Minecraft官网使用Microsoft重新登录一下。    \n3.请检查网络后再试！","登录失败");
                             Console.WriteLine("出现问题，请重新认证");
                         }
+                        loginCts.Dispose();
                         OnlinePageHide.Begin();
                         LoginPageHide.Begin();
                     }
@@ -190,6 +195,7 @@ public partial class PlayerManage : Page {
                         Console.WriteLine(result.ErrorMessage);
                     }
                     if (retryCount >= 300) {
+                        loginCts.Dispose();
                         Logintimer.Dispose();
                         MainWindow.ReloadSubFrame.Invoke("PlayerManage",null);
                         MessageBox.Show("认证超时，建议在五分钟之内完成严重，请重新认证！","登录失败");
@@ -238,9 +244,9 @@ public partial class PlayerManage : Page {
         if (PlayerListView.SelectedItem != null) {
             var item = PlayerListView.SelectedItem as Player;
             Console.WriteLine("删除:{0}",item);
-            MessageBox.Show($"你确定要删除\" {item.Name} \"这个角色吗？它会消失很久的喔！",$"{item.Name} 提醒您：",MessageBox.BtnType.ConfirmAndCancel,
+            MessageBox.Show($"你确定要删除\" {item.Name} \"这个角色吗？它会消失很久的喔！",$"{item.Name} 提醒您：",MessageBoxBtnType.ConfirmAndCancel,
                 r => {
-                    if (r == MessageBox.Result.Confirm) {
+                    if (r == MessageBoxResult.Confirm) {
                         var index = PlayerListView.SelectedIndex;
                         MessageTips.Show($"成功删除该角色\n[{item.Name}]");
                         viewModel.Players.RemoveAt(index);
@@ -295,7 +301,7 @@ public partial class PlayerManage : Page {
 
     private void OnlineBackBtn_OnClick(object sender, RoutedEventArgs e) {
         OnlinePageHide.Begin();
-        HttpRequestUtil.StopRequest();
+        loginCts.Cancel();
         if (Logintimer != null) {
             Logintimer.DisposeAsync();
         }
@@ -364,10 +370,13 @@ public partial class PlayerManage : Page {
         }
     }
 
+    private CancellationTokenSource refreshCts;
+
     private async void  RefreshOnlinePlayer() {
+        refreshCts = new CancellationTokenSource();
         Console.WriteLine(viewModel.CurrentPlayer);
-        var box = MessageBox.Show($"正在刷新 {viewModel.CurrentPlayer.Name} 玩家信息，请稍等...","刷新玩家信息",MessageBox.BtnType.None);
-        var result = await LoginUtil.RefreshMicrosoftToken(viewModel.CurrentPlayer).ConfigureAwait(true);
+        var box = MessageBox.Show($"正在刷新 {viewModel.CurrentPlayer.Name} 玩家信息，请稍等...","刷新玩家信息",MessageBoxBtnType.None);
+        var result = await LoginUtil.RefreshMicrosoftToken(viewModel.CurrentPlayer,refreshCts.Token).ConfigureAwait(true);
         if (result != null) {
             Console.WriteLine(result);
             MessageTips.Show($"刷新 {result.Name} 玩家信息成功！");
@@ -385,6 +394,7 @@ public partial class PlayerManage : Page {
             Console.WriteLine("出现问题，请重新认证");
         }
         MessageBox.Delete(box);
+        refreshCts.Dispose();
     }
 
     public void setPlayerListIndex(int index) {
