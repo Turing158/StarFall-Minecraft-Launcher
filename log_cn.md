@@ -414,3 +414,28 @@
 4. `PageConverters`下的所有`Converter`都在`GlobalStyle`中声明
 5. 优化了一些界面的布局
 
+---
+
+## 很长一段时间没有的更新-2025-11-15
+
+1. CollapsePanel组件添加自定义圆角数值
+2. 修复了一些方法报错的问题
+3. 修复了一些版本无法启动的问题
+4. 修改了一些布局
+
+*(闲话：距离上一次更新，其实一直都在研究和解决如何安装的问题，问题有些多，难受！)*
+
+---
+
+## 来了来了-2025-11-23
+
+1. 安装功能：大部分Minecraft和模组加载器都能正常进行下载和安装
+2. Minecraft新增方法：CheckAndGenerateLauncherProfile（用于检测和生成launcher_profiles.json文件）、TransformLiteLoaderInstallerDownloadApi（用于转换和拼接LiteLoaderInstaller的下载地址）、InstallOptifine（直接解压生成OptiFine模组）、InstallLiteLoader（安装LiteLoader模组加载器）、ParseVersionJson（用于解析和拼接Minecraft的json文件）、VersionArgumentParse（合并json中的启动参数）、GetMinecraftJarDownloadFile（获取Minecraft的下载地址）、StartDownloadInstallMinecraft（安装Minecraft）、TransformOptiFineJson（解析转换OptiFine的Json和版本文件的Json）、StartDownloadInstallOptiFine（安装OptiFine Minecraft）、TransformLiteLoaderJson（解析转换LiteLoader的Json和版本文件的Json）、StartDownloadInstallLiteloader（安装LiteLoader Minecraft）、TransformForgeJson（解析转换Forge和NeoForge的Json和版本文件的Json）、StartDownloadInstallForge（安装Forge Minecraft）、TransformFabricJson（解析转换Fabric的Json和版本文件的Json）、StartDownloadInstallFabric（安装Fabric Minecraft）、StartDownloadInstallNeoForge（安装NeoForge Minecraft）。
+3. 修复MinecraftUtil类的问题：HandleClientMappingsTxt方法无法生成部分安装器所需的文件、版本列表的排序问题、InstallForge方法的一些安装问题、GetForgeFmlArgs支持NeoForge版本json的解析。
+4. 将一些enum单独分开了一个文件
+5. 不使用全局取消机制，使用当前方法取消机制
+6. DirFileUtil类新增文件排序方式
+7. 下载重试次数改为8
+8. 新增进度显示界面，可以看到安装进度（目前这个功能在测试中...）
+
+*（闲话：各种考试和论文在忙，真的难更了）*
