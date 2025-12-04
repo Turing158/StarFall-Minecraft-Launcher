@@ -3,14 +3,10 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:StarFallMC.ResourcePages"
-      xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       mc:Ignorable="d"
-      Title="ModsPage" MinHeight="380" MinWidth="640"
-      Loaded="ModResources_OnLoaded"
-      Unloaded="ModResources_OnUnloaded">
+      Title="ModsPage" MinHeight="380" MinWidth="640">
     <Page.Resources>
         <ResourceDictionary>
             <Style x:Key="SearchTextBlock" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -30,7 +26,6 @@
                                     Padding="0">
                                 <TextBlock Margin="2 0" 
                                            Padding="0"
-                                           
                                            Foreground="{DynamicResource SecondaryBrush}"
                                            Text="{Binding}"></TextBlock>
                             </Border>
@@ -307,7 +302,7 @@
                                            Style="{StaticResource SearchTextBlock}"></TextBlock>
                                 <comp:ToggleButton 
                                                    Click="Platform_OnClick"
-                                                   IsChecked="{Binding UseCurseForge}"
+                                                   IsChecked="{Binding UseCurseForge, Mode=TwoWay}"
                                                    HorizontalAlignment="Left"
                                                    VerticalAlignment="Center">
                                     <comp:ToggleButton.ToolTip>

@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using StarFallMC.Entity.Enum;
 
 namespace StarFallMC.Entity.Resource;
 
-public class ModResource : INotifyPropertyChanged{
+public class MinecraftResource : INotifyPropertyChanged{
     public string DisplayName {
         get => !string.IsNullOrEmpty(ChineseName) ? ChineseName : !string.IsNullOrEmpty(EnglishName) ? EnglishName : OriginalName;
     }
@@ -41,7 +42,7 @@ public class ModResource : INotifyPropertyChanged{
     public string OriginalName { get; set; }
     public string Slug { get; set; }
     public string Logo { get; set; }
-    public string Type { get; set; }
+    public ResourceType Type { get; set; }
     public string ResourceVersion { get; set; }
     public string FilePath { get; set; }
     public string FileName { get => Path.GetFileName(FilePath); }

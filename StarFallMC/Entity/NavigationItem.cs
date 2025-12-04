@@ -9,7 +9,7 @@ public class NavigationItem {
     public double FontSize { get; set; } = -1;
     public int ChildrenIndex { get; set; }
     public IList Children { get; set; }
-    
+    public object Tag { get; set; }
     
     
 
@@ -18,6 +18,11 @@ public class NavigationItem {
 
     public NavigationItem(string name) {
         Name = name;
+    }
+
+    public NavigationItem(string name, object tag) {
+        Name = name;
+        Tag = tag;
     }
 
     public NavigationItem(string name, string path) {

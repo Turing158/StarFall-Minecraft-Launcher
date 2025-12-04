@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
@@ -16,77 +17,104 @@ public partial class ModResources : Page {
     private ViewModel viewModel = new();
 
     private CancellationTokenSource cancellationTokenSource;
+    public static Action<ResourceType> InitResourcePage;
     public ModResources() {
         InitializeComponent();
         DataContext = viewModel;
         cancellationTokenSource = new CancellationTokenSource();
         viewModel.PercentText = "正在加载Mod列表... 0%";
+        InitResourcePage = initResourcePage;
     }
     
     
-    private async Task InitResource() {
-        VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
-        VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
-        ResourcePageExtension.ReloadList(ResourceContent,LoadingBorder,NotExist);
-        if (ResourceUtil.ModResourceCache != null) {
-            viewModel.UseCurseForge = ResourceUtil.ModResourceCache.UseCurseForge;
-            Pagination.CurrentPage = ResourceUtil.ModResourceCache.CurrentPage;
-            Pagination.TotalCount = ResourceUtil.ModResourceCache.TotalCount;
-            viewModel.SearchText = ResourceUtil.ModResourceCache.SearchText;
-            viewModel.SelectedLoader = ResourceUtil.ModResourceCache.SelectedLoader;
-            viewModel.SelectedVersion = ResourceUtil.ModResourceCache.SelectedVersion;
-            viewModel.SelectedCategory = ResourceUtil.ModResourceCache.SelectedCategory;
-            viewModel.Mods = new ObservableCollection<ModResource>(ResourceUtil.ModResourceCache.List);
-        }
-        else {
-            if (ResourceUtil.ModResourceCache == null || ResourceUtil.ModResourceCache.List.Count == 0) {
-                await GetModResource();
-            }
-            else {
-                if (ResourceUtil.ModResourceCache != null) {
-                    viewModel.Mods = new ObservableCollection<ModResource>(ResourceUtil.ModResourceCache.List);
-                }
-            }
-            Dispatcher.BeginInvoke(() => {
-                Pagination.CurrentPage = 1;
-            });
-        }
-    }
-
-    private async Task GetModResource() {
+    private async Task InitResource(CancellationToken ct) {
         try {
+            ct.ThrowIfCancellationRequested();
+            VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
+            VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
+            ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
+            viewModel.Mods = new ObservableCollection<MinecraftResource>();
+            viewModel.UseCurseForge = false;
+            ct.ThrowIfCancellationRequested();
+            if (ResourceUtil.ModResourceCache != null &&
+                ResourceUtil.ModResourceCache.ContainsKey(viewModel.ResourceType)) {
+                ct.ThrowIfCancellationRequested();
+                var cache = ResourceUtil.ModResourceCache[viewModel.ResourceType];
+                viewModel.UseCurseForge = cache.UseCurseForge;
+                Pagination.CurrentPage = cache.CurrentPage;
+                Pagination.TotalCount = cache.TotalCount;
+                viewModel.SearchText = cache.SearchText;
+                viewModel.SelectedLoader = cache.SelectedLoader;
+                viewModel.SelectedVersion = cache.SelectedVersion;
+                viewModel.SelectedCategory = cache.SelectedCategory;
+                viewModel.Mods = new ObservableCollection<MinecraftResource>(cache.List);
+                Console.WriteLine(cache.TotalCount);
+            }
+            else {
+                ct.ThrowIfCancellationRequested();
+                Dispatcher.BeginInvoke(() => { Pagination.CurrentPage = 1; });
+                await GetModResource(ct).ConfigureAwait(false);
+            }
+            ct.ThrowIfCancellationRequested();
+            ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, viewModel.Mods.Count == 0);
+        }
+        catch (OperationCanceledException) {
+            Console.WriteLine("取消加载列表");
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+        }
+    }
+
+    private async Task GetModResource(CancellationToken ct) {
+        try {
+            ct.ThrowIfCancellationRequested();
             //获取网络mod资源，分为Modrinth和curseforge
-            var tmp = new List<ModResource>();
+            var tmp = new List<MinecraftResource>();
+            int totalCount = 0;
+            ct.ThrowIfCancellationRequested();
             if (viewModel.UseCurseForge) {
-                (tmp , Pagination.TotalCount) = await ResourceUtil.GetCurseForgeModResources(
-                    cancellationTokenSource.Token,
-                    Pagination.CurrentPage,
-                    viewModel.SearchText,
-                    viewModel.SelectedLoader,
-                    viewModel.SelectedVersion,
-                    ResourceCategory.CurseForgeCategoriesToInt(viewModel.SelectedCategory)
+                ct.ThrowIfCancellationRequested();
+                (tmp , totalCount) = await ResourceUtil.GetCurseForgeModResources(
+                    token: ct,
+                    page: Pagination.CurrentPage,
+                    query: viewModel.SearchText,
+                    loader: viewModel.SelectedLoader,
+                    version: viewModel.SelectedVersion,
+                    category: ResourceCategory.CurseForgeCategoriesToInt(viewModel.SelectedCategory, viewModel.ResourceType),
+                    resourceType: viewModel.ResourceType
                 );
             }
             else {
-                (tmp , Pagination.TotalCount) = await ResourceUtil.GetModrinthModResources(
-                    cancellationTokenSource.Token,
-                    Pagination.CurrentPage,
-                    viewModel.SearchText,
-                    viewModel.SelectedLoader,
-                    viewModel.SelectedVersion,
-                    ResourceCategory.ModrinthCategoryToString(viewModel.SelectedCategory)
+                (tmp , totalCount) = await ResourceUtil.GetModrinthModResources(
+                    ct: ct,
+                    page: Pagination.CurrentPage,
+                    query: viewModel.SearchText,
+                    loader: viewModel.SelectedLoader,
+                    version: viewModel.SelectedVersion,
+                    category: ResourceCategory.ModrinthCategoryToString(viewModel.SelectedCategory),
+                    resourceType: viewModel.ResourceType
                 );
             }
-
+            ct.ThrowIfCancellationRequested();
             if (ResourceUtil.ModResourceCache == null) {
-                ResourceUtil.ModResourceCache = new ModResourceCache {
+                ResourceUtil.ModResourceCache = new Dictionary<ResourceType, ModResourceCache>();
+            }
+            if (!ResourceUtil.ModResourceCache.ContainsKey(viewModel.ResourceType)) {
+                ct.ThrowIfCancellationRequested();
+                ResourceUtil.ModResourceCache[viewModel.ResourceType] = new ModResourceCache {
                     UseCurseForge = false,
                     List = tmp,
-                    TotalCount = Pagination.TotalCount,
-                    CurrentPage = Pagination.CurrentPage
+                    TotalCount = totalCount,
+                    CurrentPage = 1
                 };
+                Console.WriteLine($"存入cache 共{totalCount}条");
             }
-            viewModel.Mods = new ObservableCollection<ModResource>(tmp);
+            ct.ThrowIfCancellationRequested();
+            viewModel.Mods = new ObservableCollection<MinecraftResource>(tmp);
+            Pagination.TotalCount = totalCount;
+            Console.WriteLine(totalCount);
+            ct.ThrowIfCancellationRequested();
         }
         catch (OperationCanceledException) {
             Console.WriteLine("取消加载Mod列表");
@@ -98,9 +126,9 @@ public partial class ModResources : Page {
     
     public class ViewModel : INotifyPropertyChanged {
 
-        private ObservableCollection<ModResource> _mods;
+        private ObservableCollection<MinecraftResource> _mods;
 
-        public ObservableCollection<ModResource> Mods {
+        public ObservableCollection<MinecraftResource> Mods {
             get => _mods;
             set => SetField(ref _mods, value);
         }
@@ -149,23 +177,43 @@ public partial class ModResources : Page {
             "NeoForge",
             "Quilt"
         };
-        
-        public List<string> Categories { get; set; } = new List<string> {
-            "全部",
-            "美食",
-            "装饰", 
-            "生物",
-            "魔法",
-            "支持库",
-            "科技",
-            "装备",
-            "运输",
-            "世界元素",
-            "服务器",
-            "存储",
-            "实用",
-            "冒险"
-        };
+
+        public List<string> _categories;
+        public List<string> Categories {
+            get => _categories;
+            set => SetField(ref _categories, value);
+        }
+
+        public ResourceType _resourceType = ResourceType.Mod;
+        public ResourceType ResourceType {
+            get => _resourceType;
+            set {
+                SetField(ref _resourceType, value);
+                if (value == ResourceType.ModPack) {
+                    Categories = UseCurseForge
+                        ? ResourceCategory.ModPackCategoriesInCurseForge
+                        : ResourceCategory.ModPackCategoriesInModrinth;
+                }
+                else if (value == ResourceType.DataPack) {
+                    Categories = UseCurseForge
+                        ? ResourceCategory.DataPackCategoriesInCurseForge
+                        : ResourceCategory.DataPackCategoriesInModrinth;
+                }
+                else if (value == ResourceType.TexturePack) {
+                    Categories = UseCurseForge
+                        ? ResourceCategory.TexturePackCategoriesInCurseForge
+                        : ResourceCategory.TexturePackCategoriesInModrinth;
+                }
+                else if (value == ResourceType.ShaderPack) {
+                    Categories = UseCurseForge
+                        ? ResourceCategory.ShaderPackCategoriesInCurseForge
+                        : ResourceCategory.ShaderPackCategoriesInModrinth;
+                }
+                else {
+                    Categories = ResourceCategory.ModCategories;
+                }
+            }
+        }
         
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -181,21 +229,32 @@ public partial class ModResources : Page {
         }
     }
     
-    private void ModResources_OnUnloaded(object sender, RoutedEventArgs e) {
-        cancellationTokenSource.Cancel();
-        if(ResourceUtil.ModResourceCache != null) {
-            ResourceUtil.ModResourceCache.SearchText = viewModel.SearchText;
-            ResourceUtil.ModResourceCache.SelectedLoader = viewModel.SelectedLoader;
-            ResourceUtil.ModResourceCache.SelectedVersion = viewModel.SelectedVersion;
-            ResourceUtil.ModResourceCache.SelectedCategory = viewModel.SelectedCategory;
-            ResourceUtil.ModResourceCache.List = viewModel.Mods?.ToList() ?? new List<ModResource>();
-            ResourceUtil.ModResourceCache.CurrentPage = Pagination.CurrentPage;
-            ResourceUtil.ModResourceCache.UseCurseForge = viewModel.UseCurseForge;
-        }
-    }
 
-    private void ModResources_OnLoaded(object sender, RoutedEventArgs e) {
-        InitResource();
+    private void initResourcePage(ResourceType resourceType) {
+        // ModResources_OnUnloaded(null, null);
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+        string resourceTypeString;
+        switch (resourceType) {
+            case ResourceType.ModPack:
+                resourceTypeString = "整合包";
+                break;
+            case ResourceType.DataPack:
+                resourceTypeString = "数据包";
+                break;
+            case ResourceType.TexturePack:
+                resourceTypeString = "材质包";
+                break;
+            case ResourceType.ShaderPack:
+                resourceTypeString = "光影";
+                break;
+            default:
+                resourceTypeString = "模组";
+                break;
+        }
+        viewModel.PercentText = $"正在加载{resourceTypeString}列表...";
+        viewModel.ResourceType = resourceType;
+        InitResource(cancellationTokenSource.Token).ConfigureAwait(false);
     }
     
     private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
@@ -203,11 +262,14 @@ public partial class ModResources : Page {
     }
 
     private async Task ChangePage() {
-        viewModel.Mods = new ObservableCollection<ModResource>();
-        ScrollViewerExtensions.AnimateScroll(MainScrollViewer,0);
-        ResourcePageExtension.ReloadList(ResourceContent,LoadingBorder,NotExist);
-        await GetModResource();
-        ResourcePageExtension.AlreadyLoaded(this,ResourceContent,LoadingBorder,NotExist, viewModel.Mods.Count == 0);
+        Dispatcher.BeginInvoke(async () => {
+            viewModel.Mods = new ObservableCollection<MinecraftResource>();
+            ScrollViewerExtensions.AnimateScroll(MainScrollViewer, 0);
+            ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
+            await GetModResource(cancellationTokenSource.Token);
+            ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist,
+                viewModel.Mods.Count == 0);
+        });
     }
 
     private void Platform_OnClick(object sender, RoutedEventArgs e) {
@@ -229,13 +291,13 @@ public partial class ModResources : Page {
 
     private async Task SearchResource() {
         Pagination.CurrentPage = 1;
-        viewModel.Mods = new ObservableCollection<ModResource>();
+        viewModel.Mods = new ObservableCollection<MinecraftResource>();
         if (string.IsNullOrEmpty(viewModel.SelectedVersion)) {
             viewModel.SelectedVersion = "全部";
         }
         ScrollViewerExtensions.AnimateScroll(MainScrollViewer,0);
         ResourcePageExtension.ReloadList(ResourceContent,LoadingBorder,NotExist);
-        await GetModResource().ConfigureAwait(false);
+        await GetModResource(cancellationTokenSource.Token);
         ResourcePageExtension.AlreadyLoaded(this,ResourceContent,LoadingBorder,NotExist, viewModel.Mods.Count == 0);
     }
 
@@ -255,7 +317,7 @@ public partial class ModResources : Page {
             return;
         }
         
-        var resource = listView.SelectedItem as ModResource;
+        var resource = listView.SelectedItem as MinecraftResource;
         (sender as ListView).SelectedIndex = -1;
         if (resource == null) {
             return;
@@ -266,4 +328,5 @@ public partial class ModResources : Page {
             ModInfo.SetResource?.Invoke(resource);
         });
     }
+    
 }

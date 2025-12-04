@@ -47,6 +47,8 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
     private DoubleAnimation ScaleAnim;
     private DoubleAnimation ToOriginAnim;
 
+    private bool isInit = true;
+
     public ToggleButton() {
         
     }
@@ -79,6 +81,7 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
                 moveLeft();
             }
         };
+        isInit = false;
     }
 
     private void initColor() {
@@ -113,6 +116,24 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             moveLeft();
         }
     }
+    
+    protected override void OnChecked(RoutedEventArgs e) {
+        base.OnChecked(e);
+        Dispatcher.BeginInvoke(() => {
+            if (!isInit) {
+                moveRight();
+            }
+        });
+    }
+    
+    protected override void OnUnchecked(RoutedEventArgs e) {
+        base.OnUnchecked(e);
+        Dispatcher.BeginInvoke(() => {
+            if (!isInit) {
+                moveLeft();
+            }
+        });
+    } 
 
     private void moveLeft() {
         _active.Width = _leftPresenter.ActualWidth;
@@ -168,5 +189,4 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
         RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, ToOriginAnim);
         RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, ToOriginAnim);
     }
-    
 }

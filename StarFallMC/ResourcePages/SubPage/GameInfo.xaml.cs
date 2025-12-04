@@ -71,8 +71,8 @@ public partial class GameInfo : Page {
             set => SetField(ref _fabricLoader, value);
         }
         
-        private List<ModResource> _fabricApiVersions;
-        public List<ModResource> FabricApiVersions {
+        private List<MinecraftResource> _fabricApiVersions;
+        public List<MinecraftResource> FabricApiVersions {
             get => _fabricApiVersions;
             set => SetField(ref _fabricApiVersions, value);
         }

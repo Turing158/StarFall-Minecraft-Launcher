@@ -36,7 +36,7 @@ public partial class ModsPage : Page {
             var progress = new Progress<int>(percent => {
                 viewModel.PercentText = $"加载Mod列表... {percent}%";
                 if (percent >= 99) {
-                    viewModel.TotalMods = ResourceUtil.LocalModResources ?? new List<ModResource>();
+                    viewModel.TotalMods = ResourceUtil.LocalModResources ?? new List<MinecraftResource>();
                     for (int i = 0; i < viewModel.TotalMods.Count; i++) {
                         _modIndexCache[viewModel.TotalMods[i].ModrinthSha1] = i;
                     }
@@ -82,15 +82,15 @@ public partial class ModsPage : Page {
     
     public class ViewModel : INotifyPropertyChanged {
 
-        private ObservableCollection<ModResource> _mods;
+        private ObservableCollection<MinecraftResource> _mods;
 
-        public ObservableCollection<ModResource> Mods {
+        public ObservableCollection<MinecraftResource> Mods {
             get => _mods;
             set => SetField(ref _mods, value);
         }
 
-        private List<ModResource> _TotalMods;
-        public List<ModResource> TotalMods {
+        private List<MinecraftResource> _TotalMods;
+        public List<MinecraftResource> TotalMods {
             get => _TotalMods;
             set => SetField(ref _TotalMods, value);
         }
@@ -126,7 +126,7 @@ public partial class ModsPage : Page {
     }
 
     private void ModInfo_OnClick(object sender, RoutedEventArgs e) {
-        var item = (sender as TextButton)?.Tag as ModResource;
+        var item = (sender as TextButton)?.Tag as MinecraftResource;
         MainWindow.SubFrameNavigate.Invoke("/ResourcePages/SubPage/ModInfo",item.DisplayName);
         Dispatcher.BeginInvoke(() => {
             ModInfo.SetResource?.Invoke(item);
@@ -134,7 +134,7 @@ public partial class ModsPage : Page {
     }
 
     private void ModPosition_OnClick(object sender, RoutedEventArgs e) {
-        var item = (sender as TextButton)?.Tag as ModResource;
+        var item = (sender as TextButton)?.Tag as MinecraftResource;
         if (item == null) {
             return;
         }
@@ -144,7 +144,7 @@ public partial class ModsPage : Page {
 
     private void ModDisable_OnClick(object sender, RoutedEventArgs e) {
         var textButton = sender as TextButton;
-        var item = textButton?.Tag as ModResource;
+        var item = textButton?.Tag as MinecraftResource;
         if (item == null) {
             return;
         }
@@ -190,7 +190,7 @@ public partial class ModsPage : Page {
 
     private void ModRollBack_OnClick(object sender, RoutedEventArgs e) {
         var textButton = sender as TextButton;
-        var item = textButton?.Tag as ModResource;
+        var item = textButton?.Tag as MinecraftResource;
         if (item == null) {
             return;
         }
@@ -255,7 +255,7 @@ public partial class ModsPage : Page {
     
     private void SetModsPages() {
         var tmp = NetworkUtil.GetPageList(viewModel.TotalMods, Pagination.CurrentPage, 20);
-        viewModel.Mods = new ObservableCollection<ModResource>(tmp);
+        viewModel.Mods = new ObservableCollection<MinecraftResource>(tmp);
         Pagination.TotalCount = viewModel.TotalMods?.Count ?? 0;
     }
 

@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
+using StarFallMC.ResourcePages;
 using StarFallMC.Util;
 
 
@@ -45,9 +47,13 @@ public partial class ResourcePage : Page {
                     new ("模组","ModsPage"),
                 }),
             new ("Minecraft","DownloadGame"),
-            new ("社区资源","CommunityResource",
+            new ("社区资源","ModResources",
                 0 ,new ObservableCollection<NavigationItem>() {
-                    new ("Mod","ModResources"),
+                    new ("Mod",tag:ResourceType.Mod),
+                    new ("整合包",tag:ResourceType.ModPack),
+                    new ("材质包",tag:ResourceType.TexturePack),
+                    new ("光影包",tag:ResourceType.ShaderPack),
+                    new ("数据包",tag:ResourceType.DataPack),
                 }),
         };
         public ObservableCollection<NavigationItem> Navi {
@@ -75,10 +81,16 @@ public partial class ResourcePage : Page {
             this.Dispatcher.BeginInvoke(() => {
                 var item = ResourceBar.CurrentItem;
                 string path = item.Path;
-                if (item.Children != null) {
-                    path = (item.Children[item.ChildrenIndex] as NavigationItem).Path;
+                if (item.Children != null && (item.Children[item.ChildrenIndex] as NavigationItem).Path is string childPath && !string.IsNullOrEmpty(childPath)) {
+                    path = childPath;
                 }
                 NavigetePage($"/ResourcePages/{path}.xaml");
+                if (path == "ModResources") {
+                    var child = item.Children[item.ChildrenIndex] as NavigationItem;
+                    Dispatcher.BeginInvoke(() => {
+                        ModResources.InitResourcePage.Invoke(child.Tag as ResourceType? ?? ResourceType.Mod);
+                    });
+                }
                 NaviBarChangeTimer.Dispose();
             });
         }, null, 300, 0);

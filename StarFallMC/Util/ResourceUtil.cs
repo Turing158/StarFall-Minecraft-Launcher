@@ -10,15 +10,21 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Loader;
 using StarFallMC.Entity.Resource;
 using StarFallMC.SettingPages;
+using MessageBox = StarFallMC.Component.MessageBox;
+using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.Util;
 
 public class ResourceUtil {
 
-    public static List<ModResource> LocalModResources;
+    private static readonly string CurseForgeAPI = "https://api.curseforge.com";
+    private static readonly string ModrinthAPI = "https://api.modrinth.com";
+
+    public static List<MinecraftResource> LocalModResources;
     public static List<SavesResource> LocalSavesResources;
     public static List<TexturePackResource> LocalTexturePackResources;
     
@@ -28,7 +34,7 @@ public class ResourceUtil {
     public static List<MinecraftDownloader> AprilFoolsType = new ();
     public static List<MinecraftDownloader> OldType = new ();
 
-    public static ModResourceCache ModResourceCache;
+    public static Dictionary<ResourceType,ModResourceCache> ModResourceCache;
     
     public static List<McModData> McModData = new ();
     
@@ -48,12 +54,14 @@ public class ResourceUtil {
     private static Dictionary<string,string> CurseForgeApiHeader = new () {
         {"X-API-KEY",KeyUtil.CURSEFORGE_API_KEY}
     };
-
+    
+    // 用于检查是否初始化
     public static bool IsNeedInitDownloader() {
         return LatestType == null || ReleaseType == null || SnapshotType == null || AprilFoolsType == null || OldType == null ||
                LatestType.Count == 0 || ReleaseType.Count == 0 || SnapshotType.Count == 0 || AprilFoolsType.Count == 0 || OldType.Count == 0;
     }
     
+    // 清除数据
     public static void ClearDownloader() {
         LatestType?.Clear();
         ReleaseType?.Clear();
@@ -62,12 +70,14 @@ public class ResourceUtil {
         OldType?.Clear();
     }
     
+    // 清除本地资源
     public static void ClearLocalResources() {
         LocalModResources?.Clear();
         LocalSavesResources?.Clear();
         LocalTexturePackResources?.Clear();
     }
-
+    
+    // 获取当前游戏
     public static MinecraftItem GetMinecraftItem() {
         var hvm = Home.GetViewModel?.Invoke();
         if (hvm == null) {
@@ -77,7 +87,13 @@ public class ResourceUtil {
         var currentGame = hvm.CurrentGame;
         return string.IsNullOrEmpty(currentGame.Path) ? null : currentGame;
     }
+
+    public static string GetCurrentDir() {
+        var sgvm = SelectGame.GetViewModel?.Invoke();
+        return sgvm != null ? sgvm.CurrentDir.Path : PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>()?.Path;
+    }
     
+    // 获取本地汉化模组数据
     public static void GetMcModDataInit() {
         McModData?.Clear();
         Uri uri = new Uri("pack://application:,,,/;component/assets/ModData");
@@ -134,20 +150,24 @@ public class ResourceUtil {
 
     
     
-    public static async Task<(List<ModResource>,int)> GetCurseForgeModResources(
+    // 获取CurseForge资源（不止于模组）
+    public static async Task<(List<MinecraftResource>,int)> GetCurseForgeModResources(
         CancellationToken token,
         int page,
         string query = "",
         string loader = "",
         string version = "",
         int category = -1,
+        ResourceType resourceType = ResourceType.Mod,
         IProgress<int> progress = null ,
         int limit = 20
     ) {
+        int classId = GetCurseForgeClassId(resourceType);
         var arg = new Dictionary<string, object>() {
             {"gameId","432"},
             {"sortField", "6"},
             {"sortOrder", "desc"},
+            {"classId", classId},
             {"index", (page - 1) * limit},
             {"pageSize", limit},
         };
@@ -174,12 +194,12 @@ public class ResourceUtil {
         }
 
         int total = 0;
-        var tmp = new List<ModResource>();
-        var result = await HttpRequestUtil.Get("https://api.curseforge.com/v1/mods/search", arg,CurseForgeApiHeader);
+        var tmp = new List<MinecraftResource>();
+        var result = await HttpRequestUtil.Get($"{CurseForgeAPI}/v1/mods/search", arg,CurseForgeApiHeader);
         if (result.IsSuccess) {
             var root = JObject.Parse(result.Content);
             foreach (var i in root["data"] as JArray) {
-                var resource = new ModResource() {
+                var resource = new MinecraftResource() {
                     OriginalName = i["name"]?.ToString(),
                     Logo = i["logo"]?["thumbnailUrl"]?.ToString(),
                     Slug = i["slug"]?.ToString(),
@@ -195,8 +215,10 @@ public class ResourceUtil {
                 resource.Loaders = loaders;
                 resource.Categories = categories;
                 resource.ResourceSource = "CurseForge";
-                if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
-                    && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
+                if (resourceType == ResourceType.Mod 
+                    && McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                    && modData.ChineseName.Length >= 1 
+                    && modData.EnglishName.Length >= 1) {
                     resource.ChineseName = modData.ChineseName[^1];
                     resource.EnglishName = modData.EnglishName[^1];
                 }
@@ -207,6 +229,7 @@ public class ResourceUtil {
         return (tmp,total);
     }
 
+    // 获取CurseForge资源的加载器、版本、分类
     private static (List<string> loaders, List<string> versions, List<string> categories) GetCurseForgeLoaderVersionsCategory(JToken i) {
         List<string> versions = new List<string>();
         List<string> loaders = new List<string>();
@@ -227,10 +250,10 @@ public class ResourceUtil {
                 loaders.Add(loaderStr);
             }
         }
-
         return (loaders, versions, categories);
     }
     
+    // 获取CurseForge资源的模组加载器
     public static string GetCurseForgeModLoader(int modLoader) {
         return modLoader switch {
             1 => "Forge",
@@ -242,7 +265,20 @@ public class ResourceUtil {
             _ => "unknown"
         };
     }
+
+    // 获取CurseForge资源的分类ID（是区分模组还是整合包等类型的ID）
+    public static int GetCurseForgeClassId(ResourceType resourceType) {
+        return resourceType switch {
+            ResourceType.Mod => 6,
+            ResourceType.ModPack => 4471,
+            ResourceType.TexturePack => 12,
+            ResourceType.ShaderPack => 6552,
+            ResourceType.DataPack => 6945,
+            _ => 6
+        };
+    }
     
+    // 获取CurseForge资源的模组加载器ID
     public static int GetCurseForgeModLoader(string modLoader) {
         return modLoader.ToLower() switch {
             "forge" => 1,
@@ -255,6 +291,7 @@ public class ResourceUtil {
         };
     }
 
+    // Modrinth搜索方法
     private static async Task<HttpResult> GetModrinthSearch(string query,string type,JArray facets,int page,int limit) {
         facets.Add(new JArray($"project_type:{type}"));
         var arg = new Dictionary<string, Object> {
@@ -268,55 +305,73 @@ public class ResourceUtil {
         //Modrinth搜索API
         //接受的参数比较复杂，详细看官网文档
         //GET https://api.modrinth.com/v2/search
-        return await HttpRequestUtil.Get("https://api.modrinth.com/v2/search",arg);
+        return await HttpRequestUtil.Get($"{ModrinthAPI}/v2/search",arg);
     }
-    
 
-    public static async Task<(List<ModResource>, int)> GetModrinthModResources(
+    // 获取Modrinth资源（不止于模组）
+    public static async Task<(List<MinecraftResource>, int)> GetModrinthModResources(
         CancellationToken ct,
         int page,
         string query = "",
         string loader = "",
         string version = "",
         string category = "",
+        ResourceType resourceType = ResourceType.Mod,
         IProgress<int> progress = null) {
-        var netWorkModResources = new List<ModResource>();
+        var netWorkModResources = new List<MinecraftResource>();
         progress?.Report(1);
         JArray facetsArray = new JArray();
         
         if (!string.IsNullOrEmpty(version) && version != "全部") {
-            Console.WriteLine("add version facet");
             facetsArray.Add(new JArray($"versions:{version}"));
         }
 
         JArray categoriesArray = new JArray();
         if (!string.IsNullOrEmpty(loader) && loader != "全部") {
-            Console.WriteLine("add loader facet");
             categoriesArray.Add($"categories:{loader}");
         }
         if (!string.IsNullOrEmpty(category) && category != "全部") {
-            Console.WriteLine("add category facet");
             categoriesArray.Add($"categories:{category}");
         }
         
         if (categoriesArray.Count != 0) {
             facetsArray.Add(categoriesArray);
         }
-        
-        
         int totalCount = 0;
         try {
-            var elementResult = await GetModrinthSearch(query,"mod", facetsArray,page,20);
+            string projectType; 
+            switch (resourceType) {
+                case ResourceType.Mod:
+                    projectType = "mod";
+                    break;
+                case ResourceType.ModPack:
+                    projectType = "modpack";
+                    break;
+                case ResourceType.TexturePack:
+                    projectType = "resourcepack";
+                    break;
+                case ResourceType.ShaderPack:
+                    projectType = "shader";
+                    break;
+                case ResourceType.DataPack:
+                    projectType = "datapack";
+                    break;
+                default:
+                    projectType = "mod";
+                    break;
+            }
+            var elementResult = await GetModrinthSearch(query,projectType, facetsArray,page,20);
             if (elementResult.IsSuccess) {
                 var root = JObject.Parse(elementResult.Content);
                 foreach (var i in root["hits"] as JArray) {
-                    var resource = new ModResource() {
+                    var resource = new MinecraftResource() {
                         OriginalName = i["title"]?.ToString(),
                         Logo = i["icon_url"]?.ToString(),
                         Slug = i["slug"]?.ToString(),
                         DownloadCount = int.Parse(i["downloads"]?.ToString() ?? "0"),
                         FollowsCount = int.Parse(i["follows"]?.ToString() ?? "0"),
                         Description = i["description"]?.ToString(),
+                        Type = resourceType,
                         ModrinthProjectId = i["project_id"]?.ToString(),
                         Author = i["author"]?.ToString(),
                         LastUpdated = DateTime.Parse(i["date_modified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
@@ -327,7 +382,7 @@ public class ResourceUtil {
                     resource.GameVersions = versions;
                     resource.Categories = categories;
                     resource.ResourceSource = "Modrinth";
-                    if (McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
+                    if (resourceType == ResourceType.Mod && McModData.FirstOrDefault(x => x.ModrinthSlug == resource.Slug || x.CurseForgeSlug == resource.Slug) is McModData modData 
                         && modData.ChineseName.Length >= 1 && modData.EnglishName.Length >= 1) {
                         resource.ChineseName = modData.ChineseName[^1];
                         resource.EnglishName = modData.EnglishName[^1];
@@ -337,7 +392,7 @@ public class ResourceUtil {
                 totalCount = int.Parse(root["total_hits"]?.ToString() ?? "0");
             }
             else {
-                Console.WriteLine($"获取Modrinth模组列表失败：{elementResult.ErrorMessage}");
+                Console.WriteLine($"获取Modrinth列表失败：{elementResult.ErrorMessage}");
             }
             progress?.Report(99);
         }
@@ -347,7 +402,8 @@ public class ResourceUtil {
         progress?.Report(100);
         return (netWorkModResources,totalCount);
     }
-
+    
+    // 获取Modrinth资源的加载器、版本、分类
     private static (List<string>, List<string>, List<string>) GetModrinthLoaderGameVersionCategory(JToken i) {
         var loaders = new List<string>();
         var versions = i["versions"]?.ToObject<List<string>>();
@@ -367,7 +423,7 @@ public class ResourceUtil {
         if (versions != null) {
             var tmp = new List<string>();
             foreach (var j in versions) {
-                if (j.Contains(".") && !j.Contains("-") && !j.Contains("b")) {
+                if (j.Contains(".") && !j.Contains("-") && !j.Contains("b") && !j.Contains("a")) {
                     tmp.Add(j);
                 }
             }
@@ -381,12 +437,13 @@ public class ResourceUtil {
         return (loaders, endVersion, categories);
     }
     
-    public static async Task<List<ModDownloader>> GetModDownloaderByModrinth(ModResource modResource, CancellationToken ct) {
+    // 获取Modrinth资源的下载链接
+    public static async Task<List<ModDownloader>> GetModDownloaderByModrinth(MinecraftResource minecraftResource, CancellationToken ct) {
         List<ModDownloader> downloaders = new();
         try {
             //通过Modrinth的API获取模组下载信息
             //GET https://api.modrinth.com/v2/project/:ModrinthProjectId/version
-            var modrinth = await HttpRequestUtil.Get($"https://api.modrinth.com/v2/project/{modResource.ModrinthProjectId}/version");
+            var modrinth = await HttpRequestUtil.Get($"{ModrinthAPI}/v2/project/{minecraftResource.ModrinthProjectId}/version");
             if (modrinth.IsSuccess) {
                 try {
                     var fabricApiJson = JArray.Parse(modrinth.Content);
@@ -422,7 +479,7 @@ public class ResourceUtil {
                 }
             }
             else {
-                Console.WriteLine($"获取Modrinth模组 {modResource.ModrinthProjectId} 版本信息失败");
+                Console.WriteLine($"获取Modrinth模组 {minecraftResource.ModrinthProjectId} 版本信息失败");
             }
         }
         catch (Exception e) {
@@ -431,15 +488,16 @@ public class ResourceUtil {
         return downloaders;
     }
     
-    public static async Task<List<ModDownloader>> GetModDownloaderByCurseForge(ModResource modResource, CancellationToken ct) {
+    // 获取CurseForge资源的下载链接
+    public static async Task<List<ModDownloader>> GetModDownloaderByCurseForge(MinecraftResource minecraftResource, CancellationToken ct) {
         List<ModDownloader> downloaders = new();
         try {
-            if (modResource.CurseForgeId == 0) {
-                var list = await GetCurseForgeArgs(new List<ModResource> {modResource},null,0,1,true);
+            if (minecraftResource.CurseForgeId == 0) {
+                var list = await GetCurseForgeArgs(new List<MinecraftResource> {minecraftResource},null,0,1,true);
                 if (list.Count == 0) {
                     return downloaders;
                 }
-                modResource.CurseForgeId = list[0].CurseForgeId;
+                minecraftResource.CurseForgeId = list[0].CurseForgeId;
             }
             bool hasMore = true;
             int index = 0;
@@ -449,7 +507,7 @@ public class ResourceUtil {
                 hasMore = false;
                 //GET https://api.curseforge.com/v1/mods/：id/files
                 var curseForge = await HttpRequestUtil.Get(
-                    $"https://api.curseforge.com/v1/mods/{modResource.CurseForgeId}/files",
+                    $"{CurseForgeAPI}/v1/mods/{minecraftResource.CurseForgeId}/files",
                     args: new Dictionary<string, Object> {
                         {"index", index * 100},
                         {"pageSize", 100},
@@ -505,14 +563,22 @@ public class ResourceUtil {
         }
         return downloaders;
     }
-
-    public static async Task<(List<ForgeLoader>, List<LiteLoader>, List<NeoForgeLoader>, List<OptifineLoader>, List<FabricLoader>, List<ModResource>, List<QuiltLoader>)> GetAllLoaderByMinecraftDownloader(string version, CancellationToken ct, IProgress<int> progress = null) {
+    
+    // 获取Minecraft所支持的所有模组加载器（之后打算优化分开获取）
+    public static async Task<(
+        List<ForgeLoader>, 
+        List<LiteLoader>, 
+        List<NeoForgeLoader>, 
+        List<OptifineLoader>, 
+        List<FabricLoader>, 
+        List<MinecraftResource>,
+        List<QuiltLoader>)> GetAllLoaderByMinecraftDownloader(string version, CancellationToken ct, IProgress<int> progress = null) {
         var forgeLoaders = new List<ForgeLoader>();
         var liteLoaders = new List<LiteLoader>();
         var neoForgeLoaders = new List<NeoForgeLoader>();
         var optifineLoaders = new List<OptifineLoader>();
         var fabricLoaders = new List<FabricLoader>();
-        var fabricApiVersions = new List<ModResource>();
+        var fabricApiVersions = new List<MinecraftResource>();
         var quiltLoaders = new List<QuiltLoader>();
         
         try {
@@ -670,7 +736,7 @@ public class ResourceUtil {
                 //GET https://api.modrinth.com/v2/project/P7dR8mSH/version
                 //获取到json的数组
                 var fabricApiModrinthResult =
-                    await HttpRequestUtil.Get("https://api.modrinth.com/v2/project/P7dR8mSH/version",cancellationToken:ct);
+                    await HttpRequestUtil.Get($"{ModrinthAPI}/v2/project/P7dR8mSH/version",cancellationToken:ct);
                 if (fabricApiModrinthResult.IsSuccess) {
                     try {
                         var fabricApiJson = JArray.Parse(fabricApiModrinthResult.Content);
@@ -679,7 +745,7 @@ public class ResourceUtil {
                             var gameVersions = i["game_versions"].ToObject<List<string>>();
 
                             if (gameVersions == null || gameVersions.Contains(version)) {
-                                var modResource = new ModResource() {
+                                var modResource = new MinecraftResource() {
                                     OriginalName = i["version_number"]?.ToString().Split("+")[0],
                                     ResourceVersion = i["version_number"]?.ToString(),
                                 };
@@ -723,7 +789,7 @@ public class ResourceUtil {
                     //GET https://api.curseforge.com/v1/mods/306612/files
                     //headers需要添加X-API-KEY
                     var fabricApiCurseForgeResult = await HttpRequestUtil.Get(
-                        "https://api.curseforge.com/v1/mods/306612/files",
+                        $"{CurseForgeAPI}/v1/mods/306612/files",
                         headers: new Dictionary<string, string>() {
                             { "X-API-KEY", KeyUtil.CURSEFORGE_API_KEY }
                         },cancellationToken:ct);
@@ -735,7 +801,7 @@ public class ResourceUtil {
                                 var gameVersion = i["gameVersions"]?.ToObject<List<string>>();
 
                                 if (gameVersion == null || gameVersion.Contains(version)) {
-                                    var modResource = new ModResource() {
+                                    var modResource = new MinecraftResource() {
                                         OriginalName = i["displayName"]?.ToString().Split(" ")[^1].Split("+")[0],
                                         ResourceVersion = i["displayName"]?.ToString().Split(" ")[^1],
                                     };
@@ -817,6 +883,7 @@ public class ResourceUtil {
         return (forgeLoaders, liteLoaders, neoForgeLoaders, optifineLoaders, fabricLoaders, fabricApiVersions ,quiltLoaders);
     }
     
+    // 获取Minecraft下载列表
     public static async Task GetMinecraftDownloader(CancellationToken ct, IProgress<int> progress = null) {
         progress.Report(5);
         try {
@@ -934,6 +1001,7 @@ public class ResourceUtil {
         progress.Report(100);
     }
     
+    // 获取当前Minecraft本地材质包列表
     public static async Task<List<TexturePackResource>> GetTexturePack(CancellationToken ct,IProgress<int> progress = null) {
         List<TexturePackResource> resources = new();
         var item = GetMinecraftItem();
@@ -982,7 +1050,8 @@ public class ResourceUtil {
         progress.Report(100);
         return resources;
     }
-
+    
+    // 获取本地材质包资源信息
     private static async Task<TexturePackResource> GetTexturePack(string filePath,string tmpDir) {
         var resource = new TexturePackResource();
         await Task.Run(() => {
@@ -1017,6 +1086,7 @@ public class ResourceUtil {
         return resource;
     }
     
+    // 获取当前Minecraft本地存档列表
     public static async Task<List<SavesResource>> GetSavesResource(CancellationToken ct,IProgress<int> progress = null) {
         List<SavesResource> resources = new();
         try {
@@ -1082,7 +1152,8 @@ public class ResourceUtil {
         }
     }
 
-    public static async Task<List<ModResource>> GetModResources(CancellationToken ct,IProgress<int> progress = null) {
+    // 获取当前Minecraft本地模组列表
+    public static async Task<List<MinecraftResource>> GetModResources(CancellationToken ct,IProgress<int> progress = null) {
         
         try {
             LocalModResources?.Clear();
@@ -1099,17 +1170,17 @@ public class ResourceUtil {
             string versionPath = mcItem.Path;
             ct.ThrowIfCancellationRequested();
             progress.Report(5);
-            List<ModResource> elementResource = await GetModResourcesElement(versionPath, isIsolate,progress,5,34);
+            List<MinecraftResource> elementResource = await GetModResourcesElement(versionPath, isIsolate,progress,5,34);
             if (elementResource.Count == 0) {
                 progress.Report(100);
                 return elementResource;
             }
             progress.Report(35);
             ct.ThrowIfCancellationRequested();
-            List<ModResource> modrinthResource = await GetModrinthArgs(elementResource,progress,36,61);
+            List<MinecraftResource> modrinthResource = await GetModrinthArgs(elementResource,progress,36,61);
             ct.ThrowIfCancellationRequested();
-            List<ModResource> notEntireModResources = new();
-            List<ModResource> entireModResources = new();
+            List<MinecraftResource> notEntireModResources = new();
+            List<MinecraftResource> entireModResources = new();
             int progressCount = 0;
             progress.Report(62);
             foreach (var i in modrinthResource) {
@@ -1132,10 +1203,10 @@ public class ResourceUtil {
             }
             ct.ThrowIfCancellationRequested();
             progress.Report(71);
-            List<ModResource> curseForgeResource = await GetCurseForgeArgs(notEntireModResources,progress,71,90).ConfigureAwait(false);
+            List<MinecraftResource> curseForgeResource = await GetCurseForgeArgs(notEntireModResources,progress,71,90).ConfigureAwait(false);
             Console.WriteLine($"GetCurseForgeArgs 完成 {curseForgeResource.Count} 个模组");
             ct.ThrowIfCancellationRequested();
-            List<ModResource> allModResources = new();
+            List<MinecraftResource> allModResources = new();
             allModResources.AddRange(entireModResources);
             allModResources.AddRange(curseForgeResource);
             Console.WriteLine($"GetModResources 合并完成 {allModResources.Count} 个模组");
@@ -1165,14 +1236,15 @@ public class ResourceUtil {
         }
         catch (Exception e){
             Console.WriteLine(e);
-            LocalModResources = new List<ModResource>();
+            LocalModResources = new List<MinecraftResource>();
             progress.Report(100);
             return LocalModResources;
         }
     }
-    
-    private static async Task<List<ModResource>> GetModResourcesElement(string versionPath,bool isIsolate,IProgress<int> progress,int start,int end) {
-        List<ModResource> resources = new();
+        
+    // 获取Minecraft本地模组资源信息
+    private static async Task<List<MinecraftResource>> GetModResourcesElement(string versionPath,bool isIsolate,IProgress<int> progress,int start,int end) {
+        List<MinecraftResource> resources = new();
         if (!isIsolate) {
             versionPath = Path.GetDirectoryName(Path.GetDirectoryName(versionPath));
         }
@@ -1192,9 +1264,10 @@ public class ResourceUtil {
         return resources;
     }
 
-    private static async Task<ModResource> GetModResource(string filePath,SHA1 sha1) {
+    // 获取Minecraft本地模组资源信息
+    private static async Task<MinecraftResource> GetModResource(string filePath,SHA1 sha1) {
         using FileStream file = File.OpenRead(filePath);
-        ModResource resource = new ModResource();
+        MinecraftResource resource = new MinecraftResource();
         FileInfo fileInfo = new FileInfo(filePath);
         resource.FilePath = filePath;
         if (Path.GetFileName(Path.GetDirectoryName(filePath)) == ".disabled") {
@@ -1236,6 +1309,7 @@ public class ResourceUtil {
         return resource;
     }
     
+    // 通过mods.toml文件获取模组信息
     private static Dictionary<string,string> GetModstomlValue(string content,string titleKey,string[] valueKeys) {
         string[] lines = content.Split('\n');
         bool inTitleSection = false;
@@ -1269,6 +1343,7 @@ public class ResourceUtil {
         return value;
     }
     
+    // 辅助方法：从mods.toml文件中提取值
     private static string GetValueFromLine(string line) {
         int startIndex = line.IndexOf('"') + 1;
         int endIndex = line.LastIndexOf('"');
@@ -1279,6 +1354,7 @@ public class ResourceUtil {
         return string.Empty;
     }
     
+    // 辅助方法：计算MurmurHash2哈希值（用于CurseForge）
     private static uint GetMurmurHash2(string filepath) {
         byte[] fileBytes = File.ReadAllBytes(filepath);
         List<byte> data = new List<byte>();
@@ -1324,14 +1400,16 @@ public class ResourceUtil {
         
         return h;
     }
-    
+        
+    // 辅助方法：Modrinth API POST版本文件请求参数
     private class ModrinthPostProfileArg {
         public string ProjectId { get; set; }
         public string AuthorId { get; set; }
         public string VersionNumber { get; set; }
     }
     
-    private static async Task<List<ModResource>> GetModrinthArgs(List<ModResource> resources,IProgress<int> progress,int start,int end) {
+    // Modrinth 获取模组文件信息（批量获取）
+    private static async Task<List<MinecraftResource>> GetModrinthArgs(List<MinecraftResource> resources,IProgress<int> progress,int start,int end) {
         var ModrinthSha1s = resources.Select(i => i.ModrinthSha1).ToList();
         //POST https://api.modrinth.com/v2/version_files
         //body {"hashes":["ModrinthSha1"],"algorithm": "sha1"}
@@ -1341,7 +1419,7 @@ public class ResourceUtil {
         };
         int currentStep = 0;
         int stepRange = (end - start) / 4;
-        var modrinthProfileResult = await HttpRequestUtil.Post("https://api.modrinth.com/v2/version_files",body);
+        var modrinthProfileResult = await HttpRequestUtil.Post($"{ModrinthAPI}/v2/version_files",body);
         HashSet<string> modrinthAuthorIds = new ();
         Dictionary<string,ModrinthPostProfileArg> modrinthHashAndId = new ();
         if (modrinthProfileResult.IsSuccess) {
@@ -1379,14 +1457,14 @@ public class ResourceUtil {
         foreach (var i in modrinthHashAndId.Values) {
             args.Append($"\"{i.ProjectId}\",");
         }
-        var modrinthProjectResult = await HttpRequestUtil.Get($"https://api.modrinth.com/v2/projects?ids=[{args.ToString().TrimEnd(',')}]");
+        var modrinthProjectResult = await HttpRequestUtil.Get($"{ModrinthAPI}/v2/projects?ids=[{args.ToString().TrimEnd(',')}]");
         if (modrinthProjectResult.IsSuccess) {
             JArray modrinthProjectJArray = JArray.Parse(modrinthProjectResult.Content);
             int modrinthProjectJArrayIndex = 0;
             foreach (var i in modrinthProjectJArray) {
                 modrinthProjectJArrayIndex++;
                 int currentIndex = resources.FindIndex(j => j.ModrinthProjectId == i["id"].ToString());
-                ModResource resource = resources[currentIndex];
+                MinecraftResource resource = resources[currentIndex];
                 if (resource.OriginalName != i["title"].ToString()) {
                     resource.OriginalName = i["title"].ToString();
                 }
@@ -1426,7 +1504,7 @@ public class ResourceUtil {
         progress?.Report(start + stepRange * currentStep);
         //GET https://api.modrinth.com/v2/users?ids=[ModrinthAuthorId,...]
         Dictionary<string,string> modrinthAuthor = new ();
-        var modrinthAuthorResult = await HttpRequestUtil.Get($"https://api.modrinth.com/v2/users?ids=[{string.Join(',',modrinthAuthorIds.Select(i => $"\"{i}\""))}]");
+        var modrinthAuthorResult = await HttpRequestUtil.Get($"{ModrinthAPI}/v2/users?ids=[{string.Join(',',modrinthAuthorIds.Select(i => $"\"{i}\""))}]");
         if (modrinthAuthorResult.IsSuccess) {
             JArray modrinthAuthorJArray = JArray.Parse(modrinthAuthorResult.Content);
             int modrinthAuthorJArrayIndex = 0;
@@ -1451,7 +1529,8 @@ public class ResourceUtil {
         return resources;
     }
     
-    private static async Task<List<ModResource>> GetCurseForgeArgs(List<ModResource> resources,IProgress<int> progress,int start,int end,bool JustId = false) {
+    // CurseForge 获取模组信息（批量获取）
+    private static async Task<List<MinecraftResource>> GetCurseForgeArgs(List<MinecraftResource> resources,IProgress<int> progress,int start,int end,bool JustId = false) {
         //POST https://api.curseforge.com/v1/fingerprints/432
         //header X-API-KEY $2a$10$.kgOA4jo8lw4LTxMMVJ8x.ZPdziizi72Gok2pzA5HYj3qZ6fnONs6[示例，已废弃]
         //body {"fingerprints" :[CurseForgeSha1,...]}
@@ -1461,7 +1540,7 @@ public class ResourceUtil {
         Dictionary<string,Object> curseForgeIdJsonBody = new () {
             {"fingerprints",curseForgeSha1s}
         };
-        var curseForgeIdJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/fingerprints/432",curseForgeIdJsonBody,CurseForgeApiHeader);
+        var curseForgeIdJson = await HttpRequestUtil.Post($"{CurseForgeAPI}/v1/fingerprints/432",curseForgeIdJsonBody,CurseForgeApiHeader);
         Dictionary<uint, int> curseForgeHashAndId = new ();
         if (curseForgeIdJson.IsSuccess) {
             JObject data = JObject.Parse(curseForgeIdJson.Content);
@@ -1494,7 +1573,7 @@ public class ResourceUtil {
         Dictionary<string,Object> curseForgeModJsonBody = new () {
             {"modIds",curseForgeHashAndId.Values}
         };
-        var curseForgeModJson = await HttpRequestUtil.Post("https://api.curseforge.com/v1/mods",curseForgeModJsonBody,CurseForgeApiHeader);
+        var curseForgeModJson = await HttpRequestUtil.Post($"{CurseForgeAPI}/v1/mods",curseForgeModJsonBody,CurseForgeApiHeader);
         if (curseForgeModJson.IsSuccess) {
             JObject data = JObject.Parse(curseForgeModJson.Content);
             var modArray = data["data"] as JArray;
@@ -1503,7 +1582,7 @@ public class ResourceUtil {
                 foreach (var i in modArray) {
                     modArrayIndex++;
                     int currentIndex = resources.FindIndex(j => j.CurseForgeId == i["id"].ToObject<int>());
-                    ModResource resource = resources[currentIndex];
+                    MinecraftResource resource = resources[currentIndex];
                     resource.OriginalName = i["name"].ToString();
                     resource.Logo = i["logo"]?["url"].ToString();
                     resource.Description = i["summary"].ToString();

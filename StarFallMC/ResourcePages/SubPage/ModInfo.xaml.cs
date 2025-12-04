@@ -16,7 +16,7 @@ using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 namespace StarFallMC.ResourcePages.SubPage;
 
 public partial class ModInfo : Page {
-    public static Action<ModResource> SetResource;
+    public static Action<MinecraftResource> SetResource;
 
     private ViewModel viewModel = new();
     private CancellationTokenSource cts;
@@ -26,7 +26,7 @@ public partial class ModInfo : Page {
         SetResource = setResource;
     }
     
-    private void setResource(ModResource resource) {
+    private void setResource(MinecraftResource resource) {
         Dispatcher.BeginInvoke(() => {
             viewModel.Resource = resource;
             if (!string.IsNullOrEmpty(resource.ModrinthSha1) && resource.CurseForgeSha1 != 0) {
