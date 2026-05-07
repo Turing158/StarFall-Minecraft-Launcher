@@ -148,7 +148,304 @@ public class ResourceUtil {
         }
     }
 
+    public async static Task<ModPackInstallResult> InstallModPack(string modPackPath,CancellationToken ct) {
+        string json = string.Empty;
+        bool isCurseForge = false;
+
+        try {
+            using ZipArchive archive = ZipFile.OpenRead(modPackPath);
+            var modrinthIndexJsonEntry = archive.GetEntry("modrinth.index.json");
+            if (modrinthIndexJsonEntry != null) {
+                json = ReadJsonEntry(modrinthIndexJsonEntry);
+                isCurseForge = false;
+            }
+
+            var curseForgeManifestEntry = archive.GetEntry("manifest.json");
+            if (curseForgeManifestEntry != null) {
+                json = ReadJsonEntry(curseForgeManifestEntry);
+                isCurseForge = true;
+            }
+
+            if (string.IsNullOrEmpty(json)) {
+                return ModPackInstallResult.IsNotModPack;
+            }
+            ModPack modPack;
+            if (isCurseForge) {
+                modPack = await CurseForgeModPackInstallParse(json);
+            }
+            else {
+                modPack = ModrinthModPackInstallParse(json);
+            }
+            if (modPack == null) {
+                return ModPackInstallResult.Failed;
+            }
+            
+            bool isCancel = false; 
+            string versionPath = Path.Combine(GetCurrentDir(), "versions", modPack.VersionName);
+            string versionJsonPath = Path.Combine(versionPath, $"{modPack.VersionName}.json");
+            string versionJarPath = Path.Combine(versionPath, $"{modPack.VersionName}.jar");
+            bool isVersionExists = File.Exists(versionJsonPath) || File.Exists(versionJarPath);
+            string newName = string.Empty;
+            int renameCount = 0;
+            while (isVersionExists) {
+                renameCount++;
+                newName = $"{modPack.VersionName}_P{renameCount}";
+                versionPath = Path.Combine(GetCurrentDir(), "versions", newName);
+                versionJsonPath = Path.Combine(versionPath, $"{newName}.json");
+                versionJarPath = Path.Combine(versionPath, $"{newName}.jar");
+                isVersionExists = File.Exists(versionJsonPath) || File.Exists(versionJarPath);
+            }
+            string msgContent = renameCount != 0 
+                ? $"该版本 {modPack.VersionName} 已存在，是否将游戏名称更改为\n=> {newName} \n并安装该版本" 
+                : $"确认安装 {modPack.VersionName} 整合包吗?";
+            await MessageBox.ShowAsync(msgContent,"安装整合包", 
+                callback: r => {
+                    if (r == MessageBoxResult.Cancel) {
+                        isCancel = true;
+                    }
+                }, 
+                btnType: MessageBoxBtnType.ConfirmAndCancel,
+                confirmBtnText: isVersionExists ? "改名安装" : "安装");
+            if (renameCount >= 1) {
+                modPack.Version += $"_P{renameCount}";
+            }
+            if (!Directory.Exists(versionPath)) {
+                Directory.CreateDirectory(versionPath);
+            }
+            if (isCancel) {
+                return ModPackInstallResult.Cancel;
+            }
+            Console.WriteLine("开始安装整合包");
+            if (!Directory.Exists(versionPath)) {
+                Directory.CreateDirectory(versionPath);
+            }
+            
+            string processKey = string.Empty;
+            
+            MainWindow.BackHandle.Invoke();
+            MainWindow.DownloadPageShow.Invoke();
+            //判断模组加载器后进行安装
+            if (modPack.Loader == MinecraftLoader.Fabric) {
+                FabricLoader loader = new FabricLoader() {
+                    Version = modPack.LoaderVersion,
+                    Mcversion = modPack.MinecraftVersion
+                };
+                processKey = await MinecraftUtil.StartDownloadInstallFabric(modPack.MinecraftVersion, modPack.VersionName,
+                    GetCurrentDir(), loader, null, ct, modPack.Files, false);
+            }
+            else if (modPack.Loader == MinecraftLoader.NeoForge) {
+                NeoForgeLoader loader = new NeoForgeLoader() { 
+                    Version = modPack.LoaderVersion,
+                    Mcversion = modPack.MinecraftVersion
+                };
+                processKey = await MinecraftUtil.StartDownloadInstallNeoForge(modPack.MinecraftVersion,modPack.VersionName,GetCurrentDir(),loader,ct,modPack.Files, false);
+            }
+            else if (modPack.Loader == MinecraftLoader.Forge) {
+                ForgeLoader loader = new ForgeLoader() { 
+                    Version = modPack.LoaderVersion,
+                    Mcversion = modPack.MinecraftVersion
+                };
+                processKey = await MinecraftUtil.StartDownloadInstallForge(modPack.MinecraftVersion,modPack.VersionName,GetCurrentDir(),loader,null,ct,modPack.Files, false);
+            }
+
+            if (string.IsNullOrEmpty(processKey)) {
+                return ModPackInstallResult.Failed;
+            }
+            //安装完后，将整合包的overrides文件内的所有文件覆盖到游戏目录下
+            foreach (var entry in archive.Entries) {
+                string entryFullName = entry.FullName;
+                if (entryFullName.StartsWith("overrides/", StringComparison.OrdinalIgnoreCase) 
+                    || entryFullName.StartsWith("overrides\\", StringComparison.OrdinalIgnoreCase)) {
+                    if (entryFullName.StartsWith("overrides/", StringComparison.OrdinalIgnoreCase)) {
+                        entryFullName = entryFullName.Substring("overrides/".Length);
+                    }
+                    if (entryFullName.StartsWith("overrides\\", StringComparison.OrdinalIgnoreCase)) {
+                        entryFullName = entryFullName.Substring("overrides\\".Length);
+                    }
+                    if (string.IsNullOrEmpty(entryFullName) || entryFullName.EndsWith("/") || entryFullName.EndsWith("\\")) {
+                        continue;
+                    }
+                    string filePath = Path.Combine(versionPath, entryFullName);
+                    string directoryPath = Path.GetDirectoryName(filePath);
+                    if (!Directory.Exists(directoryPath)) {
+                        Directory.CreateDirectory(directoryPath);
+                    }
+                    entry.ExtractToFile(filePath, true);
+                }
+            }
+            
+            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+        }
+        catch (NotSupportedException notSupportedException) {
+            
+            return ModPackInstallResult.IsNotModPack;
+        }
+        catch (InvalidDataException invalidDataException) {
+            return ModPackInstallResult.IsNotModPack;
+        }
+        catch (Exception e) {
+            Console.WriteLine(e);
+        }
+        return ModPackInstallResult.Success;
+    }
     
+    private static string ReadJsonEntry(ZipArchiveEntry jsonEntry) {
+        using Stream stream = jsonEntry.Open();
+        using StreamReader reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+    
+    private static ModPack ModrinthModPackInstallParse(string json) {
+        ModPack modPack;
+        try {
+            JObject modrinthIndex = JObject.Parse(json);
+            string name = modrinthIndex["name"].ToString();
+            string version = modrinthIndex["versionId"].ToString();
+            List<DownloadFile> files = new List<DownloadFile>();
+            string currentDir = GetCurrentDir();
+            foreach (var fileJson in modrinthIndex["files"] as JArray) {
+                string path = Path.Combine(currentDir, "versions", $"{name} {version}", fileJson["path"].ToString());
+                var file = new DownloadFile() {
+                    Name = Path.GetFileNameWithoutExtension(path),
+                    FilePath = path,
+                    UrlPaths = fileJson["downloads"]?.ToObject<List<string>>(),
+                    Size = fileJson["fileSize"]?.ToObject<long>() ?? 0,
+                    Sha1 = fileJson["hashes"]?["sha1"]?.ToString(),
+                };
+                file.UrlPath = file.UrlPaths[0];
+                files.Add(file);
+            }
+
+            var dependencies = modrinthIndex["dependencies"] as JObject;
+            
+            var minecraftVersion = dependencies["minecraft"]?.ToString();
+            MinecraftLoader loader = MinecraftLoader.Unknown;
+            string loaderVersion = string.Empty;
+            if (dependencies.ContainsKey("fabric-loader")) {
+                loader = MinecraftLoader.Fabric;
+                loaderVersion = dependencies["fabric-loader"]?.ToString();
+            }
+            else if (dependencies.ContainsKey("quilt-loader")) {
+                loader = MinecraftLoader.Quilt;
+                loaderVersion = minecraftVersion;
+            }
+            else if (dependencies.ContainsKey("neoforge")) {
+                loader = MinecraftLoader.NeoForge;
+                loaderVersion = dependencies["neoforge"]?.ToString();
+            }
+            else if (dependencies.ContainsKey("forge")) {
+                loader = MinecraftLoader.Forge;
+                loaderVersion = dependencies["forge"]?.ToString();
+            }
+            
+            modPack = new ModPack() {
+                Name = name,
+                Version = version,
+                Files = files,
+                MinecraftVersion = minecraftVersion,
+                Loader = loader,
+                LoaderVersion = loaderVersion,
+            };
+        }
+        catch (Exception e){
+            return null;
+        }
+        return modPack;
+    }
+
+    private async static Task<ModPack> CurseForgeModPackInstallParse(string json) {
+        ModPack modPack;
+        try {
+            JObject manifest = JObject.Parse(json);
+            string name = manifest["name"].ToString();
+            string version = manifest["version"].ToString();
+            List<long> fileIds = new List<long>();
+            foreach (var file in manifest["files"] as JArray) {
+                long id = file["fileID"]?.ToObject<long>() ?? 0;
+                if (id != 0) {
+                    fileIds.Add(id);
+                }
+            }
+            
+            Dictionary<string, Object> fileRequestBody = new();
+            fileRequestBody["fileIds"] = fileIds;
+            string modsPath = Path.Combine(GetCurrentDir(), "versions", $"{name} {version}", "mods");
+            // 获取所有Mod文件Id的下载地址，并且拼接正常的游戏路径
+            // POST https://api.curseforge.com/v1/mods/files
+            // 需要传入一个fileIds的数组
+            var filesResult = await HttpRequestUtil.Post($"{CurseForgeAPI}/v1/mods/files",headers:CurseForgeApiHeader,args:fileRequestBody);
+            if (!filesResult.IsSuccess) {
+                Console.WriteLine("获取CurseForge整合包模组文件失败，请重试！");
+                return null;
+            }
+            var filesResultJson = JObject.Parse(filesResult.Content);
+            List<DownloadFile> files = new List<DownloadFile>();
+            foreach (var fileObj in filesResultJson["data"] as JArray) {
+                string fileName = fileObj["fileName"]?.ToString();
+                var file = new DownloadFile {
+                    Name = fileName,
+                    FilePath = Path.Combine(modsPath, fileName),
+                    UrlPath = fileObj["downloadUrl"]?.ToString(),
+                    Size = fileObj["fileLength"]?.ToObject<long>() ?? 0,
+                    Sha1 = fileObj["hashes"]?[1]?["value"]?.ToString(),
+                };
+                if (string.IsNullOrEmpty(file.UrlPath)) {
+                    file.UrlPath = await NetworkUtil.GetNeedJavaScriptRedirectUrl(
+                        $"https://www.curseforge.com/api/v1/mods/{fileObj["modId"]}/files/{fileObj["id"]}/download"
+                        , "mediafilez.");
+                    Console.WriteLine($"https://www.curseforge.com/api/v1/mods/{fileObj["modId"]}/files/{fileObj["id"]}/download");
+                    Console.WriteLine(file.UrlPath);
+                }
+                files.Add(file);
+            }
+            var minercraftVersion = manifest["minecraft"]?["version"]?.ToString();
+            MinecraftLoader loader = MinecraftLoader.Unknown;
+            string loaderVersion = string.Empty;
+            foreach (var modLoader in manifest["minecraft"]?["modLoaders"] as JArray) {
+                if (modLoader["primary"] == null || modLoader["primary"].ToObject<bool>().Equals(false)) {
+                    continue;
+                }
+                var loaderStr = modLoader["id"]?.ToString();
+                var loaderParts = loaderStr.Split("-");
+            
+                if (loaderParts[0].Contains("fabric")) {
+                    loader = MinecraftLoader.Fabric;
+                    loaderVersion = string.Join("-", loaderParts.Skip(1));
+                }
+                else if (loaderParts[0].Contains("neoforge")) {
+                    loader = MinecraftLoader.NeoForge;
+                    loaderVersion = string.Join("-", loaderParts.Skip(1));
+                }
+                else if (loaderParts[0].Contains("forge")) {
+                    loader = MinecraftLoader.Forge;
+                    loaderVersion = string.Join("-", loaderParts.Skip(1));
+                }
+                else if (loaderParts[0].Contains("quilt")) {
+                    loader = MinecraftLoader.Quilt;
+                    loaderVersion = string.Join("-", loaderParts.Skip(1));;
+                }
+            }
+            modPack = new ModPack() {
+                Name = name,
+                Version = version,
+                Files = files,
+                MinecraftVersion = minercraftVersion,
+                Loader = loader,
+                LoaderVersion = loaderVersion,
+            };
+        }
+        catch (Exception e) {
+            Console.WriteLine(e);
+            return null;
+        }
+        return modPack;
+    }
+    
+    public class CurseForgeModIdAndFile {
+        public long ModId { get; set; }
+        public long FileId { get; set; }
+        public DownloadFile file;
+    }
     
     // 获取CurseForge资源（不止于模组）
     public static async Task<(List<MinecraftResource>,int)> GetCurseForgeModResources(
@@ -206,7 +503,7 @@ public class ResourceUtil {
                     DownloadCount = int.Parse(i["downloadCount"]?.ToString() ?? "0"),
                     Description = i["summary"]?.ToString(),
                     CurseForgeId = i["id"]?.ToObject<int>() ?? 0,
-                    WebsiteUrl = i["websiteUrl"]?.ToString(),
+                    WebsiteUrl = $"https://www.curseforge.com/minecraft/{GetCurseForgeLinkType(resourceType)}/{i["slug"]}",
                     LastUpdated = DateTime.Parse(i["dateModified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
                 };
                 resource.Author = string.Join(",",i["authors"]?.Select(j => j["name"]?.ToString()) ?? new List<string>());
@@ -227,6 +524,17 @@ public class ResourceUtil {
             total = root["pagination"]?["totalCount"]?.ToObject<int>() ?? 0;
         }
         return (tmp,total);
+    }
+
+    private static string GetCurseForgeLinkType(ResourceType resourceType) {
+        return resourceType switch {
+            ResourceType.Mod => "mc-mods",
+            ResourceType.ModPack => "modpacks",
+            ResourceType.TexturePack => "texture-packs",
+            ResourceType.ShaderPack => "shaders",
+            ResourceType.DataPack => "data-packs",
+            _ => "mc-mods"
+        };
     }
 
     // 获取CurseForge资源的加载器、版本、分类

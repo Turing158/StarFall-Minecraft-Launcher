@@ -17,9 +17,18 @@
         <local:ComboBoxTitleContentMarginConverter x:Key="ComboBoxTitleContentMarginConverter"/>
         <local:ListEmptyToVisibilityConverter x:Key="ListEmptyToVisibilityConverter"/>
         <local:ObjectEmptyToCollapsedConverter x:Key="ObjectEmptyToCollapsedConverter"/>
+        <local:ComboBoxChoiceEnabledConverter x:Key="ComboBoxChoiceEnabledConverter"/>
         <Style x:Key="DefaultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="{Binding IsAnimatedOnSelection,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></Setter>
+            <Setter Property="IsEnabled">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource ComboBoxChoiceEnabledConverter}">
+                        <Binding Path="" RelativeSource="{RelativeSource Self}"></Binding>
+                        <Binding Path="DisabledItemsSource" RelativeSource="{RelativeSource AncestorType=local:ComboBox}"></Binding>
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">

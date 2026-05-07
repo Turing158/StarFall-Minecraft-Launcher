@@ -1,11 +1,16 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Net;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Wpf;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.ResourcePages.SubPage;
@@ -39,6 +44,18 @@ public partial class MainWindow : Window {
     public static Action DownloadPageShow;
     public static Action BackHandle;
     
+    private bool isDraging = false;
+    private DoubleAnimation showDrag = new() {
+        To = 1,
+        Duration = TimeSpan.FromSeconds(0.2),
+        EasingFunction = new CubicEase()
+    };
+    private DoubleAnimation hideDrag = new() {
+        To = 0,
+        Duration = TimeSpan.FromSeconds(0.2),
+        EasingFunction = new CubicEase()
+    };
+    private CancellationTokenSource installModPackCts;
     private ViewModel viewModel = new ViewModel();
     public MainWindow() {
         
@@ -62,6 +79,13 @@ public partial class MainWindow : Window {
         ReloadSubFrame = reloadSubFrame;
         DownloadPageShow = downloadPageShow;
         BackHandle = backHandle;
+        
+        hideDrag.Completed += (_, _) => {
+            if (!isDraging) {
+                DragFileGrid.IsHitTestVisible = false;
+                DragFileGrid.Visibility = Visibility.Collapsed;
+            }
+        };
     }
     
     public class ViewModel : INotifyPropertyChanged{
@@ -258,6 +282,55 @@ public partial class MainWindow : Window {
             case 2:
                 ToSetting();
                 break;
+        }
+    }
+    
+    private void MainWindow_OnPreviewDragOver(object sender, DragEventArgs e) {
+        if (!isDraging) {
+            isDraging = true;
+            DragFileGrid.Visibility = Visibility.Visible;
+            DragFileGrid.IsHitTestVisible = true;
+            DragFileGrid.BeginAnimation(OpacityProperty, showDrag);
+        }
+        e.Handled = true;
+    }
+    
+    private void MainWindow_OnPreviewDrop(object sender, DragEventArgs e) {
+        hideDragHandle();
+        if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files.Length == 0 || files.Length > 1) {
+                MessageTips.Show("请拖拽单个文件!");
+                return;
+            }
+            if (!DirFileUtil.IsCanCompressFile(files[0])) {
+                MessageTips.Show("请拖拽整合包压缩包格式的文件!");
+                return;
+            }
+            
+            PerpareModPackInstall(files[0]).ConfigureAwait(false);
+        }
+    }
+    
+    private async Task PerpareModPackInstall(string filePath) {
+        installModPackCts?.Cancel();
+        installModPackCts = new CancellationTokenSource();
+        MessageTips.Show("正在校验整合包...");
+        var result = await ResourceUtil.InstallModPack(filePath,installModPackCts.Token);
+        Console.WriteLine(result);
+        
+        
+    }
+
+    private void MainWindow_OnDragLeave(object sender, DragEventArgs e) {
+        hideDragHandle();
+        e.Handled = true;
+    }
+
+    private void hideDragHandle() {
+        if (isDraging) {
+            isDraging = false;
+            DragFileGrid.BeginAnimation(OpacityProperty, hideDrag);
         }
     }
 }

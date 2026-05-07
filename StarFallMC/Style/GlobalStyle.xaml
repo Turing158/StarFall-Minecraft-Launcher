@@ -3,7 +3,9 @@
                     xmlns:comp="clr-namespace:StarFallMC.Component"
                     xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
                     xmlns:converters="clr-namespace:StarFallMC.Util.Converters">
-    
+    <Style TargetType="Grid">
+        <Setter Property="AllowDrop" Value="True"></Setter>
+    </Style>
     <SolidColorBrush x:Key="PrimaryBrush" Color="#fff"></SolidColorBrush>
     <SolidColorBrush x:Key="PrimaryBrush_1" Color="#fff"></SolidColorBrush>
     <SolidColorBrush x:Key="PrimaryBrush_2" Color="#fff"></SolidColorBrush>

@@ -279,5 +279,23 @@ public class DirFileUtil {
             }
         }
     }
-    
+
+    public static bool IsCanCompressFile(string filePath) {
+        if (!File.Exists(filePath)) {
+            return false;
+        }
+        try {
+            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            byte[] header = new byte[4];
+            int bytesRead = fileStream.Read(header, 0, 4);
+            return bytesRead == 4 && 
+                   header[0] == 0x50 && 
+                   header[1] == 0x4B && 
+                   header[2] == 0x03 && 
+                   header[3] == 0x04;
+        }
+        catch {
+            return false;
+        }
+    }
 }

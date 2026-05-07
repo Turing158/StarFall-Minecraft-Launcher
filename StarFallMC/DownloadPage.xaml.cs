@@ -161,7 +161,9 @@ public partial class DownloadPage : Page {
         viewModel.Remaining = downloadFiles.Count - viewModel.Finished;
         DownloadNavigationBar.SelectedIndex = 0;
         TotalDownloads = downloadFiles;
+        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
         viewModel.Downloads = new ObservableCollection<DownloadFile>(downloadFiles);
+        // ListScrollViewer.ItemsSource = viewModel.Downloads;
         SetOperateBtn(DownloadUtil.IsCancel);
     }
     
@@ -276,6 +278,7 @@ public partial class DownloadPage : Page {
     }
 
     private void ChangeDownloadNavi() {
+        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
         switch (DownloadNavigationBar.SelectedIndex) {
             case 0:
                 viewModel.Downloads = new ObservableCollection<DownloadFile>(TotalDownloads);
@@ -297,6 +300,7 @@ public partial class DownloadPage : Page {
                     DownloadUtil.errorDownloadFiles);
                 break;
         }
+        // ListScrollViewer.ItemsSource = viewModel.Downloads;
         if (viewModel.Downloads.Count == 0) {
             EmptyList.Opacity = 1;
         }
@@ -312,7 +316,9 @@ public partial class DownloadPage : Page {
                 MessageBox.Show("确定要清除当前的所有下载任务嘛！可能会造成某些事情的出现。", "清除当前下载任务", MessageBoxBtnType.ConfirmAndCancel, r => {
                     if (r == MessageBoxResult.Confirm) {
                         DownloadUtil.ClearDownload();
+                        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
                         viewModel.Downloads.Clear();
+                        // ListScrollViewer.ItemsSource = viewModel.Downloads;
                         viewModel.Total = 0;
                         viewModel.Remaining = 0;
                         viewModel.Finished = 0;
@@ -345,6 +351,7 @@ public partial class DownloadPage : Page {
     }
 
     private void RetryAndContinueDownload_OnClick(object sender, RoutedEventArgs e) {
+        Console.WriteLine("重试或继续下载");
         if (DownloadUtil.IsCancel) {
             Console.WriteLine("继续下载");
             try {

@@ -156,6 +156,14 @@ public partial class ComboBox : UserControl {
     public static readonly DependencyProperty IsAnimatedOnSelectionProperty = DependencyProperty.Register(
         nameof(IsAnimatedOnSelection), typeof(bool), typeof(ComboBox), new PropertyMetadata(true));
     
+    // 禁用的选项源，但是现在有点问题，暂时未修复
+    public Object DisabledItemsSource {
+        get => GetValue(DisabledItemsSourceProperty);
+        set => SetValue(DisabledItemsSourceProperty, value);
+    }
+    public static readonly DependencyProperty DisabledItemsSourceProperty = DependencyProperty.Register(
+        nameof(DisabledItemsSource), typeof(Object), typeof(ComboBox), new PropertyMetadata(default(Object)));
+    
     public event SelectionChangedEventHandler SelectionChanged {
         add => AddHandler(SelectionChangedEvent, value);
         remove => RemoveHandler(SelectionChangedEvent, value);

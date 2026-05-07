@@ -1192,6 +1192,7 @@ public class MinecraftUtil {
                                 if (!string.IsNullOrEmpty(value.url)) {
                                     item.UrlPaths.Add(value.url);
                                 }
+                                item.Size = value.size;
                                 downloadFiles.Add(item);
                             }
                             break;
@@ -1213,6 +1214,7 @@ public class MinecraftUtil {
                         if (!string.IsNullOrEmpty(url)) {
                             item.UrlPaths.Add(url);
                         }
+                        item.Size = i.artifact?.size ?? -1;
                         downloadFiles.Add(item);
                         
                     }
@@ -1293,7 +1295,7 @@ public class MinecraftUtil {
                     string objFilePath = $"{currentDir}/assets/objects/{prefix}/{i.Value["hash"]}";
                     string objUrl = $"{bmclAssetsAPI}/{prefix}/{i.Value["hash"]}";
                     var item = new DownloadFile(i.Name, objFilePath, objUrl);
-                    item.Size = i.Value["size"]?.ToObject<long>() ?? 0;
+                    item.Size = i.Value["size"]?.ToObject<long>() ?? -1;
                     assets.Add(item);
                 }
             }
@@ -1486,7 +1488,7 @@ public class MinecraftUtil {
                             retry = r == MessageBoxResult.Confirm;
                         },confirmBtnText:"重新下载",cancelBtnText:"跳过");
                     if (retry) {
-                        await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
+                        await DownloadUtil.RetryAsync();
                     }
                     else {
                         break;
@@ -1719,16 +1721,23 @@ public class MinecraftUtil {
     }
     
     // 获取Minecraft的Jar下载文件
-    private static DownloadFile GetMinecraftJarDownloadFile(string minecraftVersion, string versionName,string versionPath) {
+    private static DownloadFile GetMinecraftJarDownloadFile(string minecraftVersion, string versionName,string versionPath,JObject versionJson) {
+        long size = versionJson["downloads"]?["client"]?["size"]?.ToObject<long>() ?? -1;
         return new DownloadFile {
             Name = $"{versionName}-jar",
             UrlPath = $"https://bmclapi2.bangbang93.com/version/{minecraftVersion}/client",
             FilePath = Path.Combine(versionPath, $"{versionName}.jar"),
+            Size = size,
         };
     }
 
     // 安装原版Minecraft
-    public async static Task<bool> StartDownloadInstallMinecraft(string minecraftVersion, string versionName,string currentDir, CancellationToken ct = default){
+    public async static Task<bool> StartDownloadInstallMinecraft(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir, 
+        CancellationToken ct = default)
+    {
         var processKey = DownloadPage.AppendProcessProgress($"安装 {versionName}", new (){
             "1. 下载并生成json文件",
             "2. 获取需要下载的文件",
@@ -1780,31 +1789,9 @@ public class MinecraftUtil {
             ct.ThrowIfCancellationRequested();
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0, GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
+            needDownloadFiles.Insert(0, GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
             ct.ThrowIfCancellationRequested();
-            bool isSuccessDownload = true;
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
-            }
-
-            ct.ThrowIfCancellationRequested();
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles,null,ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -1846,7 +1833,13 @@ public class MinecraftUtil {
     }
 
     // 安装OptiFine Minecraft
-    public async static Task<bool> StartDownloadInstallOptiFine(string minecraftVersion, string versionName,string currentDir,OptifineLoader optiFineLoader, CancellationToken ct = default){
+    public async static Task<bool> StartDownloadInstallOptiFine(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir,
+        OptifineLoader optiFineLoader, 
+        CancellationToken ct = default)
+    {
         var processKey = DownloadPage.AppendProcessProgress($"安装 {versionName}", new (){
             "1. 下载OptiFine Installer",
             "2. 生成Json文件",
@@ -1914,30 +1907,8 @@ public class MinecraftUtil {
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
-            bool isSuccessDownload = true;
-            ct.ThrowIfCancellationRequested();
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
-            DownloadFile needCompressMinecraftForgeJar = null;
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
-            }
+            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles,null,ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -2067,7 +2038,13 @@ public class MinecraftUtil {
     }
     
     // 安装LiteLoader Minecraft
-    public async static Task<bool> StartDownloadInstallLiteloader(string minecraftVersion, string versionName,string currentDir,LiteLoader liteLoader, CancellationToken ct = default) {
+    public async static Task<bool> StartDownloadInstallLiteloader(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir,
+        LiteLoader liteLoader, 
+        CancellationToken ct = default) 
+    {
         var processKey = DownloadPage.AppendProcessProgress($"安装 {versionName}", new (){
             "1. 下载LiteLoader Installer",
             "2. 生成Json文件",
@@ -2141,31 +2118,9 @@ public class MinecraftUtil {
             var assetFiles = await GetAssetsFile(json, currentDir, true,ct);
             ct.ThrowIfCancellationRequested();
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
+            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            bool isSuccessDownload = true;
-            ct.ThrowIfCancellationRequested();
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
-            DownloadFile needCompressMinecraftForgeJar = null;
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
-            }
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles,null,ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -2266,7 +2221,16 @@ public class MinecraftUtil {
     }
 
     // 安装Forge Minecraft
-    public async static Task<bool> StartDownloadInstallForge(string minecraftVersion, string versionName,string currentDir,string installerDownloadUrl,OptifineLoader needOptifine = null, CancellationToken ct = default) {
+    public async static Task<string> StartDownloadInstallForge(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir,
+        ForgeLoader loader,
+        OptifineLoader needOptifine = null, 
+        CancellationToken ct = default, 
+        List<DownloadFile> extraFiles = null,
+        bool isNeedAutoFinish = true)
+    {
         List<String> progressNames = new() {
             "1. 下载Forge安装器",
             "2. 生成json文件",
@@ -2293,18 +2257,25 @@ public class MinecraftUtil {
         }
         try {
             ct.ThrowIfCancellationRequested();
+            string forgeDownloadUrl;
+            if (!string.IsNullOrEmpty(loader.Build)) {
+                forgeDownloadUrl = $"https://bmclapi2.bangbang93.com/forge/download/{loader.Build}";
+            }
+            else {
+                forgeDownloadUrl = $"https://bmclapi2.bangbang93.com/forge/download?mcversion={loader.Mcversion}&version={loader.Version}&category=installer&format=jar";
+            }
             var forgeInstallerDownloader = new DownloadFile() {
                 Name = "Forge Installer-"+versionName,
-                UrlPath = installerDownloadUrl,
+                UrlPath = forgeDownloadUrl,
                 FilePath = Path.Combine(versionPath, $"forge-{minecraftVersion}-installer.jar"),
             };
-            Console.WriteLine($"Forge安装器下载地址：{installerDownloadUrl}");
+            Console.WriteLine($"Forge安装器下载地址：{forgeDownloadUrl}");
             ct.ThrowIfCancellationRequested();
             if (!File.Exists(forgeInstallerDownloader.FilePath) && !await DownloadUtil.SingalDownload(forgeInstallerDownloader,ct)) {
                 ct.ThrowIfCancellationRequested();
                 Console.WriteLine("下载Forge安装器失败");
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                return false;
+                return null;
             }
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
@@ -2325,7 +2296,7 @@ public class MinecraftUtil {
                 Console.WriteLine("获取版本信息失败");
                 MessageTips.Show("获取版本信息失败，无法安装Forge");
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                return false;
+                return null;
             }
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
@@ -2357,42 +2328,24 @@ public class MinecraftUtil {
             var assetFiles = await GetAssetsFile(json, currentDir, true,ct);
             ct.ThrowIfCancellationRequested();
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
+            if (extraFiles != null) {
+                needDownloadFiles.AddRange(extraFiles);
+            }
             ct.ThrowIfCancellationRequested();
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
+            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            bool isSuccessDownload = true;
-            ct.ThrowIfCancellationRequested();
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
             DownloadFile needCompressMinecraftForgeJar = null;
-            if (DownloadUtil.errorDownloadFiles.Count != 0) {
-                if (DownloadUtil.errorDownloadFiles.FirstOrDefault(x => x.Name.Contains("minecraftforge")) is DownloadFile forgeJar && forgeJar != null) {
-                    Console.WriteLine("找到需要installer里面压缩的minecraftforge jar，跳过错误下载：" + forgeJar.Name);
-                    needCompressMinecraftForgeJar = forgeJar;
-                    var tmpList = DownloadUtil.errorDownloadFiles.ToList();
-                    tmpList.Remove(forgeJar);
-                    DownloadUtil.errorDownloadFiles = new ConcurrentBag<DownloadFile>(tmpList);
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles, () => {
+                if (DownloadUtil.errorDownloadFiles.Count != 0) {
+                    if (DownloadUtil.errorDownloadFiles.FirstOrDefault(x => x.Name.Contains("minecraftforge")) is DownloadFile forgeJar && forgeJar != null) {
+                        Console.WriteLine("找到需要installer里面压缩的minecraftforge jar，跳过错误下载：" + forgeJar.Name);
+                        needCompressMinecraftForgeJar = forgeJar;
+                        var tmpList = DownloadUtil.errorDownloadFiles.ToList();
+                        tmpList.Remove(forgeJar);
+                        DownloadUtil.errorDownloadFiles = new ConcurrentBag<DownloadFile>(tmpList);
+                    }
                 }
-            }
-            ct.ThrowIfCancellationRequested();
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
-            }
+            },ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -2462,7 +2415,9 @@ public class MinecraftUtil {
                 }
             }
             Console.WriteLine("Forge安装完成");
-            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            if (isNeedAutoFinish) {
+                DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            }
         }
         catch (OperationCanceledException) {
             MessageTips.Show($"{versionName} 安装取消");
@@ -2472,9 +2427,9 @@ public class MinecraftUtil {
             Console.WriteLine(e);
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
             MessageBox.Show(e.Message);
-            return false;
+            return null;
         }
-        return true;
+        return processKey;
     }
     
     // 转换Fabric的Json
@@ -2501,7 +2456,16 @@ public class MinecraftUtil {
     }
     
     // 安装Fabric Minecraft
-    public static async Task<bool> StartDownloadInstallFabric(string minecraftVersion, string versionName,string currentDir,FabricLoader liteLoader,ModResource fabricApi, CancellationToken ct = default) {
+    public static async Task<string> StartDownloadInstallFabric(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir,
+        FabricLoader fabricLoader,
+        MinecraftResource fabricApi, 
+        CancellationToken ct = default, 
+        List<DownloadFile> extraFiles = null,
+        bool isNeedAutoFinish = true) 
+    {
         var processKey = DownloadPage.AppendProcessProgress($"安装 {versionName}", new (){
             "1. 生成Fabric Json文件",
             "2. 获取所需下载文件",
@@ -2532,11 +2496,11 @@ public class MinecraftUtil {
                 Console.WriteLine("写入文件");
                 // 转换并写入json
                 ct.ThrowIfCancellationRequested();
-                versionJson = await TransformFabricJson(versionJsonResult.Content,versionName,liteLoader,ct);
+                versionJson = await TransformFabricJson(versionJsonResult.Content,versionName,fabricLoader,ct);
                 ct.ThrowIfCancellationRequested();
                 if (versionJson == null) {
                     DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                    return false;
+                    return null;
                 }
                 File.WriteAllText(versionJsonPath, versionJson.ToString());
             }
@@ -2544,7 +2508,7 @@ public class MinecraftUtil {
                 Console.WriteLine("获取版本信息失败");
                 MessageTips.Show("获取版本信息失败，无法安装Fabric");
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                return false;
+                return null;
             }
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
@@ -2552,40 +2516,23 @@ public class MinecraftUtil {
             var json = versionJson.ToString();
             var libs = GetLibs(json);
             var libFiles = GetNeedLibrariesFile(libs, currentDir);
-            if (fabricApi.Downloaders.Count != 0) {
-                var downloadFile = fabricApi.Downloaders[0].File;
-                downloadFile.FilePath = Path.Combine(versionPath, "mods", downloadFile.Name);
-                libFiles.Add(downloadFile);
+            if (fabricApi != null) {
+                if (fabricApi.Downloaders.Count != 0) {
+                    var downloadFile = fabricApi.Downloaders[0].File;
+                    downloadFile.FilePath = Path.Combine(versionPath, "mods", downloadFile.Name);
+                    libFiles.Add(downloadFile);
+                }
             }
             ct.ThrowIfCancellationRequested();
             var assetFiles = await GetAssetsFile(json, currentDir, true,ct);
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
-            ct.ThrowIfCancellationRequested();
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
-            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            bool isSuccessDownload = true;
-            ct.ThrowIfCancellationRequested();
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
-            DownloadFile needCompressMinecraftForgeJar = null;
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
+            if (extraFiles != null) {
+                needDownloadFiles.AddRange(extraFiles);
             }
+            ct.ThrowIfCancellationRequested();
+            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
+            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles,null,ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -2594,7 +2541,9 @@ public class MinecraftUtil {
             }
             ct.ThrowIfCancellationRequested();
             Console.WriteLine("Fabric安装完成");
-            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            if (isNeedAutoFinish) {
+                DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            }
         }
         catch (OperationCanceledException) {
             MessageTips.Show($"{versionName} 安装取消");
@@ -2604,13 +2553,21 @@ public class MinecraftUtil {
             Console.WriteLine(e);
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
             MessageBox.Show(e.Message);
-            return false;
+            return null;
         }
-        return true;
+        return processKey;
     }
     
     // 安装NeoForge Minecraft
-    public async static Task<bool> StartDownloadInstallNeoForge(string minecraftVersion, string versionName,string currentDir,NeoForgeLoader neoForgeLoader, CancellationToken ct = default) {
+    public async static Task<string> StartDownloadInstallNeoForge(
+        string minecraftVersion, 
+        string versionName,
+        string currentDir,
+        NeoForgeLoader neoForgeLoader, 
+        CancellationToken ct = default, 
+        List<DownloadFile> extraFiles = null,
+        bool isNeedAutoFinish = true) 
+    {
         var processKey = DownloadPage.AppendProcessProgress($"安装 {versionName}", new() {
             "1. 下载NeoForge安装器",
             "2. 生成json文件",
@@ -2642,7 +2599,7 @@ public class MinecraftUtil {
             if (!File.Exists(neoForgeInstallerDownloader.FilePath) && !await DownloadUtil.SingalDownload(neoForgeInstallerDownloader,ct)) {
                 Console.WriteLine("下载NeoForge安装器失败");
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                return false;
+                return null;
             }
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
@@ -2663,7 +2620,7 @@ public class MinecraftUtil {
                 Console.WriteLine("获取版本信息失败");
                 MessageTips.Show("获取版本信息失败，无法安装NeoForge");
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
-                return false;
+                return null;
             }
             ct.ThrowIfCancellationRequested();
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
@@ -2680,31 +2637,13 @@ public class MinecraftUtil {
             }
             var assetFiles = await GetAssetsFile(json, currentDir, true,ct);
             var needDownloadFiles = GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
-            ct.ThrowIfCancellationRequested();
-            Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
-            Console.WriteLine("开始下载文件");
-            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath));
-            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
-            bool isSuccessDownload = true;
-            ct.ThrowIfCancellationRequested();
-            await DownloadUtil.StartDownload(needDownloadFiles);
-            ct.ThrowIfCancellationRequested();
-            while (DownloadUtil.errorDownloadFiles.Count != 0) {
-                bool retry = false;
-                await MessageBox.ShowAsync(
-                    $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
-                    "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
-                    confirmBtnText: "重新下载", cancelBtnText: "跳过");
-                if (retry) {
-                    ct.ThrowIfCancellationRequested();
-                    await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
-                    ct.ThrowIfCancellationRequested();
-                }
-                else {
-                    isSuccessDownload = false;
-                    break;
-                }
+            if (extraFiles != null) {
+                needDownloadFiles.AddRange(extraFiles);
             }
+            ct.ThrowIfCancellationRequested();
+            needDownloadFiles.Insert(0,GetMinecraftJarDownloadFile(minecraftVersion, versionName, versionPath, versionJson));
+            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            bool isSuccessDownload = await DownloadNeedFileAsync(needDownloadFiles,null,ct);
             if (isSuccessDownload) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
@@ -2746,7 +2685,10 @@ public class MinecraftUtil {
                 }
             }
             Console.WriteLine("NeoForge安装完成");
-            DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            if (isNeedAutoFinish) {
+                DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
+            }
+            
         }
         catch (OperationCanceledException) {
             MessageTips.Show($"{versionName} 安装取消");
@@ -2756,8 +2698,42 @@ public class MinecraftUtil {
             Console.WriteLine(e);
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Error, false);
             MessageBox.Show(e.Message);
-            return false;
+            return null;
         }
-        return true;
+        return processKey;
+    }
+
+    private async static Task<bool> DownloadNeedFileAsync(List<DownloadFile> needDownloadFiles,Action onFirstDownloadComplete = null,CancellationToken ct = default) {
+        Console.WriteLine($"需要下载的文件数量：{needDownloadFiles.Count}");
+        Console.WriteLine("开始下载文件");
+        bool isSuccessDownload = true;
+        ct.ThrowIfCancellationRequested();
+        await DownloadUtil.StartDownload(needDownloadFiles);
+        ct.ThrowIfCancellationRequested();
+        onFirstDownloadComplete?.Invoke();
+        ct.ThrowIfCancellationRequested();
+        while (DownloadUtil.errorDownloadFiles.Count != 0) {
+            bool retry = false;
+            await MessageBox.ShowAsync(
+                $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误，可能是网络波动问题\n选择 重新下载 来尝试下载文件\n选择 跳过 来忽略这些文件\n选择 跳过并导出 来导出无法下载文件，可进行自行下载",
+                "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => {
+                    retry = r == MessageBoxResult.Confirm;
+                    if (r == MessageBoxResult.Custom) {
+                        NetworkUtil.ExportErrorFile();
+                    }
+                },
+                confirmBtnText: "重新下载", cancelBtnText: "跳过", customBtnText: "跳过并导出");
+            if (retry) {
+                ct.ThrowIfCancellationRequested();
+                await DownloadUtil.RetryAsync();
+                ct.ThrowIfCancellationRequested();
+            }
+            else {
+                isSuccessDownload = false;
+                break;
+            }
+        }
+
+        return isSuccessDownload;
     }
 }

@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using StarFallMC.Util;
 
 namespace StarFallMC.Component;
 
@@ -94,6 +95,15 @@ public class CollapsePanel : UserControl{
         Loaded += CollapsePanel_OnLoaded;
         IsEnabledChanged += OnIsEnabledChanged;
     }
+    
+    ~CollapsePanel() {
+        Loaded -= CollapsePanel_OnLoaded;
+        IsEnabledChanged -= OnIsEnabledChanged;
+        _triggerBorder.MouseLeave -= Top_OnMouseLeave;
+        _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
+        _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
+        _contentPresenter.SizeChanged -= Content_OnSizeChanged;
+    }
 
     private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
         Hide();
@@ -110,7 +120,6 @@ public class CollapsePanel : UserControl{
         _triggerBorder.MouseLeave += Top_OnMouseLeave;
         _triggerBorder.MouseLeftButtonDown += Top_OnMouseLeftButtonDown;
         _triggerBorder.MouseLeftButtonUp += Top_OnMouseLeftButtonUp;
-
         _contentPresenter.SizeChanged += Content_OnSizeChanged;
 
         OpenHeightAnim = new DoubleAnimation {
@@ -131,7 +140,7 @@ public class CollapsePanel : UserControl{
         MouseUpAnim = (FindResource("MouseUpAnim") as Storyboard).Clone();
         Storyboard.SetTarget(MouseUpAnim,_main);
     }
-    
+        
     private bool isMouseLeftDown = false;
     private void Top_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
         isMouseLeftDown = true;

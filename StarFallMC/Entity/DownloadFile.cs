@@ -20,7 +20,23 @@ public class DownloadFile : INotifyPropertyChanged {
     public string FileDate { get; set; }
     public int RetryCount { get; set; } = 0;
     public string ErrorMessage { get; set; } = string.Empty;
-    public long Size { get; set; } = 1;
+    private long _size = -1;// 单位：B
+
+    public long Size {
+        get => _size;
+        set => SetField(ref _size, value);
+    } 
+
+    public string SizeStr => 
+        Size < 0 
+            ? "未知" 
+            : Size >= 1024 * 1024 * 1024 
+                ? $"{Size / (1024 * 1024 * 1024):F0} GB" 
+                : Size >= 1024 * 1024 
+                    ? $"{Size / (1024 * 1024):F0} MB" 
+                        : Size >= 1024 
+                            ? $"{Size / 1024:F0} KB" 
+                            : $"{Size} B";
 
     private StateType _state = StateType.Waiting;
     public StateType State {
@@ -41,6 +57,8 @@ public class DownloadFile : INotifyPropertyChanged {
             return Path.GetExtension(FilePath).ToLower() switch {
                 ".json" => "\ue7bd",
                 ".jar" => "\ue639",
+                ".zip" => "\ue7bb",
+                ".rar" => "\ue7bb;",
                 _ => "\ue625"
             };
         }

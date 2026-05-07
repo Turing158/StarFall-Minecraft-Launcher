@@ -128,3 +128,27 @@ public class ObjectEmptyToCollapsedConverter : IValueConverter {
         return null;
     }
 }
+
+public class ComboBoxChoiceEnabledConverter : IMultiValueConverter {
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+        if (values[1] == null) {
+            return true;
+        }
+        if (values[0] is ListViewItem item && values[1] is IList disabledItemsSource) {
+            if (disabledItemsSource.Count == 0) {
+                return true;
+            }
+
+            Console.WriteLine($"{item.DataContext}-{disabledItemsSource.Contains(item.DataContext)}");
+            if (disabledItemsSource.Contains(item.DataContext)) {
+                return false;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+        return null;
+    }
+}

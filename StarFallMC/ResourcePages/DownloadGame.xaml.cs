@@ -1,8 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
+using System.Windows.Media;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.ResourcePages.SubPage;
@@ -21,6 +25,7 @@ public partial class DownloadGame : Page {
     }
     
     public class ViewModel : INotifyPropertyChanged {
+        
 
         private List<MinecraftDownloader> latestType;
         public List<MinecraftDownloader> LatestType {
@@ -47,16 +52,32 @@ public partial class DownloadGame : Page {
         }
         
         private List<MinecraftDownloader> _oldType;
+
+        public List<MinecraftDownloader> OldType {
+            get => _oldType;
+            set => SetField(ref _oldType, value);
+        }
         
         private string _percentText;
         public string PercentText {
             get => _percentText;
             set => SetField(ref _percentText, value);
         }
-
-        public List<MinecraftDownloader> OldType {
-            get => _oldType;
-            set => SetField(ref _oldType, value);
+        
+        public void ClearAllCollection() {
+            ClearCollection(ref latestType);
+            ClearCollection(ref _releaseType);
+            ClearCollection(ref _snapshotType);
+            ClearCollection(ref _aprilFoolsType);
+            ClearCollection(ref _oldType);
+        }
+        
+        private void ClearCollection<T>(ref List<T> collection) {
+            if (collection != null) {
+                collection.Clear();
+                collection.TrimExcess();
+                collection = null;
+            }
         }
         
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -75,7 +96,9 @@ public partial class DownloadGame : Page {
     
     private async Task InitMinecraftDownloader() {
         ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder);
+        Console.WriteLine("开始加载Minecraft列表");
         if (ResourceUtil.IsNeedInitDownloader()) {
+            Console.WriteLine("需要初始化Minecraft列表，开始获取...");
             var progress = new Progress<int>(percent => {
                 viewModel.PercentText = $"加载中... {percent}%";
                 if (percent == 100) {
@@ -101,6 +124,7 @@ public partial class DownloadGame : Page {
             }
         }
         else {
+            Console.WriteLine("无需初始化Minecraft列表，直接使用缓存数据");
             MessageTips.Show("卡顿一下~");
             await Task.Delay(250).ConfigureAwait(false);
             viewModel.LatestType = ResourceUtil.LatestType ?? new List<MinecraftDownloader>();
@@ -137,15 +161,30 @@ public partial class DownloadGame : Page {
         Console.WriteLine($"选择了{downloader}");
         (sender as ListView).SelectedIndex = -1;
     }
-
-    private void DownloadGame_OnUnloaded(object sender, RoutedEventArgs e) {
-        cts.Cancel();
-    }
-
+    
     private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
         cts?.Cancel();
+        cts?.Dispose();
         cts = new CancellationTokenSource();
         ResourceUtil.ClearDownloader();
         InitMinecraftDownloader();
+    }
+
+    private void DownloadGame_OnUnloaded(object sender, RoutedEventArgs e) {
+        cts?.Cancel();
+        cts?.Dispose();
+
+
+        Console.WriteLine($"SnapshotType.Count : {ResourceUtil.SnapshotType?.Count}");
+        
+        PageUtil.CleanupListView(LatestTypeListView);
+        PageUtil.CleanupListView(ReleaseTypeListView);
+        PageUtil.CleanupListView(SnapshotTypeListView);
+        PageUtil.CleanupListView(AprilFoolsTypeListView);
+        PageUtil.CleanupListView(OldTypeListView);
+        Console.WriteLine($"SnapshotType.Count : {ResourceUtil.SnapshotType?.Count}");
+        // viewModel.ClearAllCollection();
+        PageUtil.CleanupPage(this);
+        Console.WriteLine($"SnapshotType.Count : {ResourceUtil.SnapshotType?.Count}");
     }
 }

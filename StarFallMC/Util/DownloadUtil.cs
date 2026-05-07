@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using StarFallMC.Component;
 using StarFallMC.Entity;
@@ -12,6 +13,12 @@ public class DownloadUtil {
         Single,
         Append
     }
+    
+    private static HttpClientHandler handler = new () {
+        AllowAutoRedirect = true,
+        UseCookies = true,
+        CookieContainer = new CookieContainer(),
+    };
     
     private static List<ThreadDownloader> downloaders = new ();
     public static ConcurrentQueue<DownloadFile> waitDownloadFiles { get; private set; }
@@ -60,6 +67,7 @@ public class DownloadUtil {
         IsCancel = false;
         DownloadPage.DownloadingAnimState?.Invoke(true);
         if (mode == DownloadMode.Single) {
+            Console.WriteLine("单独下载任务，清空下载队列");
             waitDownloadFiles = new ConcurrentQueue<DownloadFile>(downloadFiles);
             errorDownloadFiles.Clear();
             globalCts?.Cancel();
@@ -67,6 +75,7 @@ public class DownloadUtil {
             finishCount = 0;
         }
         else if (mode == DownloadMode.Append) {
+            Console.WriteLine("追加下载任务");
             if (globalCts == null) {
                 globalCts = new CancellationTokenSource();
             }
@@ -97,6 +106,7 @@ public class DownloadUtil {
     }
 
     private static async Task DownloadFilesFunc() {
+        Console.WriteLine("调度下载任务");
         if (downloaders.Count == 0) {
             Console.WriteLine("下载线程未初始化，请先调用 DownloadUtil.init()");
             return;
@@ -110,7 +120,6 @@ public class DownloadUtil {
             }
             for (int i = 0; i < downloaders.Count; i++) {
                 if (waitDownloadFiles.Count == 0) {
-                    Console.WriteLine("下载队列已空");
                     if (FinishCount + errorDownloadFiles.Count == TotalCount) {
                         MessageTips.Show("下载任务完成");
                         DownloadPage.DownloadingAnimState?.Invoke(false);
@@ -124,6 +133,7 @@ public class DownloadUtil {
                 }
                 downloaders[i].isRunning = true;
                 if (waitDownloadFiles.TryDequeue(out DownloadFile item)) {
+                    Console.WriteLine("分配下载任务：" + item.UrlPath);
                     _ = downloaders[i].DownloadFileFunc(item, globalCts.Token);
                 }
             }
@@ -156,11 +166,17 @@ public class DownloadUtil {
     }
     
     public static void RetryDownload() {
+        Console.WriteLine("重试任务");
         foreach (var i in errorDownloadFiles) {
-            i.UrlPath = i.UrlPaths[0];
-            i.State = DownloadFile.StateType.Downloading;
+            if (i.UrlPaths != null && i.UrlPaths.Count >= 2) {
+                i.UrlPath = i.UrlPaths[0];
+            }
+
+            Console.WriteLine("");
+            i.RetryCount = 0;
+            i.State = DownloadFile.StateType.Waiting;
             waitDownloadFiles.Enqueue(i);
-            DownloadPage.ProgressUpdate?.Invoke(i, finishCount, errorDownloadFiles.Count);
+            DownloadPage.ProgressUpdate?.Invoke(i, finishCount, 0);
         }
         errorDownloadFiles.Clear();
         _ = DownloadFilesFunc();
@@ -187,9 +203,22 @@ public class DownloadUtil {
             downloader.isRunning = false;
         }
     }
+
+
+    public async static Task RetryAsync() {
+        Console.WriteLine("清空当前所有任务并重试任务-异步");
+        List<DownloadFile> retryFiles = new();
+        foreach (var i in errorDownloadFiles) {
+            if (i.UrlPaths != null && i.UrlPaths.Count >= 2) {
+                i.UrlPath = i.UrlPaths[0];
+            }
+            i.State = DownloadFile.StateType.Waiting;
+            i.RetryCount = 0;
+        }
+        await StartDownload(retryFiles);
+    }
     
-    
-    private static readonly HttpClient httpClient = new HttpClient();
+    private static readonly HttpClient httpClient = new HttpClient (handler);
     public static async Task<bool> SingalDownload(DownloadFile downloadFile,CancellationToken ct = default) {
         var dir = Path.GetDirectoryName(downloadFile.FilePath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) {
@@ -201,6 +230,7 @@ public class DownloadUtil {
         for (int i = 0; i < RetryCount * 2; i++) {
             try {
                 ct.ThrowIfCancellationRequested();
+                
                 using var req = new HttpRequestMessage(HttpMethod.Get, downloadFile.UrlPath);
                 req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
                 ct.ThrowIfCancellationRequested();
@@ -234,10 +264,13 @@ public class DownloadUtil {
     }
     
     public class ThreadDownloader {
-        private HttpClient httpClient = new ();
+        private HttpClient httpClient = new (handler);
         public bool isRunning { get; set; } = false;
 
         public ThreadDownloader() {
+            httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", PropertiesUtil.UserAgent);
+            httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
         }
         public async Task DownloadFileFunc(DownloadFile item, CancellationToken ct) {
             if (IsCancel) {
@@ -259,21 +292,23 @@ public class DownloadUtil {
                     throw new Exception("下载地址为空");
                 }
                 ct.ThrowIfCancellationRequested();
-                // if (item.Size == 0) {
-                //     using var getSizeReq = new HttpRequestMessage(HttpMethod.Head, item.UrlPath);
-                //     using var getSize = await httpClient.SendAsync(getSizeReq, ct);
-                //     getSize.EnsureSuccessStatusCode();
-                //     long size = getSize.Content.Headers.ContentLength.Value / 1024;
-                //     // Console.WriteLine(size);
-                // }
+                if (item.Size <= 0) {
+                    using var getSizeReq = new HttpRequestMessage(HttpMethod.Head, item.UrlPath);
+                    using var getSize = await httpClient.SendAsync(getSizeReq, ct);
+                    getSize.EnsureSuccessStatusCode();
+                    long size = long.Parse(getSize.Headers.FirstOrDefault(x => x.Key == "Content-Length").Value.FirstOrDefault() ?? "-1");
+                    item.Size = size;
+                    DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
+                    Console.WriteLine(size);
+                }
                 // 添加User-Agent
                 Console.WriteLine($"下载中：{item.UrlPath}");
-                using var req = new HttpRequestMessage(HttpMethod.Get, item.UrlPath);
-                req.Headers.Add("User-Agent", PropertiesUtil.UserAgent);
-                using var download =
-                    await httpClient.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+                Console.WriteLine($"=> {item.FilePath}");
                 
-                ct.ThrowIfCancellationRequested();
+                using var req = new HttpRequestMessage(HttpMethod.Get, item.UrlPath);
+                using var download =
+                    await httpClient.SendAsync(req, HttpCompletionOption.ResponseContentRead, ct);
+                // ct.ThrowIfCancellationRequested();
                 download.EnsureSuccessStatusCode();
                 ct.ThrowIfCancellationRequested();
                 using var fileStream = new FileStream(item.FilePath, FileMode.Create);
@@ -294,7 +329,9 @@ public class DownloadUtil {
                 DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
             }
             catch (Exception e) {
-                // Console.WriteLine("下载失败 ：" + item.UrlPath);
+                Console.WriteLine("下载失败 ：" + item.UrlPath);
+                Console.WriteLine(e);
+                Console.WriteLine("==============================");
                 item.ErrorMessage = e.Message;
                 if (e.Message == "路径不合法" || e.Message == "下载地址为空") {
                     item.State = DownloadFile.StateType.Error;
@@ -302,7 +339,7 @@ public class DownloadUtil {
                     errorDownloadFiles.Add(item);
                 }
                 else {
-                    if (item.RetryCount > RetryCount) {
+                    if (item.RetryCount <= RetryCount) {
                         item.RetryCount++;
                         item.State = DownloadFile.StateType.Waiting;
                         DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
@@ -334,7 +371,7 @@ public class DownloadUtil {
                 return;
             }
             if (!IsCancel && waitDownloadFiles.Count > 0) {
-                _ = Task.Delay(100);
+                _ = Task.Delay(200);
                 _ = DownloadFilesFunc().ConfigureAwait(false);
             }
         }

@@ -18,8 +18,12 @@
         TextOptions.TextRenderingMode="ClearType"
         RenderOptions.ClearTypeHint="Enabled"
         Name="MainWindowPage"
-        Opacity="0"
-        Icon="assets/ico.ico">
+        Opacity="1"
+        Icon="assets/ico.ico"
+        AllowDrop="True"
+        PreviewDragOver="MainWindow_OnPreviewDragOver"
+        PreviewDrop="MainWindow_OnPreviewDrop"
+        DragLeave="MainWindow_OnDragLeave">
     
     <Window.Resources>
         <ResourceDictionary Source="/Style/MainWindowStyle.xaml"></ResourceDictionary>
@@ -131,6 +135,15 @@
         <Grid Name="MessageTipContainer"></Grid>
         <Border CornerRadius="5" 
                 BorderThickness="2"
-                BorderBrush="{DynamicResource PrimaryBrush_3}"></Border>
+                BorderBrush="{DynamicResource PrimaryBrush_3}">
+            <Grid Name="DragFileGrid" Opacity="0" Visibility="Collapsed">
+                <Border Background="#55131313" CornerRadius="10">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="释放文件安装整合包" FontSize="18" Foreground="{StaticResource SecondaryBrush}"></TextBlock>
+                        <TextBlock Text="[ 仅支持大部分整合包安装格式 ]" Foreground="{StaticResource SecondaryBrush}"></TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

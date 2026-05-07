@@ -14,7 +14,7 @@ public partial class App : Application {
     protected override void OnStartup(StartupEventArgs e) {
         base.OnStartup(e);
         PropertiesUtil.LoadPropertiesJson();
-        DownloadUtil.init(15,8);
+        DownloadUtil.init(30,10);
         ThemeUtil.init();
         HardwareAccelerationSetting = hardwareAccelerationSetting;
     }

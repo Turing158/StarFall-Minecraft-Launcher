@@ -139,6 +139,7 @@
     <ItemGroup>
       <PackageReference Include="fNbt" Version="1.0.0" />
       <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
+      <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="System.Management" Version="10.0.0-preview.6.25358.103" />
     </ItemGroup>

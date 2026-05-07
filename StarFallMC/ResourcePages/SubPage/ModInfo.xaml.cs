@@ -91,9 +91,9 @@ public partial class ModInfo : Page {
 
     public class ViewModel : INotifyPropertyChanged {
         
-        private ModResource _resource;
+        private MinecraftResource _resource;
         
-        public ModResource Resource {
+        public MinecraftResource Resource {
             get => _resource;
             set => SetField(ref _resource, value);
         }

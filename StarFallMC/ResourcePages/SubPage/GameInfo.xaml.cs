@@ -508,12 +508,11 @@ public partial class GameInfo : Page {
         MainWindow.BackHandle.Invoke();
         MainWindow.DownloadPageShow.Invoke();
         if (viewModel.SelectedForgeLoader != null) {
-            string forgeDownloadUrl = $"https://bmclapi2.bangbang93.com/forge/download/{viewModel.SelectedForgeLoader.Build}";
             await MinecraftUtil.StartDownloadInstallForge(
                 viewModel.Downloader.Name,
                 viewModel.VersionName,
                 currentDir, 
-                forgeDownloadUrl,
+                viewModel.SelectedForgeLoader,
                 viewModel.SelectedOptifineLoader);
         }
         else if (viewModel.SelectedOptifineLoader != null) {
