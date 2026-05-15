@@ -342,6 +342,8 @@ public partial class Home : Page {
     };
 
     private void switchDownloadBtnShow(bool flag) {
-        DownloadBtn.BeginAnimation(OpacityProperty,flag ? ToOneAnimation : ToZeroAnimation);
+        this.Dispatcher.BeginInvoke(() => {
+            DownloadBtn.BeginAnimation(OpacityProperty,flag ? ToOneAnimation : ToZeroAnimation);
+        });
     }
 }

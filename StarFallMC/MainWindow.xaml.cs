@@ -226,7 +226,6 @@ public partial class MainWindow : Window {
             GameInfo.CancelLoading?.Invoke();
         }
         else {
-            MessageTips.Show("关闭");
             if (SubFrame.Opacity == 0) {
                 DownloadHide.Begin();
             }
