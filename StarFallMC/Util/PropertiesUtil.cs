@@ -124,6 +124,8 @@ public class PropertiesUtil {
         LauncherArgs["bg"] = bg;
         LauncherArgs["hardwareAcceleration"] = launcherArgs.HardwareAcceleration;
         LauncherArgs["enableNotice"] = launcherArgs.EnableNotice;
+        LauncherArgs["showDownloadBtn"] = launcherArgs.ShowDownloadBtn;
+        LauncherArgs["theme"] = launcherArgs.ThemeType;
         return LauncherArgs;
     }
 
@@ -353,6 +355,8 @@ public class PropertiesUtil {
 
         public bool HardwareAcceleration { get; set; } = true;
         public bool EnableNotice { get; set; } = true;
+        public bool ShowDownloadBtn { get; set; } = false;
+        public string ThemeType { get; set; } = "";
     }
     
     public static LauncherArgs launcherArgs = new ();
@@ -402,20 +406,30 @@ public class PropertiesUtil {
                 bg["path"] = "";
             }
             try {
-                launcherArgs.EnableNotice = launcher["EnableNotice"].Value<bool>();
+                launcherArgs.EnableNotice = launcher["enableNotice"].Value<bool>();
             }
             catch (Exception e){
                 launcherArgs.EnableNotice = true;
-                launcher["EnableNotice"] = true;
+                launcher["enableNotice"] = true;
             }
 
             try {
-                launcherArgs.HardwareAcceleration = launcher["HardwareAcceleration"].Value<bool>();
+                launcherArgs.HardwareAcceleration = launcher["hardwareAcceleration"].Value<bool>();
             }
             catch (Exception e) {
                 launcherArgs.HardwareAcceleration = true;
-                launcher["HardwareAcceleration"] = true;
+                launcher["hardwareAcceleration"] = true;
             }
+
+            try {
+                launcherArgs.ShowDownloadBtn = launcher["showDownloadBtn"].Value<bool>();
+            }
+            catch (Exception e) {
+                launcherArgs.ShowDownloadBtn = false;
+                launcher["showDownloadBtn"] = false;
+            }
+
+            launcherArgs.ThemeType = launcher["theme"]?.Value<string>() ?? "Puce" ;
         }
         else {
             launcher = new JObject();
@@ -424,8 +438,11 @@ public class PropertiesUtil {
             bg["path"] = "";
             
             launcher["bg"] = bg;
-            launcher["EnableNotice"] = true;
-            launcher["HardwareAcceleration"] = true;
+            launcher["enableNotice"] = true;
+            launcher["hardwareAcceleration"] = true;
+            launcher["showDownloadBtn"] = false;
+            launcher["theme"] = "Puce";
+
             loadJson["launcher"] = launcher;
         }
     }

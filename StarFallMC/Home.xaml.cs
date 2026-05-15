@@ -31,6 +31,8 @@ public partial class Home : Page {
     public static Action<string> StartingState;
     public static Action SettingBackground;
     public static Func<ViewModel> GetViewModel;
+    public static Action<bool> SwitchHomeNotice;
+    public static Action<bool> SwitchDownloadBtnShow;
     public static bool GameStarting = false;
     
     public Home() {
@@ -49,6 +51,9 @@ public partial class Home : Page {
         StartingState = startingState;
         SettingBackground = settingBackground;
         GetViewModel = getViewModel;
+        SwitchHomeNotice = switchHomeNotice;
+        SwitchDownloadBtnShow = switchDownloadBtnShow;
+        
         
         Downloading = (Storyboard)FindResource("Downloading");
         
@@ -321,5 +326,22 @@ public partial class Home : Page {
         var btn = sender as FrameworkElement;
         btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
         btn?.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
+    }
+
+    private void switchHomeNotice(bool flag){
+        HomeNotices.Visibility = flag ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private DoubleAnimation ToOneAnimation = new() {
+        To = 1,
+        Duration = TimeSpan.FromMilliseconds(200),
+    };
+    private DoubleAnimation ToZeroAnimation = new() {
+        To = 0,
+        Duration = TimeSpan.FromMilliseconds(200),
+    };
+
+    private void switchDownloadBtnShow(bool flag) {
+        DownloadBtn.BeginAnimation(OpacityProperty,flag ? ToOneAnimation : ToZeroAnimation);
     }
 }

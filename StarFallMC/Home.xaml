@@ -33,7 +33,7 @@
                 <RowDefinition Height="80"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Name="TopFrame">
-                <comp:Notices HorizontalAlignment="Left" Width="310" ></comp:Notices>
+                <comp:Notices x:Name="HomeNotices" HorizontalAlignment="Left" Width="310" ></comp:Notices>
                 <Grid Name="DownloadBtn" Width="50" Height="50" 
                       RenderTransformOrigin="0.5,0.5"
                       HorizontalAlignment="Right"
@@ -46,7 +46,8 @@
                     </Grid.RenderTransform>
                     <Button Style="{StaticResource DownloadBtn}" 
                             Tag="None" Click="DownloadBtn_OnClick"></Button>
-                    <Border Name="DownloadBorder" BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="2" CornerRadius="60" Opacity="0"></Border>
+                    <Border Name="DownloadBorder" BorderBrush="{DynamicResource PrimaryBrush}" 
+                            BorderThickness="2" CornerRadius="60" Opacity="0"></Border>
                 </Grid>
             </Grid>
             <Grid Row="1" Name="BottomFrame" VerticalAlignment="Bottom" Height="80">

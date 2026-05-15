@@ -32,6 +32,7 @@ public partial class GameSetting : Page {
     private void initInfo() {
         var freeMemory = MinecraftUtil.GetMemoryAllInfo()[MinecraftUtil.MemoryName.FreeMemory];
         viewModel.MemoryValue = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
+        CurrentMemory.Text = viewModel.MemoryValue + "mb";
         PropertiesUtil.LoadGameSettingArgs(ref viewModel);
         RefleshMemory();
         JvmExtraArea.ToolTip = "JVM参数\n\n"+
@@ -240,6 +241,7 @@ public partial class GameSetting : Page {
 
     private void Memory_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
         MemorySlider.ValueText = ((double)viewModel.MemoryValue / 1024).ToString("F1")+"G";
+        CurrentMemory.Text = viewModel.MemoryValue + "mb";
         MemorySlider.Interval = 100;
     }
 

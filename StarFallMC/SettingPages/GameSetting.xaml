@@ -48,22 +48,25 @@
                             <comp:ComboBox.ChoiceTemplate>
                                 <DataTemplate>
                                     <Grid ToolTip="{Binding Path}">
-                                        <TextBlock Text="{Binding Name}" FontSize="14" 
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="14"
                                                    Foreground="{DynamicResource SecondaryBrush_1}"
                                                    HorizontalAlignment="Left" VerticalAlignment="Center"
-                                                   Margin="20 0 100 0" Padding="0 10"></TextBlock>
-                                        <Border Margin="100 0" Height="10"></Border>
-                                        <TextBlock Text="{Binding Version}" FontSize="12"
-                                                   Foreground="{DynamicResource SecondaryBrush}"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   Margin="35 0 0 10"></TextBlock>
-                                        <TextBlock Text="{Binding Path}" FontSize="11"
-                                                   Foreground="{DynamicResource PrimaryBrush_4}"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                   TextWrapping="NoWrap"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   MaxWidth="300"
-                                                   Margin="0 15 0 0"></TextBlock>
+                                                   Margin="20 0 0 0" Padding="0 10"></TextBlock>
+                                        
+                                        <Border Grid.Column="1" Height="10"></Border>
+                                        <Grid Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="0,0,0,0">
+                                            <TextBlock Text="{Binding Version}" FontSize="12"
+                                                       Foreground="{DynamicResource SecondaryBrush}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       Margin="35 0 0 10"></TextBlock>
+                                            <TextBlock Text="{Binding Path}" FontSize="11"
+                                                       Foreground="{DynamicResource PrimaryBrush_4}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                       TextWrapping="NoWrap"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="300"
+                                                       Margin="0 15 0 0"></TextBlock>
+                                        </Grid>
                                     </Grid>
                                 </DataTemplate>
                             </comp:ComboBox.ChoiceTemplate>
@@ -84,10 +87,16 @@
                 <Border Height="100" Style="{StaticResource RectByMargin}">
                     <Grid>
                         <TextBlock Text="游戏内存:" Style="{StaticResource RectTitle}"></TextBlock>
-                        <comp:ToggleButton x:Name="MemoryMode" 
-                                      HorizontalAlignment="Right" 
-                                      VerticalAlignment="Top" 
-                                      Margin="50 10" 
+                        <TextBlock Name="CurrentMemory"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Top"
+                                   Margin="0 15 130 0"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource SecondaryBrush_1}"/>
+                        <comp:ToggleButton x:Name="MemoryMode"
+                                      HorizontalAlignment="Right"
+                                      VerticalAlignment="Top"
+                                      Margin="50 10"
                                       Click="MemoryMode_OnClick"
                                       IsChecked="{Binding AutoMemoryDisable}">
                             <comp:ToggleButton.LeftContent>

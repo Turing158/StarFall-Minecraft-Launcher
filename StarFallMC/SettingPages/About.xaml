@@ -15,7 +15,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
                         <Border CornerRadius="5" 
-                                Background="{DynamicResource PrimaryBrush_4}" 
+                                Background="{DynamicResource PrimaryBrush_1}" 
                                 Height="50">
                             <Grid>
                                 <Image Width="35" Height="35" 
@@ -24,11 +24,11 @@
                                         Margin="7.5"></Image>
                                 <StackPanel Height="40" HorizontalAlignment="Left"  Margin="50 2  0 2">
                                     <TextBlock Text="{Binding Name}" 
-                                               Foreground="{DynamicResource PrimaryBrush}"
+                                               Foreground="{DynamicResource PrimaryBrush_4}"
                                                FontSize="14"></TextBlock>
                                     <TextBlock Text="{Binding Role}"
                                                Margin="0 3 0 0" 
-                                               Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                               Foreground="{DynamicResource PrimaryBrush_4}"></TextBlock>
                                 </StackPanel>
                                 <component:Button Height="30" Width="30" 
                                                   HorizontalAlignment="Right" 
@@ -60,7 +60,7 @@
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                                 <ColumnDefinition Width="100"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource PrimaryBrush_4}" 
+                            <Border Background="{DynamicResource PrimaryBrush_1}" 
                                     CornerRadius="5">
                                 <Grid>
                                     <Image Width="25" Height="25" 
@@ -69,12 +69,12 @@
                                            Source="../assets/ico.ico"></Image>
                                     <StackPanel Height="40" HorizontalAlignment="Left"  Margin="50 2  0 2">
                                         <TextBlock Text="StarFallMC" 
-                                                   Foreground="{DynamicResource PrimaryBrush}"
+                                                   Foreground="{DynamicResource PrimaryBrush_4}"
                                                    FontSize="13"></TextBlock>
                                         <TextBlock Text="一个Minecraft启动器"
                                                    FontSize="11"
                                                    Margin="0 2 0 0" 
-                                                   Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                                   Foreground="{DynamicResource PrimaryBrush_4}"></TextBlock>
                                     </StackPanel>
                                     <Border HorizontalAlignment="Right"
                                             VerticalAlignment="Top" 
@@ -92,7 +92,7 @@
                             <Border Grid.Column="1" 
                                     Name="UpdateBtn"
                                     Margin="10 0 0 0" 
-                                    Background="{DynamicResource PrimaryBrush_4}"
+                                    Background="{DynamicResource PrimaryBrush_1}"
                                     CornerRadius="5"
                                     MouseLeftButtonDown="Update_OnMouseLeftButtonDown"
                                     MouseLeftButtonUp="Update_OnMouseLeftButtonUp"
@@ -105,14 +105,14 @@
                                     <StackPanel ToolTip="点击检查更新"  VerticalAlignment="Center"
                                                 Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanFalseToVisibilityVisibleConverter}}">
                                         <TextBlock HorizontalAlignment="Center"
-                                                   Foreground="{DynamicResource PrimaryBrush}"
+                                                   Foreground="{DynamicResource PrimaryBrush_4}"
                                                    FontSize="13"
                                                    Text="暂无更新"></TextBlock>
                                         <TextBlock HorizontalAlignment="Center"
                                                    Text="点击检查更新" 
                                                    FontSize="10"
                                                    Margin="0 1 0 0" 
-                                                   Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                                   Foreground="{DynamicResource PrimaryBrush_4}"></TextBlock>
                                     </StackPanel>
                                     <Grid Visibility="{Binding NeedUpdate, Converter={StaticResource BooleanTrueToVisibilityVisibleConverter}}">
                                         <Border Margin="5"
@@ -145,12 +145,12 @@
                                         <TextBlock Text="点击更新" 
                                                    FontSize="11"
                                                    Margin="0 0 0 1"
-                                                   Foreground="{DynamicResource PrimaryBrush}" 
+                                                   Foreground="{DynamicResource PrimaryBrush_4}" 
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Bottom"></TextBlock>
                                     </Grid>
                                     <Border Name="UpdateLoading" 
-                                            Background="{DynamicResource PrimaryBrush_4}"
+                                            Background="{DynamicResource PrimaryBrush_1}"
                                             CornerRadius="5">
                                         <StackPanel  HorizontalAlignment="Center" 
                                                      VerticalAlignment="Center">
@@ -159,7 +159,7 @@
                                                        FontSize="13"
                                                        HorizontalAlignment="Center"
                                                        RenderTransformOrigin="0.5,0.5"
-                                                       Foreground="{DynamicResource PrimaryBrush}">
+                                                       Foreground="{DynamicResource PrimaryBrush_4}">
                                                 <TextBlock.RenderTransform>
                                                     <RotateTransform Angle="0"></RotateTransform>
                                                 </TextBlock.RenderTransform>
@@ -176,7 +176,7 @@
                                                     </EventTrigger>
                                                 </TextBlock.Triggers>
                                             </TextBlock>
-                                            <TextBlock Text="检测更新中..." Foreground="{DynamicResource PrimaryBrush}"></TextBlock>
+                                            <TextBlock Text="检测更新中..." Foreground="{DynamicResource PrimaryBrush_4}"></TextBlock>
                                         </StackPanel>
                                     </Border>
                                 </Grid>

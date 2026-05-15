@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
 using StarFallMC.ResourcePages;
@@ -23,6 +24,7 @@ public partial class ResourcePage : Page {
 
     public static Action ChangeVersionAction;
     public static Action LoadTempPage;
+    public static Action TheFirstEnterResourcePage;
     
     private string tempPagePath = "ResourcePages/TexturePacksPage.xaml";
     
@@ -32,6 +34,7 @@ public partial class ResourcePage : Page {
         NaviBarChangeAnim = (Storyboard)FindResource("NaviBarChangeAnim");
         ChangeVersionAction = changeVersionAction;
         LoadTempPage = loadTempPage;
+        TheFirstEnterResourcePage = theFirstEnterResourcePage;
         
         //初始化ModData
         ResourceUtil.GetMcModDataInit();
@@ -74,7 +77,11 @@ public partial class ResourcePage : Page {
             return true;
         }
     }
+    private bool theFirstEnter = true;
     private void NaviBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+        if (theFirstEnter) {
+            return;
+        }
         NaviBarChangeAnim.Begin();
         NaviBarChangeTimer?.Dispose();
         NaviBarChangeTimer = new Timer(o => {
@@ -96,12 +103,7 @@ public partial class ResourcePage : Page {
         }, null, 300, 0);
     }
 
-    private bool isFirst = true;
     private void NavigetePage(string path) {
-        if (isFirst) {
-            isFirst = false;
-            return;
-        }
         if (!string.IsNullOrEmpty(path)) {
             PageFrame.Navigate(new Uri(path, UriKind.Relative));
         }
@@ -122,6 +124,14 @@ public partial class ResourcePage : Page {
             Console.WriteLine("存在切换版本，加载临时页面");
             NavigetePage(tempPagePath);
             tempPagePath = "";
+        }
+    }
+
+//  此方法為了不讓啓動器加載后直接加載第一個ResourcePage頁面
+    private void theFirstEnterResourcePage() {
+        if (theFirstEnter) {
+            theFirstEnter = false;
+            NaviBar_OnSelectionChanged(null,null);
         }
     }
 }

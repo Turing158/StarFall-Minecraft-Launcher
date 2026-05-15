@@ -12,7 +12,7 @@ public class ThemeUtil {
     }
     
     private static ThemeColor puce = new ("#D7C6C5", "#C4ABAA", "#B2908F", "#957A78", "#513938", "#264446", "#113032", "#001D1F");
-    private static ThemeColor ebony = new ThemeColor("#E0E3DE", "#C8CDC5", "#B1B8AD","#6C7665 ","#555D50", "#385A80", "#204569", "#003153");
+    private static ThemeColor ebony = new ("#E0E3DE", "#C8CDC5", "#B1B8AD","#6C7665 ","#555D50", "#385A80", "#204569", "#003153");
     public static SolidColorBrush PrimaryBrush;
     public static SolidColorBrush PrimaryBrush_1;
     public static SolidColorBrush PrimaryBrush_2;
@@ -25,7 +25,13 @@ public class ThemeUtil {
     public static Action updateColor;
 
     public static void init() {
-        ThemeColor color = puce;
+        var typeStr = PropertiesUtil.launcherArgs.ThemeType;
+        var type = ParseStringToThemeType(typeStr);
+        var typeParseStr = ParseThemeTypeToString(type);
+        if (!typeStr.Equals(typeParseStr)) {
+            PropertiesUtil.launcherArgs.ThemeType = typeParseStr;
+        }
+        var color = getThemeColor(type);
         PrimaryBrush = ToSolidColorBrush(color.Primary);
         PrimaryBrush_1 = ToSolidColorBrush(color.Primary_1);
         PrimaryBrush_2 = ToSolidColorBrush(color.Primary_2);
@@ -43,6 +49,7 @@ public class ThemeUtil {
         Application.Current.Resources["SecondaryBrush"] = SecondaryBrush;
         Application.Current.Resources["SecondaryBrush_1"] = SecondaryBrush_1;
         Application.Current.Resources["SecondaryBrush_2"] = SecondaryBrush_2;
+
     }
     
     public static SolidColorBrush ToSolidColorBrush(string colorHex) {
@@ -54,15 +61,8 @@ public class ThemeUtil {
     }
 
     public static void ChangeColor(ThemeType type) {
-        ThemeColor color = ebony;
-        switch (type) {
-            case ThemeType.Puce:
-                color = puce;
-                break;
-            case ThemeType.Ebony:
-                color = ebony;
-                break;
-        }
+        
+        var color = getThemeColor(type);
         ColorChange(ref PrimaryBrush, nameof(PrimaryBrush), color.Primary);
         ColorChange(ref PrimaryBrush_1, nameof(PrimaryBrush_1), color.Primary_1);
         ColorChange(ref PrimaryBrush_2, nameof(PrimaryBrush_2), color.Primary_2);
@@ -72,6 +72,7 @@ public class ThemeUtil {
         ColorChange(ref SecondaryBrush_1, nameof(SecondaryBrush_1), color.Secondary_1);
         ColorChange(ref SecondaryBrush_2, nameof(SecondaryBrush_2), color.Secondary_2);
         updateColor();
+        PropertiesUtil.launcherArgs.ThemeType = ParseThemeTypeToString(type);
     }
 
     private static void ColorChange(ref SolidColorBrush Brush,string BrushKey,string toColorHex) {
@@ -86,4 +87,22 @@ public class ThemeUtil {
         Brush.BeginAnimation(SolidColorBrush.ColorProperty, animation);
         Application.Current.Resources[BrushKey] = Brush;
     }
+
+    public static string ParseThemeTypeToString(ThemeType type) => type switch {
+        ThemeType.Puce => "Puce",
+        ThemeType.Ebony => "Ebony",
+        _ => ""
+    };
+
+    public static ThemeType ParseStringToThemeType(string type) => type switch {
+        "Puce" => ThemeType.Puce,
+        "Ebony" => ThemeType.Ebony,
+        _ => ThemeType.Puce
+    };
+
+    private static ThemeColor getThemeColor(ThemeType type) => type switch{
+        ThemeType.Puce => puce,
+        ThemeType.Ebony => ebony,
+        _ => puce
+    };
 }

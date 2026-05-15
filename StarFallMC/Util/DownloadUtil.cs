@@ -38,6 +38,8 @@ public class DownloadUtil {
     private static CancellationTokenSource globalCts;
     public static bool IsCancel { get; private set; }
 
+    private static Timer hideDownloadBtnTimer;
+
     public static async Task StartDownload(List<DownloadFile> downloadFiles) {
         DownloadMode mode = DownloadMode.Single;
         bool isDownload = true;
@@ -172,7 +174,6 @@ public class DownloadUtil {
                 i.UrlPath = i.UrlPaths[0];
             }
 
-            Console.WriteLine("");
             i.RetryCount = 0;
             i.State = DownloadFile.StateType.Waiting;
             waitDownloadFiles.Enqueue(i);
@@ -263,6 +264,27 @@ public class DownloadUtil {
         return false;
     }
     
+    public static void SetTimerToHideDownloadBtn(bool flag) {
+        if (!PropertiesUtil.launcherArgs.ShowDownloadBtn) {
+            if (flag) {
+                if (hideDownloadBtnTimer == null) {
+                    hideDownloadBtnTimer = new (s => {
+                        Home.SwitchDownloadBtnShow?.Invoke(false);
+                        hideDownloadBtnTimer.Dispose();
+                        hideDownloadBtnTimer = null;
+                    },null,TimeSpan.FromMinutes(0.1),TimeSpan.Zero);
+                }
+            }
+            else {
+                if (hideDownloadBtnTimer != null) {
+                    hideDownloadBtnTimer.Dispose();
+                    hideDownloadBtnTimer = null;
+                    Home.SwitchDownloadBtnShow?.Invoke(true);
+                }
+            }
+        }
+    }
+
     public class ThreadDownloader {
         private HttpClient httpClient = new (handler);
         public bool isRunning { get; set; } = false;
@@ -367,6 +389,7 @@ public class DownloadUtil {
                 Home.DownloadState?.Invoke(false);
                 DownloadPage.DownloadingAnimState?.Invoke(false);
                 downloadCompletionSource?.TrySetResult(true);
+                SetTimerToHideDownloadBtn(true);
                 Console.WriteLine($"下载任务完成    总共：{TotalCount} | 完成：{FinishCount} | 失败：{errorDownloadFiles.Count}");
                 return;
             }
@@ -388,4 +411,5 @@ public class DownloadUtil {
         }
         return $"{len:0.##} {sizes[order]}";
     }
+
 }

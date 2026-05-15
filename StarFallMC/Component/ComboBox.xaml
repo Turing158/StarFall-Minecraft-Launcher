@@ -18,9 +18,15 @@
         <local:ListEmptyToVisibilityConverter x:Key="ListEmptyToVisibilityConverter"/>
         <local:ObjectEmptyToCollapsedConverter x:Key="ObjectEmptyToCollapsedConverter"/>
         <local:ComboBoxChoiceEnabledConverter x:Key="ComboBoxChoiceEnabledConverter"/>
+        <local:ComboBoxTextMaxWidthConverter x:Key="ComboBoxTextMaxWidthConverter"/>
+        <local:ComboBoxListWidthConverter x:Key="ComboBoxListWidthConverter"/>
+        <local:ComboBoxListItemWidthConverter x:Key="ComboBoxListItemWidthConverter"/>
+        <local:ComboBoxGridMarginConverter x:Key="ComboBoxGridMarginConverter"/>
+        <local:ComboBoxGridMaxWidthConverter x:Key="ComboBoxGridMaxWidthConverter"/>
         <Style x:Key="DefaultItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"></Setter>
             <Setter Property="extension:ListViewItemExtension.ClickAnimate" Value="{Binding IsAnimatedOnSelection,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"></Setter>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
             <Setter Property="IsEnabled">
                 <Setter.Value>
                     <MultiBinding Converter="{StaticResource ComboBoxChoiceEnabledConverter}">
@@ -32,23 +38,32 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
-                        <Grid>
-                            <Border Name="Bg" 
-                                    Background="{DynamicResource PrimaryBrush_1}" 
-                                    BorderBrush="{DynamicResource PrimaryBrush_4}" 
+                        <Grid x:Name="ListItemGrid" ClipToBounds="True"
+                              HorizontalAlignment="Stretch"
+                              Margin="{Binding DeleteButtonVisibility, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ComboBoxGridMarginConverter}}"
+                              MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ListView}, Converter={StaticResource ComboBoxGridMaxWidthConverter}}"
+                              >
+                            <Border Name="Bg"
+                                    Background="{DynamicResource PrimaryBrush_1}"
+                                    BorderBrush="{DynamicResource PrimaryBrush_4}"
                                     BorderThickness="1"
                                     CornerRadius="5"
-                                    Opacity="0">
+                                    Opacity="0"
+                                    ClipToBounds="True"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch">
                                 <Border HorizontalAlignment="Right"
                                         VerticalAlignment="Center"
                                         Margin="5 0"
-                                        Visibility="{Binding DeleteButtonVisibility ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
+                                        Visibility="{Binding DeleteButtonVisibility ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                                        ClipToBounds="True">
                                     <local:TextButton Name="DeleteButton" Focusable="False"
                                                       FontSize="20"
                                                       Content="&#xe90b;"
                                                       ToolTip="删除"
                                                       Tag="{TemplateBinding Content}"
-                                                      Click="DeleteItem_OnClick">
+                                                      Click="DeleteItem_OnClick"
+                                                      ClipToBounds="True">
                                         <local:TextButton.Style>
                                             <Style TargetType="local:TextButton" BasedOn="{StaticResource {x:Type local:TextButton}}">
                                                 <Setter Property="Visibility">
@@ -65,10 +80,13 @@
                                     </local:TextButton>
                                 </Border>
                             </Border>
-                            <ContentControl Name="ContentControl" 
-                                            Margin="{Binding Visibility,ElementName=DeleteButton,Converter={StaticResource ComboBoxChoiceMarginAnimationConverter}}" 
-                                            Content="{TemplateBinding Content}" 
-                                            ContentTemplate="{Binding ChoiceTemplate ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}">
+                            <!-- Margin="{Binding Visibility,ElementName=DeleteButton,Converter={StaticResource ComboBoxChoiceMarginAnimationConverter}}"  -->
+                            <ContentControl Name="ContentControl"
+                                            Margin="0 0 10 0"
+                                            Content="{TemplateBinding Content}"
+                                            ContentTemplate="{Binding ChoiceTemplate ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Left">
                             </ContentControl>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -76,7 +94,7 @@
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" 
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity"
                                                              To="1" Duration="0:0:0.2"></DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
@@ -84,12 +102,34 @@
                                 <Trigger.ExitActions>
                                     <BeginStoryboard>
                                         <Storyboard>
-                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity" 
+                                            <DoubleAnimation Storyboard.TargetName="Bg" Storyboard.TargetProperty="Opacity"
                                                              To="0" Duration="0:0:0.2"></DoubleAnimation>
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
                             </Trigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                                    <Condition Binding="{Binding DeleteButtonVisibility, RelativeSource={RelativeSource AncestorType=local:ComboBox}}" Value="Visible" />
+                                </MultiDataTrigger.Conditions>
+                                <MultiDataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetName="ContentControl" Storyboard.TargetProperty="Margin"
+                                                                To="0 0 30 0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></ThicknessAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.EnterActions>
+                                <MultiDataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ThicknessAnimation Storyboard.TargetName="ContentControl" Storyboard.TargetProperty="Margin"
+                                                                To="0 0 10 0" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></ThicknessAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </MultiDataTrigger.ExitActions>
+                            </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -98,32 +138,46 @@
         </Style>
         
         <DataTemplate x:Key="DefaultChoice">
-            <TextBlock Text="{Binding}"
-                       VerticalAlignment="Center" 
-                       HorizontalAlignment="Left"
-                       Foreground="{DynamicResource SecondaryBrush}"
-                       FontSize="14" Margin="30 5"
-                       TextWrapping="NoWrap"
-                       TextTrimming="CharacterEllipsis"></TextBlock>
+            <Grid ClipToBounds="True">
+                <TextBlock Text="{Binding}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Left"
+                           Foreground="{DynamicResource SecondaryBrush}"
+                           FontSize="14" Margin="30 5 0 5"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           ClipToBounds="True" />
+            </Grid>
+            <!-- MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ComboBoxTextMaxWidthConverter}}" -->
         </DataTemplate>
         
         <DataTemplate x:Key="DefaultCurrentChoice">
-            <TextBlock Text="{Binding}"
-                       VerticalAlignment="Center" 
-                       HorizontalAlignment="Left"
-                       Foreground="{DynamicResource SecondaryBrush}"
-                       FontSize="15" Margin="30 5"
-                       TextWrapping="NoWrap"
-                       TextTrimming="CharacterEllipsis"></TextBlock>
+            <Grid ClipToBounds="True">
+                <TextBlock Text="{Binding}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Left"
+                           Foreground="{DynamicResource SecondaryBrush}"
+                           FontSize="15" Margin="30 5 0 5"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ComboBoxTextMaxWidthConverter}}"
+                           ClipToBounds="True" />
+            </Grid>
         </DataTemplate>
             
         <DataTemplate x:Key="DefaultNoSelect">
-            <TextBlock Text="{Binding }" 
-                       Foreground="{DynamicResource SecondaryBrush}"
-                       HorizontalAlignment="Left" 
-                       VerticalAlignment="Center" 
-                       FontSize="15" 
-                       Margin="20 0"></TextBlock>
+            <Grid ClipToBounds="True">
+                <TextBlock Text="{Binding}"
+                           Foreground="{DynamicResource SecondaryBrush}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center"
+                           FontSize="15"
+                           Margin="20 0"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ComboBoxTextMaxWidthConverter}}"
+                           ClipToBounds="True" />
+            </Grid>
         </DataTemplate>
         
         <ContentControl x:Key="DefaultDisabledContent" >
@@ -167,7 +221,8 @@
                            Margin="0 10" 
                            Visibility="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ListEmptyToVisibilityConverter}}"></TextBlock>
                 <ScrollViewer Name="ScrollViewer" MaxHeight="{Binding MaxDropDownHeight,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
-                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              ClipToBounds="True">
                     <ListView ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
                               ItemContainerStyle="{StaticResource DefaultItemStyle}"
                               ItemTemplate="{Binding ChoiceTemplate ,RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
@@ -175,7 +230,12 @@
                               SelectedItem="{Binding CurrentItem, RelativeSource={RelativeSource AncestorType=local:ComboBox}}"
                               SelectionChanged="ListView_SelectionChanged"
                               Loaded="ListView_OnLoaded"
-                              Margin="5">
+                              Margin="5"
+                              Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=local:ComboBox}, Converter={StaticResource ComboBoxListWidthConverter}}"
+                              HorizontalContentAlignment="Stretch"
+                              ClipToBounds="True"
+                              SnapsToDevicePixels="True"
+                              UseLayoutRounding="True">
                     </ListView>
                 </ScrollViewer>
             </Grid>

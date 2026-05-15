@@ -43,6 +43,12 @@ public partial class LauncherSetting : Page {
                 new NavigationItem("网络图片"),
             };
         }
+
+        private Visibility _isShowRefreshNoticeBtn;
+        public Visibility IsShowRefreshNoticeBtn {
+            get => _isShowRefreshNoticeBtn;
+            set => SetField(ref _isShowRefreshNoticeBtn, value);
+        }
         
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -137,5 +143,52 @@ public partial class LauncherSetting : Page {
 
         PropertiesUtil.launcherArgs.HardwareAcceleration = !toggleButton.IsChecked.Value;
         App.HardwareAccelerationSetting?.Invoke();
+    }
+
+    private void ShowNotice_OnClick(object sender, RoutedEventArgs e) {
+        var toggleButton = sender as ToggleButton;
+        if (toggleButton == null) {
+            return;
+        }
+        var isShowNotice = !toggleButton.IsChecked.Value;
+        MessageTips.Show("是否開啓公告：" + (isShowNotice ? "是" : "否"));
+        PropertiesUtil.launcherArgs.EnableNotice = isShowNotice;
+        viewModel.IsShowRefreshNoticeBtn = isShowNotice ? Visibility.Visible : Visibility.Collapsed;
+        Home.SwitchHomeNotice?.Invoke(!toggleButton.IsChecked.Value);
+    }
+
+    private Timer refreshNoticeTimer;
+    private bool canRefreshNotice = true;
+    private void RefreshNotice_OnClick(object sender, RoutedEventArgs e) {
+        if (refreshNoticeTimer == null){
+            refreshNoticeTimer = new Timer(s =>{
+                canRefreshNotice = true;
+                refreshNoticeTimer.Dispose();
+                refreshNoticeTimer = null;
+            },null , TimeSpan.FromSeconds(3) ,TimeSpan.Zero);
+        }
+        if (canRefreshNotice){
+            MessageTips.Show("刷新公告");
+            Notices.RefreshNotices?.Invoke();
+            canRefreshNotice = false;
+        }
+        else{
+            MessageTips.Show("慢点~慢点~会坏掉的！");
+        }
+
+    }
+
+    private void ShowDownload_OnClick(object sender, RoutedEventArgs e) {
+        MainWindow.DownloadPageShow?.Invoke();
+    }
+
+    private void IsShowDownload_OnClick(object sender, RoutedEventArgs e) {
+        var toggleButton = sender as ToggleButton;
+        if (toggleButton == null) {
+            return;
+        }
+        var isShow = !toggleButton.IsChecked.Value;
+        MessageTips.Show((isShow ? "下載時" : "始終") + "顯示下載按鈕");
+        // 这里需要使用一个方法来判断是否需要切换完毕之后隐藏下载按钮（待开发）
     }
 }

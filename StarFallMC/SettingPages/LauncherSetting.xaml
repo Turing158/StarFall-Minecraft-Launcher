@@ -106,20 +106,85 @@
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="30"></RowDefinition>
+                                <RowDefinition Height="10"></RowDefinition>
                                 <RowDefinition Height="30"></RowDefinition>
+
+                                <!-- 此爲填充底部，不讓内容觸碰邊緣 -->
+                                <RowDefinition Height="10"></RowDefinition>
                             </Grid.RowDefinitions>
+
                             <Grid>
-                                <TextBlock FontSize="14" 
+                                <TextBlock FontSize="14"
                                            Margin="10 0 0 0"
-                                           HorizontalAlignment="Left" 
-                                           VerticalAlignment="Center" 
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Center"
                                            Text="硬件加速"></TextBlock>
-                                <comp:ToggleButton Width="80" Click="HardwareAcceleration_OnClick">
+                                <comp:ToggleButton Width="80"
+                                                   HorizontalAlignment="Right"
+                                                   Margin="0 0 10 0"
+                                                   Click="HardwareAcceleration_OnClick"
+                                                   ToolTip="开启：开启硬件加速（可能需要重启应用）&#x0a;关闭：关闭硬件加速">
                                     <comp:ToggleButton.LeftContent>
                                         <TextBlock Text="开启"></TextBlock>
                                     </comp:ToggleButton.LeftContent>
                                     <comp:ToggleButton.RightContent>
                                         <TextBlock Text="关闭"></TextBlock>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
+                            </Grid>
+
+                            <Grid Grid.Column="1">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10 0 0 0">
+                                    <TextBlock FontSize="14"
+                                               VerticalAlignment="Center"
+                                               Text="显示公告"></TextBlock>
+                                    <comp:TextButton Content="&#xe60c;"
+                                                     FontSize="14"
+                                                     Margin="5 0 0 0"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"
+                                                     Padding="4 0"
+                                                     Click="RefreshNotice_OnClick"
+                                                     Visibility="{Binding IsShowRefreshNoticeBtn}"></comp:TextButton>
+                                </StackPanel>
+                                <comp:ToggleButton Width="80"
+                                                   HorizontalAlignment="Right"
+                                                   Margin="0 0 10 0"
+                                                   Click="ShowNotice_OnClick"
+                                                   ToolTip="开启：开启公告显示&#x0a;关闭：关闭公告显示">
+                                    <comp:ToggleButton.LeftContent>
+                                        <TextBlock Text="开启"></TextBlock>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <TextBlock Text="关闭"></TextBlock>
+                                    </comp:ToggleButton.RightContent>
+                                </comp:ToggleButton>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Grid.Column="0" >
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10 0 0 0">
+                                    <TextBlock FontSize="14"
+                                               VerticalAlignment="Center"
+                                               Text="显示下载"></TextBlock>
+                                    <comp:Button Width="20"
+                                                 Height="20"
+                                                 Margin="5 0 0 0"
+                                                 ToolTip="点我进入下载页面"
+                                                 Click="ShowDownload_OnClick">
+                                        <TextBlock FontFamily="{StaticResource IconFontFamily}"
+                                                   Text="&#xe635;" FontSize="15"></TextBlock>
+                                    </comp:Button>
+                                </StackPanel>
+                                <comp:ToggleButton Width="80"
+                                                   HorizontalAlignment="Right"
+                                                   Margin="0 0 10 0"
+                                                   Click="IsShowDownload_OnClick"
+                                                   ToolTip="下载：只有在有下载任务的时候出现，没有下载任务或没有进入到下载页面的时候1分钟之后会消失&#x0a;始终：一直显示下载按钮">
+                                    <comp:ToggleButton.LeftContent>
+                                        <TextBlock Text="下载"></TextBlock>
+                                    </comp:ToggleButton.LeftContent>
+                                    <comp:ToggleButton.RightContent>
+                                        <TextBlock Text="始终"></TextBlock>
                                     </comp:ToggleButton.RightContent>
                                 </comp:ToggleButton>
                             </Grid>

@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
 using Button = StarFallMC.Component.Button;
@@ -32,20 +33,30 @@ public partial class About : Page {
     public async Task CheckUpdate() {
         return;//提交注释这里，可以检测版本更新
         UpdateLoading.BeginAnimation(OpacityProperty, valueTo1);
-        if (DateTime.Now - PropertiesUtil.LastCheckUpdateTime > TimeSpan.FromMinutes(10)) {
+        var interval = DateTime.Now - PropertiesUtil.LastCheckUpdateTime;
+        if (interval > TimeSpan.FromMinutes(1)) {
+            MessageTips.Show("正在检测更新中...");
             PropertiesUtil.LastCheckUpdateTime = DateTime.Now;
             var updateInfo = await NetworkUtil.GetUpdateInfo();
             if (updateInfo == null) {
                 viewModel.NeedUpdate = false;
-                UpdateLoading.BeginAnimation(OpacityProperty, valueTo0);
+                MessageTips.Show("无需更新");
             }
             else {
                 PropertiesUtil.LastUpdateInfo = updateInfo;
                 viewModel.LastUpdateInfo = updateInfo;
                 if (Version.Parse(viewModel.LastUpdateInfo.Version) > Version.Parse(PropertiesUtil.LauncherVersion)) {
                     viewModel.NeedUpdate = true;
+                    MessageTips.Show("需要更新");
+                }
+                else {
+                    viewModel.NeedUpdate = false;
+                    MessageTips.Show("无需更新");
                 }
             }
+        }
+        else {
+            MessageTips.Show("请" + (TimeSpan.FromMinutes(1) - interval).Seconds + "秒再试！");
         }
         UpdateLoading.BeginAnimation(OpacityProperty, valueTo0);
     }

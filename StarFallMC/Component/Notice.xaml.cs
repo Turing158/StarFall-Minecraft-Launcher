@@ -212,13 +212,62 @@ public partial class Notice : UserControl,INotifyPropertyChanged {
                 if (!url.StartsWith("http") || !url.Contains("://")) {
                     url = DirFileUtil.GetAbsolutePathInLauncherSettingDir(url);
                 }
-                var image = new Image {
-                    Source = new BitmapImage(new Uri(url, UriKind.RelativeOrAbsolute)),
-                    ToolTip = url,
-                    Stretch = Stretch.Uniform,
-                    StretchDirection = StretchDirection.DownOnly,
-                };
-                renderer.Push(new InlineUIContainer(image));
+                var flag = true;
+                BitmapImage bitmapImage;
+                try {
+                    bitmapImage = new BitmapImage(new Uri(url, UriKind.RelativeOrAbsolute));
+                } catch {
+                    flag = false;
+                    try {
+                        // 使用pack:// URI訪問應用程式資源
+                        string defaultImagePath = "pack://application:,,,/assets/DefaultGameIcon/unknowGame.png";
+                        bitmapImage = new BitmapImage(new Uri(defaultImagePath, UriKind.Absolute));
+                    } catch {
+                        // 如果pack://方案也失敗，使用原始方案作為備份
+                        try {
+                            bitmapImage = new BitmapImage(new Uri("../assets/DefaultGameIcon/unknowGame.png", UriKind.Relative));
+                        } catch {
+                            bitmapImage = new BitmapImage();
+                        }
+                    }
+                }
+                if (flag) {
+                    var image = new Image {
+                        Source = bitmapImage,
+                        ToolTip = url,
+                        Stretch = Stretch.Uniform,
+                        StretchDirection = StretchDirection.DownOnly,
+                    };
+                    renderer.Push(new InlineUIContainer(image));
+                } else {
+                    var stackPanel = new StackPanel {
+                        Orientation = Orientation.Horizontal,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(0, 2, 0, 2)
+                    };
+
+                    var image = new Image {
+                        Source = bitmapImage,
+                        ToolTip = "图片加载失败，URL: " + url,
+                        Stretch = Stretch.Uniform,
+                        StretchDirection = StretchDirection.DownOnly,
+                        Width = 16,
+                        Height = 16,
+                        Margin = new Thickness(0, 0, 5, 0)
+                    };
+
+                    var errorText = new TextBlock {
+                        Text = "图片加載失败！",
+                        Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF5252")),
+                        FontSize = 12,
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+
+                    stackPanel.Children.Add(image);
+                    stackPanel.Children.Add(errorText);
+
+                    renderer.Push(new InlineUIContainer(stackPanel));
+                }
             }
             else {
                 var hyperlink = new Hyperlink {
@@ -227,7 +276,14 @@ public partial class Notice : UserControl,INotifyPropertyChanged {
                 };
                 if (hyperlink.NavigateUri != null) {
                     hyperlink.RequestNavigate += (sender, e) => {
-                        NetworkUtil.OpenUrl(e.Uri.AbsoluteUri);
+                        string url = e.Uri.ToString();
+                        if (!string.IsNullOrEmpty(url) && url.StartsWith("#")) {
+                            // 锚点链接处理逻辑（未实现功能）
+                           MessageTips.Show("未实现功能：页面内标题跳转功能暂不支持");
+                        } else {
+                            // 普通链接处理逻辑
+                            NetworkUtil.OpenUrl(e.Uri.AbsoluteUri);
+                        }
                         e.Handled = true;
                     };
                 }

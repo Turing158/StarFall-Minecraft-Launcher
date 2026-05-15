@@ -157,6 +157,7 @@ public partial class MainWindow : Window {
         DownloadGameFrame.IsHitTestVisible = true;
         DownloadGameFrameTimer?.Dispose();
         ResourcePage.LoadTempPage?.Invoke();
+        ResourcePage.TheFirstEnterResourcePage?.Invoke();
         DownloadGameLeave.Stop();
         DownloadGameEnter.Begin();
         HideSetting();
@@ -225,12 +226,14 @@ public partial class MainWindow : Window {
             GameInfo.CancelLoading?.Invoke();
         }
         else {
+            MessageTips.Show("关闭");
             if (SubFrame.Opacity == 0) {
                 DownloadHide.Begin();
             }
             else {
                 DownloadOnlyHide.Begin();
             }
+            DownloadUtil.SetTimerToHideDownloadBtn(true);
             DownloadFrameTimer = new Timer(o => {
                 this.Dispatcher.BeginInvoke(() => {
                     DownloadFrame.IsHitTestVisible = false;
@@ -252,6 +255,7 @@ public partial class MainWindow : Window {
         DownloadShow.Begin();
         DownloadFrame.IsHitTestVisible = true;
         Title.Text = "下载 - Download";
+        DownloadUtil.SetTimerToHideDownloadBtn(false);
     }
 
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {

@@ -8,9 +8,11 @@ namespace StarFallMC.Component;
 
 public partial class Notices : UserControl {
     private string SettingFile = $"{DirFileUtil.LauncherSettingsDir}/Notices.json";
+    public static Action RefreshNotices;
     public Notices() {
         InitializeComponent();
         InitNotices();
+        RefreshNotices = refreshNotices;
     }
 
     public void InitNotices() {
@@ -41,7 +43,30 @@ public partial class Notices : UserControl {
                     else {
                         item = new NoticeItem(i["title"]?.ToString(), i["source"].ToString());
                     }
-                    item.Icon = i["icon"]?.ToString();
+                    // 处理图标路径：如果是相对路径则转换为绝对路径
+                    var iconPath = i["icon"]?.ToString();
+                    if (!string.IsNullOrEmpty(iconPath)) {
+                        // 检查是否是网络路径或pack:// URI
+                        bool isNetworkPath = iconPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                             iconPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                                             iconPath.StartsWith("ftp://", StringComparison.OrdinalIgnoreCase);
+                        bool isPackUri = iconPath.StartsWith("pack://", StringComparison.OrdinalIgnoreCase);
+
+                        if (isNetworkPath || isPackUri) {
+                            // 网络路径或pack:// URI，直接使用
+                            item.Icon = iconPath;
+                        }
+                        else if (!Path.IsPathRooted(iconPath)) {
+                            // 相对路径，转换为绝对路径
+                            item.Icon = DirFileUtil.GetAbsolutePathInLauncherSettingDir(iconPath);
+                        }
+                        else {
+                            // 已经是绝对路径，直接使用
+                            item.Icon = iconPath;
+                        }
+                    } else {
+                        item.Icon = iconPath;
+                    }
                     notices.Add(item);
                 }
             }
@@ -58,5 +83,20 @@ public partial class Notices : UserControl {
             notices.Add(item);
         }
         return notices;
+    }
+
+    private void refreshNotices(){
+        // 清除所有Notice控件并释放资源
+        foreach (var child in NoticesContainer.Children.OfType<Notice>().ToList()) {
+            // 清除数据上下文以释放绑定
+            child.DataContext = null;
+            // 清除依赖属性值
+            child.ClearValue(Notice.IconProperty);
+            child.ClearValue(Notice.TitleProperty);
+            child.ClearValue(Notice.ContentTextProperty);
+        }
+        NoticesContainer.Children.Clear();
+
+        InitNotices();
     }
 }
