@@ -129,6 +129,10 @@ public partial class ProcessProgresses : UserControl {
         }
     }
 
+    public bool HasProcessDoing() {
+        return Progresses != null && Progresses.Count != 0 && Progresses.Any(i => i.Progesses.Any(p => p.Status == ProcessStatus.Doing));
+    }
+
     private void ProcessDelete_OnClick(object sender, RoutedEventArgs e) {
         var button = sender as TextButton;
         string key = button?.Tag?.ToString();

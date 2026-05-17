@@ -121,6 +121,7 @@
                                            Text="硬件加速"></TextBlock>
                                 <comp:ToggleButton Width="80"
                                                    HorizontalAlignment="Right"
+                                                   IsChecked="{Binding IsHardwareAccelerationEnabled}"
                                                    Margin="0 0 10 0"
                                                    Click="HardwareAcceleration_OnClick"
                                                    ToolTip="开启：开启硬件加速（可能需要重启应用）&#x0a;关闭：关闭硬件加速">
@@ -150,6 +151,7 @@
                                 <comp:ToggleButton Width="80"
                                                    HorizontalAlignment="Right"
                                                    Margin="0 0 10 0"
+                                                   IsChecked="{Binding IsShowNoticeEnabled}"
                                                    Click="ShowNotice_OnClick"
                                                    ToolTip="开启：开启公告显示&#x0a;关闭：关闭公告显示">
                                     <comp:ToggleButton.LeftContent>
@@ -178,6 +180,7 @@
                                 <comp:ToggleButton Width="80"
                                                    HorizontalAlignment="Right"
                                                    Margin="0 0 10 0"
+                                                   IsChecked="{Binding IsShowDownloadButtonEnabled}"
                                                    Click="IsShowDownload_OnClick"
                                                    ToolTip="下载：只有在有下载任务的时候出现，没有下载任务或没有进入到下载页面的时候1分钟之后会消失&#x0a;始终：一直显示下载按钮">
                                     <comp:ToggleButton.LeftContent>

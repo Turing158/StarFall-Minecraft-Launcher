@@ -32,6 +32,11 @@ public partial class LauncherSetting : Page {
         else if (BgSelectNavi.SelectedIndex == 3) {
             NetworkBgPath.Text = PropertiesUtil.launcherArgs.BgPath;
         }
+        
+        viewModel.IsHardwareAccelerationEnabled = !PropertiesUtil.launcherArgs.HardwareAcceleration;
+        viewModel.IsShowNoticeEnabled = !PropertiesUtil.launcherArgs.EnableNotice;
+        Console.WriteLine(PropertiesUtil.launcherArgs.ShowDownloadBtn);
+        viewModel.IsShowDownloadButtonEnabled = PropertiesUtil.launcherArgs.ShowDownloadBtn;
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -48,6 +53,24 @@ public partial class LauncherSetting : Page {
         public Visibility IsShowRefreshNoticeBtn {
             get => _isShowRefreshNoticeBtn;
             set => SetField(ref _isShowRefreshNoticeBtn, value);
+        }
+        
+        private bool _isHardwareAccelerationEnabled;
+        public bool IsHardwareAccelerationEnabled {
+            get => _isHardwareAccelerationEnabled;
+            set => SetField(ref _isHardwareAccelerationEnabled, value);
+        }
+        
+        private bool _isShowNoticeEnabled;
+        public bool IsShowNoticeEnabled {
+            get => _isShowNoticeEnabled;
+            set => SetField(ref _isShowNoticeEnabled, value);
+        }
+        
+        private bool _isShowDownloadButtonEnabled;
+        public bool IsShowDownloadButtonEnabled {
+            get => _isShowDownloadButtonEnabled;
+            set => SetField(ref _isShowDownloadButtonEnabled, value);
         }
         
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -187,8 +210,20 @@ public partial class LauncherSetting : Page {
         if (toggleButton == null) {
             return;
         }
-        var isShow = !toggleButton.IsChecked.Value;
-        MessageTips.Show((isShow ? "下載時" : "始終") + "顯示下載按鈕");
-        // 这里需要使用一个方法来判断是否需要切换完毕之后隐藏下载按钮（待开发）
+        var isShow = toggleButton.IsChecked.Value;
+        MessageTips.Show((isShow ? "始終" :"下載時") + "顯示下載按鈕");
+        PropertiesUtil.launcherArgs.ShowDownloadBtn = isShow;
+        if (isShow) {
+            DownloadUtil.SetTimerToHideDownloadBtn(false);
+        }
+        else {
+            if (DownloadUtil.IsFinished || DownloadPage.HasProcessDoing?.Invoke() != true) {
+                DownloadUtil.SetTimerToHideDownloadBtn(true);
+            }
+            else {
+                DownloadUtil.SetTimerToHideDownloadBtn(false);
+                    
+            }
+        }
     }
 }

@@ -26,6 +26,7 @@ public partial class DownloadPage : Page {
     public static Action<string,bool> ResetProcessStatus;
     public static Func<string,List<string>,bool,string> AppendProcessProgress;
     public static Action<string, Action<ProcessProgress>, bool> ChangeProcessProgressCallback;
+    public static Func<bool> HasProcessDoing;
     
     private Storyboard DownloadingAnim;
     private Storyboard ListScrollViewerChange;
@@ -57,7 +58,7 @@ public partial class DownloadPage : Page {
         ResetProcessStatus = resetProcessStatus;
         AppendProcessProgress = appendProcessProgress;
         ChangeProcessProgressCallback = changeProcessProgressCallback;
-        
+        HasProcessDoing = hasProcessDoing;
 
         OperateBtn.Visibility = Visibility.Collapsed;
     }
@@ -435,5 +436,8 @@ public partial class DownloadPage : Page {
     public void changeProcessProgressCallback(string key, Action<ProcessProgress> callback, bool isOnDelete = false) {
         ProcessProgresses.ChangeProcessProgressCallback(key,callback, isOnDelete);
     }
-    
+
+    public bool hasProcessDoing() {
+        return ProcessProgresses.HasProcessDoing();
+    }
 }

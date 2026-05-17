@@ -56,10 +56,14 @@ public partial class Home : Page {
         
         
         Downloading = (Storyboard)FindResource("Downloading");
+
+        DownloadBtn.Visibility =
+            PropertiesUtil.launcherArgs.ShowDownloadBtn ? Visibility.Visible : Visibility.Collapsed;
         
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
         settingBackground();
+        
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -341,9 +345,26 @@ public partial class Home : Page {
         Duration = TimeSpan.FromMilliseconds(200),
     };
 
+    private Timer DownloadBtnShowTimer;
     private void switchDownloadBtnShow(bool flag) {
         this.Dispatcher.BeginInvoke(() => {
             DownloadBtn.BeginAnimation(OpacityProperty,flag ? ToOneAnimation : ToZeroAnimation);
+            if (DownloadBtnShowTimer != null) {
+                DownloadBtnShowTimer.Dispose();
+                DownloadBtnShowTimer = null;
+            }
+
+            if (flag) {
+                DownloadBtn.Visibility = Visibility.Visible;
+                
+            }
+            else {
+                DownloadBtnShowTimer = new Timer(s => {
+                    this.Dispatcher.BeginInvoke(() => {
+                        DownloadBtn.Visibility = Visibility.Collapsed;
+                    });
+                },null,300,0);
+            }
         });
     }
 }

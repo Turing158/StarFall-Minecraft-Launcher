@@ -23,6 +23,7 @@ public class DownloadUtil {
     private static List<ThreadDownloader> downloaders = new ();
     public static ConcurrentQueue<DownloadFile> waitDownloadFiles { get; private set; }
     public static ConcurrentBag<DownloadFile> errorDownloadFiles { get; set; } = new ();
+    
     public static int TotalCount { get; private set; }
     public static int RetryCount { get;private set; }
     public static int FinishCount {
@@ -33,7 +34,7 @@ public class DownloadUtil {
         get => FinishCount + errorDownloadFiles.Count == TotalCount;
     }
 
-    private static TaskCompletionSource<bool> downloadCompletionSource;
+    public static TaskCompletionSource<bool> downloadCompletionSource { get; private set; }
     private static readonly object downloadLock = new object();
     private static CancellationTokenSource globalCts;
     public static bool IsCancel { get; private set; }
@@ -103,6 +104,7 @@ public class DownloadUtil {
         DownloadPage.ProgressInit?.Invoke(mode == DownloadMode.Single ? downloadFiles : waitDownloadFiles.ToList(), mode == DownloadMode.Single);
         downloadCompletionSource = new TaskCompletionSource<bool>();
         Home.DownloadState?.Invoke(true);
+        SetTimerToHideDownloadBtn(false);
         DownloadFilesFunc();
         await downloadCompletionSource.Task;
     }
@@ -265,6 +267,8 @@ public class DownloadUtil {
     }
     
     public static void SetTimerToHideDownloadBtn(bool flag) {
+        Console.WriteLine("!PropertiesUtil.launcherArgs.ShowDownloadBtn :{0}",!PropertiesUtil.launcherArgs.ShowDownloadBtn);
+        Console.WriteLine("flag ：{0}",flag);
         if (!PropertiesUtil.launcherArgs.ShowDownloadBtn) {
             if (flag) {
                 if (hideDownloadBtnTimer == null) {
@@ -273,15 +277,14 @@ public class DownloadUtil {
                         hideDownloadBtnTimer.Dispose();
                         hideDownloadBtnTimer = null;
                     },null,TimeSpan.FromMinutes(0.1),TimeSpan.Zero);
+                    return;
                 }
             }
-            else {
-                if (hideDownloadBtnTimer != null) {
-                    hideDownloadBtnTimer.Dispose();
-                    hideDownloadBtnTimer = null;
-                    Home.SwitchDownloadBtnShow?.Invoke(true);
-                }
-            }
+        }
+        if (hideDownloadBtnTimer != null) {
+            hideDownloadBtnTimer.Dispose();
+            hideDownloadBtnTimer = null;
+            Home.SwitchDownloadBtnShow?.Invoke(true);
         }
     }
 

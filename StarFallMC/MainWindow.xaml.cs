@@ -232,7 +232,19 @@ public partial class MainWindow : Window {
             else {
                 DownloadOnlyHide.Begin();
             }
-            DownloadUtil.SetTimerToHideDownloadBtn(true);
+            
+            if (PropertiesUtil.launcherArgs.ShowDownloadBtn) {
+                DownloadUtil.SetTimerToHideDownloadBtn(false);
+            }
+            else {
+                if (DownloadUtil.IsFinished || DownloadPage.HasProcessDoing?.Invoke() != true) {
+                    DownloadUtil.SetTimerToHideDownloadBtn(true);
+                }
+                else {
+                    DownloadUtil.SetTimerToHideDownloadBtn(false);
+                    
+                }
+            }
             DownloadFrameTimer = new Timer(o => {
                 this.Dispatcher.BeginInvoke(() => {
                     DownloadFrame.IsHitTestVisible = false;
@@ -255,6 +267,7 @@ public partial class MainWindow : Window {
         DownloadFrame.IsHitTestVisible = true;
         Title.Text = "下载 - Download";
         DownloadUtil.SetTimerToHideDownloadBtn(false);
+        Home.SwitchDownloadBtnShow?.Invoke(true);
     }
 
     private void TopFrame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
