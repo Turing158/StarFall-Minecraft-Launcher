@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 using StarFallMC.Util;
@@ -21,9 +22,21 @@ public partial class Notices : UserControl {
                 var noticeItem = new Notice();
                 noticeItem.Title = i.Title;
                 noticeItem.ContentText = i.Content;
-                noticeItem.Icon = i.Icon;
+                noticeItem.Icon = ConvertToImageSource(i.Icon);
                 NoticesContainer.Children.Add(noticeItem);
             }
+        }
+    }
+
+    private static BitmapImage? ConvertToImageSource(string? path) {
+        if (string.IsNullOrEmpty(path))
+            return null;
+        try {
+            var uri = new Uri(path, UriKind.RelativeOrAbsolute);
+            return new BitmapImage(uri);
+        }
+        catch {
+            return null;
         }
     }
     
@@ -43,7 +56,7 @@ public partial class Notices : UserControl {
                     else {
                         item = new NoticeItem(i["title"]?.ToString(), i["source"].ToString());
                     }
-                    // 处理图标路径：如果是相对路径则转换为绝对路径
+                    // 处理图标路径：如果是相对路径则转换为绝对路径，最终转为 ImageSource
                     var iconPath = i["icon"]?.ToString();
                     if (!string.IsNullOrEmpty(iconPath)) {
                         // 检查是否是网络路径或pack:// URI
@@ -64,8 +77,9 @@ public partial class Notices : UserControl {
                             // 已经是绝对路径，直接使用
                             item.Icon = iconPath;
                         }
-                    } else {
-                        item.Icon = iconPath;
+                    }
+                    else {
+                        item.Icon = null;
                     }
                     notices.Add(item);
                 }

@@ -18,11 +18,11 @@ namespace StarFallMC.Component;
 public partial class Notice : UserControl,INotifyPropertyChanged {
     //  需要用到NuGet安装 Markdig
     
-    public string Icon {
-        get => (string)GetValue(IconProperty);
+    public ImageSource Icon {
+        get => (ImageSource)GetValue(IconProperty);
         set {
             SetValue(IconProperty, value);
-            if (string.IsNullOrEmpty(value)) {
+            if (value == null) {
                 TitleMargin = new Thickness(15,0,0,0);
             }
             else {
@@ -30,8 +30,8 @@ public partial class Notice : UserControl,INotifyPropertyChanged {
             }
         }
     }
-    public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(string),
-        typeof(Notice), new PropertyMetadata(""));
+    public static readonly DependencyProperty IconProperty = DependencyProperty.Register(nameof(Icon), typeof(ImageSource),
+        typeof(Notice), new PropertyMetadata(null));
     
     public double IconSize {
         get => (double)GetValue(IconSizeProperty);
@@ -91,7 +91,7 @@ public partial class Notice : UserControl,INotifyPropertyChanged {
         InitializeComponent();
         DataContext = this;
         
-        if (string.IsNullOrEmpty(Icon)) {
+        if (Icon == null) {
             TitleMargin = new Thickness(15,0,0,0);
         }
         else {

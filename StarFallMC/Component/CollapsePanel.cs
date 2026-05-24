@@ -134,6 +134,7 @@ public class CollapsePanel : UserControl{
         OpenAnim.Children[0].SetValue(Storyboard.TargetProperty, _stateIcon);
         CloseAnim = (FindResource("CloseAnim") as Storyboard).Clone();
         CloseAnim.Children[0].SetValue(Storyboard.TargetProperty, _main);
+        CloseAnim.Children[0].SetValue(DoubleAnimation.ToProperty, MainHeight);
         CloseAnim.Children[1].SetValue(Storyboard.TargetProperty, _stateIcon);
         MouseDownAnim = (FindResource("MouseDownAnim") as Storyboard).Clone();
         Storyboard.SetTarget(MouseDownAnim,_main);
@@ -144,7 +145,7 @@ public class CollapsePanel : UserControl{
     private bool isMouseLeftDown = false;
     private void Top_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
         isMouseLeftDown = true;
-        MouseDownAnim.Begin();
+        MouseDownAnim.Begin(this, true);
     }
 
     private void Top_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
@@ -156,7 +157,7 @@ public class CollapsePanel : UserControl{
             else {
                 Show();
             }
-            MouseUpAnim.Begin();
+            MouseUpAnim.Begin(this, true);
         }
     }
 
@@ -171,18 +172,18 @@ public class CollapsePanel : UserControl{
             openAnim.EasingFunction = new CubicEase();
             _main.BeginAnimation(HeightProperty,openAnim);
         }
-        OpenAnim.Begin();
+        OpenAnim.Begin(this, true);
     }
 
     public void Hide() {
         RaiseEvent(new RoutedEventArgs(ClosedEvent));
         IsOpen = false;
-        CloseAnim.Begin();
+        CloseAnim.Begin(this, true);
     }
 
     private void Top_OnMouseLeave(object sender, MouseEventArgs e) {
         if (isMouseLeftDown) {
-            MouseUpAnim.Begin();
+            MouseUpAnim.Begin(this, true);
         }
         isMouseLeftDown = false;
     }

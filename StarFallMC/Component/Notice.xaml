@@ -20,7 +20,18 @@
                                            HorizontalAlignment="Left" VerticalAlignment="Center"
                                            Margin="8 0"
                                            Source="{Binding Icon, RelativeSource={RelativeSource AncestorType=local:Notice}}"
-                                           Stretch="UniformToFill"></Image>
+                                           Stretch="UniformToFill">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Icon, RelativeSource={RelativeSource AncestorType=local:Notice}}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
                                     <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=local:Notice}}"
                                                FontSize="{Binding TitleFontSize, RelativeSource={RelativeSource AncestorType=local:Notice}}"
                                                Foreground="{Binding TitleForeground, RelativeSource={RelativeSource AncestorType=local:Notice}}"

@@ -259,8 +259,9 @@ public partial class DownloadPage : Page {
         else {
             DownloadingAnim.RepeatBehavior = new RepeatBehavior(1);
         }
+        DownloadingAnim.Stop();
         DownloadingAnim.Begin();
-        
+
         // 借用方法调整按钮
         CancelAndCleanDownload.Content = DownloadUtil.IsFinished ? "清 空" : "取 消";
         CancelAndCleanDownload.ToolTip = DownloadUtil.IsFinished ? "清空下载列表" : "取消当前所有下载任务";
@@ -269,6 +270,7 @@ public partial class DownloadPage : Page {
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         listScrollViewerChangeTimer?.Dispose();
+        ListScrollViewerChange.Stop();
         ListScrollViewerChange.Begin();
         listScrollViewerChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {

@@ -43,12 +43,19 @@
                                            FontSize="12" Text="{Binding LoaderName}" Margin="5"></TextBlock>
                             </Grid>
                         </Border>
-                        <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5" 
-                               RenderOptions.BitmapScalingMode="NearestNeighbor">
-                            <Image.Source>
-                                <BitmapImage UriSource="{Binding Icon}" 
-                                             CacheOption="OnLoad" CreateOptions="IgnoreImageCache"></BitmapImage>
-                            </Image.Source>
+                        <Image Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="5"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor"
+                               Source="{Binding Icon}">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
                         </Image>
                     </Grid>
                     

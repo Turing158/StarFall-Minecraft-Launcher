@@ -56,19 +56,19 @@
                         <TranslateTransform X="0"></TranslateTransform>
                     </Frame.RenderTransform>
                 </Frame>
-                <Frame Name="SettingFrame" Source="Setting.xaml" Opacity="0">
+                <Frame Name="SettingFrame" Source="Setting.xaml" Opacity="0" IsHitTestVisible="False">
                     <Frame.RenderTransform>
-                        <TranslateTransform X="{Binding ElementName=SettingFrame,Path=ActualWidth}"></TranslateTransform>
+                        <TranslateTransform X="50"></TranslateTransform>
                     </Frame.RenderTransform>
                 </Frame>
-                <Frame Name="DownloadGameFrame" Source="ResourcePage.xaml" Opacity="0">
+                <Frame Name="DownloadGameFrame" Source="ResourcePage.xaml" Opacity="0" IsHitTestVisible="False">
                     <Frame.RenderTransform>
-                        <TranslateTransform X="{Binding ElementName=DownloadGameFrame,Path=ActualWidth}"></TranslateTransform>
+                        <TranslateTransform X="50"></TranslateTransform>
                     </Frame.RenderTransform>
                 </Frame>
-                <Frame Name="SubFrame" Source="SelectGame.xaml" Opacity="0">
+                <Frame Name="SubFrame" Source="SelectGame.xaml" Opacity="0" IsHitTestVisible="False">
                     <Frame.RenderTransform>
-                        <TranslateTransform Y="{Binding ElementName=SubFrame,Path=ActualHeight}"></TranslateTransform>
+                        <TranslateTransform Y="-50"></TranslateTransform>
                     </Frame.RenderTransform>
                 </Frame>
                 <Frame Name="DownloadFrame" Source="DownloadPage.xaml" Opacity="0" IsHitTestVisible="False">

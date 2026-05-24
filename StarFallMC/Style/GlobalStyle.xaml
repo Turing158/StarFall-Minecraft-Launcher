@@ -225,7 +225,6 @@
     <Style TargetType="ScrollViewer">
         <Setter Property="CanContentScroll" Value="True"></Setter>
         <Setter Property="extension:ScrollViewerExtensions.SmoothScroll" Value="True"></Setter>
-        <Setter Property="extension:ScrollViewerBehavior.VerticalOffset" Value="{Binding VerticalOffset, Mode=TwoWay}"></Setter>
     </Style>
     
     <Style TargetType="Thumb">
@@ -562,7 +561,7 @@
                         </Storyboard>
                         <Storyboard x:Key="CloseAnim">
                             <DoubleAnimation Storyboard.TargetProperty="Height"
-                                             To="{Binding MainHeight, RelativeSource={RelativeSource AncestorType=comp:CollapsePanel}, Mode=OneTime}" Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
+                                             Duration="0:0:0.2" EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>
                             <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(RotateTransform.Angle)"
                                              To="180" Duration="0:0:0.2"
                                              EasingFunction="{StaticResource CubicEase}"></DoubleAnimation>

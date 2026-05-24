@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch StarFallMC",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows/StarFallMC.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Launch StarFallMC (no build)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows/StarFallMC.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}
