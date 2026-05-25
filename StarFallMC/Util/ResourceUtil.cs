@@ -138,7 +138,8 @@ public class ResourceUtil {
                 if (splitLine.Length >= 2) {
                     modData.AllName = splitLine[1];
                     if (modData.AllName.Contains("*")) {
-                        var slugToName = (modData.CurseForgeSlug ?? modData.ModrinthSlug).Replace("-", " ");
+                        var slug = modData.CurseForgeSlug ?? modData.ModrinthSlug ?? "";
+                        var slugToName = slug.Replace("-", " ");
                         modData.AllName = modData.AllName.Replace("*", 
                             $" ({char.ToUpper(slugToName[0]) + slugToName.Substring(1).ToLower()})");
                     }
@@ -303,7 +304,7 @@ public class ResourceUtil {
             string version = modrinthIndex["versionId"].ToString();
             List<DownloadFile> files = new List<DownloadFile>();
             string currentDir = GetCurrentDir();
-            foreach (var fileJson in modrinthIndex["files"] as JArray) {
+            foreach (var fileJson in modrinthIndex["files"] as JArray ?? new JArray()) {
                 string path = Path.Combine(currentDir, "versions", $"{name} {version}", fileJson["path"].ToString());
                 var file = new DownloadFile() {
                     Name = Path.GetFileNameWithoutExtension(path),
@@ -312,7 +313,7 @@ public class ResourceUtil {
                     Size = fileJson["fileSize"]?.ToObject<long>() ?? 0,
                     Sha1 = fileJson["hashes"]?["sha1"]?.ToString(),
                 };
-                file.UrlPath = file.UrlPaths[0];
+                file.UrlPath = file.UrlPaths != null && file.UrlPaths.Count > 0 ? file.UrlPaths[0] : "";
                 files.Add(file);
             }
 
@@ -682,7 +683,7 @@ public class ResourceUtil {
                         Type = resourceType,
                         ModrinthProjectId = i["project_id"]?.ToString(),
                         Author = i["author"]?.ToString(),
-                        LastUpdated = DateTime.Parse(i["date_modified"]?.ToString()).ToString("yyyy-MM-dd HH:mm:ss"),
+                        LastUpdated = DateTime.TryParse(i["date_modified"]?.ToString(), out var modDate) ? modDate.ToString("yyyy-MM-dd HH:mm:ss") : "",
                     };
                     resource.WebsiteUrl = "https://modrinth.com/"+i["project_type"]+"/"+i["slug"]; 
                     var (loaders, versions, categories) = GetModrinthLoaderGameVersionCategory(i);
@@ -716,7 +717,7 @@ public class ResourceUtil {
         var loaders = new List<string>();
         var versions = i["versions"]?.ToObject<List<string>>();
         var categories = new List<string>();
-        foreach (var j in i["categories"] as JArray) {
+        foreach (var j in i["categories"] as JArray ?? new JArray()) {
             if (ModLoaders.Contains(j.ToString())) {
                 loaders.Add(j.ToString());
             }
@@ -1277,7 +1278,7 @@ public class ResourceUtil {
                         downloader.Description = $"最新发行快照版 | {releaseTime}";
                         latestType.Add(downloader);
                     }
-                    else if (AprilFoolsVersionName.Contains(name)) {
+                    else if (name != null && AprilFoolsVersionName.Contains(name)) {
                         downloader.Description = ApriFlFoolsDescription[AprilFoolsVersionName.IndexOf(name)];
                         aprilFoolsType.Add(downloader);
                     }
@@ -1371,9 +1372,8 @@ public class ResourceUtil {
                 if (iconEntry != null) {
                     using (Stream stream = iconEntry.Open()) {
                         string tmpIconPath = Path.Combine(tmpDir, resource.Name + ".png");
-                        FileStream fileStream = new FileStream(tmpIconPath, FileMode.Create, FileAccess.Write);
+                        using FileStream fileStream = new FileStream(tmpIconPath, FileMode.Create, FileAccess.Write);
                         stream.CopyTo(fileStream);
-                        fileStream.Close();
                         resource.IconPath = tmpIconPath;
                     }
                 }
@@ -1381,7 +1381,7 @@ public class ResourceUtil {
                 ZipArchiveEntry mateEntry = archive.GetEntry("pack.mcmeta");
                 if (mateEntry != null) {
                     using (Stream stream = mateEntry.Open()) {
-                        StreamReader reader = new StreamReader(stream);
+                        using StreamReader reader = new StreamReader(stream);
                         string json = reader.ReadToEnd();
                         JObject root = JObject.Parse(json);
                         if (root["pack"]?["description"] != null) {
@@ -1451,9 +1451,15 @@ public class ResourceUtil {
             LocalSavesResources = resources;
             return resources;
         }
+        catch (OperationCanceledException) {
+            Console.WriteLine("GetSavesResource取消");
+            LocalSavesResources = new List<SavesResource>();
+            progress.Report(100);
+            return resources;
+        }
         catch (Exception e) {
             Console.WriteLine(e);
-            MessageTips.Show("取消获取地图列表");
+            MessageTips.Show("获取地图列表失败");
             LocalSavesResources = new List<SavesResource>();
             progress.Report(100);
             return resources;
@@ -1607,7 +1613,8 @@ public class ResourceUtil {
                             string versionLine = manifest.Split("\n")
                                 .FirstOrDefault(i => i.StartsWith("Implementation-Version:"));
                             if (!string.IsNullOrEmpty(versionLine)) {
-                                resource.ResourceVersion = versionLine.Split(":")[1].Trim();
+                                var parts = versionLine.Split(":", 2);
+                                resource.ResourceVersion = parts.Length > 1 ? parts[1].Trim() : "";
                             }
                         }
                     }

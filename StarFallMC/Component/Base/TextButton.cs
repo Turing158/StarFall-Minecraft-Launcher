@@ -28,9 +28,17 @@ public class TextButton : ButtonBase {
         _textContent = Template.FindName("TextContent", this) as TextBlock;
         _textContent.Foreground = ThemeUtil.PrimaryBrush_4.Clone();
         initAnimation();
-        ThemeUtil.updateColor += () => {
-            initAnimation();
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        initAnimation();
     }
 
     public void initAnimation() {

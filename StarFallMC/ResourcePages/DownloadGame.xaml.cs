@@ -116,7 +116,7 @@ public partial class DownloadGame : Page {
                 await ResourceUtil.GetMinecraftDownloader(cts.Token,progress).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
-                Console.WriteLine("取消加载Minecraft列表");
+                Console.WriteLine("LoadMinecraftList取消");
                 return;
             }
             catch (Exception e){

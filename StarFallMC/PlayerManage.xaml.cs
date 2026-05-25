@@ -287,7 +287,7 @@ public partial class PlayerManage : Page {
             flag = false;
         }
         if (!flag) {
-            ((Storyboard)FindResource("NameTipsShow")).Begin();
+            ((Storyboard)FindResource("NameTipsShow")).Begin(this, true);
             return;
         }
         var player = new Player(OutlineInput.Text,DefaultSKin,false,Guid.NewGuid().ToString().Replace("-", ""));

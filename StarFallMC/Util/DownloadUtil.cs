@@ -249,7 +249,7 @@ public class DownloadUtil {
                 return true;
             }
             catch (OperationCanceledException e){
-                Console.WriteLine($"下载任务取消    路径：{downloadFile.UrlPath}");
+                Console.WriteLine($"SingalDownload取消    路径：{downloadFile.UrlPath}");
                 return false;
             }
             catch (Exception e){
@@ -344,6 +344,7 @@ public class DownloadUtil {
                 DownloadPage.ProgressUpdate?.Invoke(item, finishCount, errorDownloadFiles.Count);
             }
             catch (OperationCanceledException) {
+                Console.WriteLine("BatchDownload取消");
                 // Console.WriteLine($"下载取消：{item.UrlPath}");
                 // 下载取消，删除未完成的文件【以免文件不完整】
                 if (File.Exists(item.FilePath)) {

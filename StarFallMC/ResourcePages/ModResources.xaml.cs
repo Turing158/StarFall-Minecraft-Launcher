@@ -59,7 +59,7 @@ public partial class ModResources : Page {
             ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, viewModel.Mods.Count == 0);
         }
         catch (OperationCanceledException) {
-            Console.WriteLine("取消加载列表");
+            Console.WriteLine("LoadModResources取消");
         }
         catch (Exception e){
             Console.WriteLine(e);
@@ -117,7 +117,7 @@ public partial class ModResources : Page {
             ct.ThrowIfCancellationRequested();
         }
         catch (OperationCanceledException) {
-            Console.WriteLine("取消加载Mod列表");
+            Console.WriteLine("GetModFileInfo取消");
         }
         catch (Exception e){
             Console.WriteLine(e);

@@ -5,12 +5,15 @@
             "name": "Launch StarFallMC",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows/StarFallMC.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows",
+            "program": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/StarFallMC/StarFallMC.csproj"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
             "stopAtEntry": false,
-            "console": "internalConsole",
             "env": {
                 "DOTNET_ENVIRONMENT": "Development"
             }
@@ -19,11 +22,15 @@
             "name": "Launch StarFallMC (no build)",
             "type": "coreclr",
             "request": "launch",
-            "program": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows/StarFallMC.exe",
-            "args": [],
-            "cwd": "${workspaceFolder}/StarFallMC/bin/Debug/net8.0-windows",
-            "stopAtEntry": false,
-            "console": "internalConsole"
+            "program": "dotnet",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/StarFallMC/StarFallMC.csproj"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
         }
     ]
 }

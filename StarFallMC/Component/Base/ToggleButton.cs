@@ -81,6 +81,9 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
                 moveLeft();
             }
         };
+        Unloaded += (sender, args) => {
+            ThemeUtil.updateColor -= initColor;
+        };
         isInit = false;
     }
 

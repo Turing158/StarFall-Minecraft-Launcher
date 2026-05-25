@@ -54,6 +54,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         
         initColor();
         ThemeUtil.updateColor += initColor;
+        Unloaded += OnUnloaded;
         Main.Width = 0;
         Main.Height = 0;
         SetMessage(message,messageType);
@@ -61,12 +62,17 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         Hide();
     }
 
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= initColor;
+        Unloaded -= OnUnloaded;
+    }
+
     private void initColor() {
         MessageColor = ThemeUtil.SecondaryBrush_1.Color.ToString();
     }
 
     public void SetMessage(string message, MessageType messageType) {
-        ChangeTextAnim.Begin();
+        ChangeTextAnim.Begin(this, true);
         MessageTimer?.Dispose();
         HideContent.Text = message;
         Dispatcher.BeginInvoke(() => {
@@ -97,7 +103,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
                          (container.Count == 1 && container.OfType<MessageTips>().FirstOrDefault().isClosing)) {
                     var messageTips = new MessageTips(message, messageType);
                     container.Add(messageTips);
-                    messageTips.ShowAnim.Begin();
+                    messageTips.ShowAnim.Begin(messageTips, true);
                 }
             }
         });
@@ -116,7 +122,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         DeleteTimer?.Dispose();
         this.Dispatcher.BeginInvoke(() => {
             isClosing = true;
-            HideAnim.Begin();
+            HideAnim.Begin(this, true);
             DeleteTimer = new Timer(o => {
                 this.Dispatcher.BeginInvoke(() => {
                     var mainWindow = Application.Current.MainWindow;
@@ -157,21 +163,21 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         if (isClosing) {
             return;
         }
-        MouseUpAnim.Begin();
+        MouseUpAnim.Begin(this, true);
         Hide();
     }
 
     private bool isDown = false;
     private void Main_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
         if (!isClosing) {
-            MouseDownAnim.Begin();
+            MouseDownAnim.Begin(this, true);
             isDown = true;
         }
     }
 
     private void Main_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
         if (isDown) {
-            MouseUpAnim.Begin();
+            MouseUpAnim.Begin(this, true);
             HideImmediately();
         }
         isDown = false;

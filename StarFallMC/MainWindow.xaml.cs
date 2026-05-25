@@ -143,8 +143,7 @@ public partial class MainWindow : Window {
         }
         SettingFrame.IsHitTestVisible = true;
         SettingFrameTimer?.Dispose();
-        SettingLeave.Stop();
-        SettingEnter.Begin();
+        SettingEnter.Begin(this, true);
         HideDownloadGame();
     }
 
@@ -158,15 +157,13 @@ public partial class MainWindow : Window {
         DownloadGameFrameTimer?.Dispose();
         ResourcePage.LoadTempPage?.Invoke();
         ResourcePage.TheFirstEnterResourcePage?.Invoke();
-        DownloadGameLeave.Stop();
-        DownloadGameEnter.Begin();
+        DownloadGameEnter.Begin(this, true);
         HideSetting();
     }
 
     private void HideSetting() {
         SettingFrame.IsHitTestVisible = false;
-        SettingEnter.Stop();
-        SettingLeave.Begin();
+        SettingLeave.Begin(this, true);
         SettingFrameTimer?.Dispose();
         SettingFrameTimer = new Timer(new TimerCallback((state => {
             Dispatcher.BeginInvoke(new Action(() => {
@@ -178,8 +175,7 @@ public partial class MainWindow : Window {
 
     private void HideDownloadGame() {
         DownloadGameFrame.IsHitTestVisible = false;
-        DownloadGameEnter.Stop();
-        DownloadGameLeave.Begin();
+        DownloadGameLeave.Begin(this, true);
         DownloadGameFrameTimer?.Dispose();
         DownloadGameFrameTimer = new Timer(new TimerCallback((state => {
             Dispatcher.BeginInvoke(new Action(() => {
@@ -209,7 +205,7 @@ public partial class MainWindow : Window {
         SubFrame.RenderTransform = new TranslateTransform(0, 0);
         Title.Text = pageTitle;
         SubFrame.Navigate(new Uri($"{pageName}.xaml", UriKind.Relative));
-        SubFrameShow.Begin();
+        SubFrameShow.Begin(this, true);
         SubFrame.IsHitTestVisible = true;
     }
 
@@ -220,17 +216,17 @@ public partial class MainWindow : Window {
     private void backHandle() {
         if (DownloadFrame.Opacity == 0) {
             SubFrameHide.Completed += SubFrameHideOnCompleted;
-            SubFrameHide.Begin();
+            SubFrameHide.Begin(this, true);
             SubFrame.IsHitTestVisible = false;
 
             GameInfo.CancelLoading?.Invoke();
         }
         else {
             if (SubFrame.Opacity == 0) {
-                DownloadHide.Begin();
+                DownloadHide.Begin(this, true);
             }
             else {
-                DownloadOnlyHide.Begin();
+                DownloadOnlyHide.Begin(this, true);
             }
             
             if (PropertiesUtil.launcherArgs.ShowDownloadBtn) {
@@ -263,7 +259,7 @@ public partial class MainWindow : Window {
     }
 
     private void downloadPageShow() {
-        DownloadShow.Begin();
+        DownloadShow.Begin(this, true);
         DownloadFrame.IsHitTestVisible = true;
         Title.Text = "下载 - Download";
         DownloadUtil.SetTimerToHideDownloadBtn(false);

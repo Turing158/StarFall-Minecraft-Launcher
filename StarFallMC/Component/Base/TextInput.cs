@@ -63,12 +63,20 @@ public class TextInput : TextBox {
         updatePlaceholderVisibility();
         initColor();
         initAnimation();
-        ThemeUtil.updateColor += () => {
-            Dispatcher.BeginInvoke(() => {
-                initColor();
-                initAnimation();
-            });
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        Dispatcher.BeginInvoke(() => {
+            initColor();
+            initAnimation();
+        });
     }
 
     private void initColor() {

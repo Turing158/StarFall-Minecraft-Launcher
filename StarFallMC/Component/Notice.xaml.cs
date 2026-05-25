@@ -102,9 +102,17 @@ public partial class Notice : UserControl,INotifyPropertyChanged {
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
         updateColor();
-        ThemeUtil.updateColor += () => {
-            updateColor();
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        updateColor();
     }
 
     private void updateColor() {

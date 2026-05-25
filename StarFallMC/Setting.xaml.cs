@@ -46,7 +46,7 @@ public partial class Setting : Page {
         }
     }
     private void NaviBar_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
-        NaviBarChangeAnim.Begin();
+        NaviBarChangeAnim.Begin(this, true);
         NaviBarChangeTimer?.Dispose();
         NaviBarChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {

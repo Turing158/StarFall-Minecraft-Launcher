@@ -48,10 +48,8 @@ public class Slider : System.Windows.Controls.Slider{
         _border = Template.FindName("Border", this) as Border;
         initColor();
         initAnimation();
-        ThemeUtil.updateColor += () => {
-            initColor();
-            initAnimation();
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
         IsEnabledChanged += (sender, args) => {
             if (IsEnabled) {
                 _border.Background.BeginAnimation(SolidColorBrush.ColorProperty, EnableAnimation);
@@ -62,6 +60,16 @@ public class Slider : System.Windows.Controls.Slider{
         };
     }
     
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        initColor();
+        initAnimation();
+    }
+
     private void initColor(){
         if (IsEnabled) {
             _border.Background = ThemeUtil.PrimaryBrush_2.Clone();

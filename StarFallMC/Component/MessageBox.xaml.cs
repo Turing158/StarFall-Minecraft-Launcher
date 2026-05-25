@@ -158,7 +158,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     }
 
     private void Mask_OnClickMask(object sender, RoutedEventArgs e) {
-        HighlightBox.Begin();
+        HighlightBox.Begin(this, true);
     }
     
     public static void Delete(MessageBox box) {

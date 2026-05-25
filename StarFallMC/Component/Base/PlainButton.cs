@@ -9,7 +9,7 @@ using StarFallMC.Util;
 namespace StarFallMC.Component;
 
 public class PlainButton : ButtonBase{
-    
+
     private Border _container;
     private ContentPresenter _contentPresenter;
 
@@ -17,18 +17,26 @@ public class PlainButton : ButtonBase{
     private ColorAnimation LeaveAnim;
     private DoubleAnimation DownAnim;
     private DoubleAnimation UpAnim;
-    
+
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
         InitElement();
         InitColor();
         InitAnimation();
-        ThemeUtil.updateColor += () => {
-            Dispatcher.BeginInvoke(() => {
-                InitColor();
-                InitAnimation();
-            });
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        Dispatcher.BeginInvoke(() => {
+            InitColor();
+            InitAnimation();
+        });
     }
 
     public void InitElement() {

@@ -35,12 +35,12 @@ public partial class LittleTips : UserControl {
     }
 
     public void Show() {
-        ShowStoryboard.Begin();
+        ShowStoryboard.Begin(this, true);
         getRandomTip();
         int dur = (int)duration*1000;
         changeTimer = new Timer(s => {
             this.Dispatcher.BeginInvoke(() => {
-                TipsStoryboard.Begin();
+                TipsStoryboard.Begin(this, true);
                 textTimer = new Timer(s => {
                     this.Dispatcher.BeginInvoke(() => {
                         getRandomTip();
@@ -54,7 +54,7 @@ public partial class LittleTips : UserControl {
     public void Hide() {
         changeTimer?.Dispose();
         textTimer?.Dispose();
-        HideStoryboard.Begin();
+        HideStoryboard.Begin(this, true);
     }
     
     private void getRandomTip() {

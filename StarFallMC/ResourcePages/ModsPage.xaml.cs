@@ -55,7 +55,7 @@ public partial class ModsPage : Page {
                 cancellationTokenSource.Token.ThrowIfCancellationRequested();
             }
             catch (OperationCanceledException) {
-                Console.WriteLine("取消加载Mod列表");
+                Console.WriteLine("LoadMods取消");
                 return;
             }
             catch (Exception e){

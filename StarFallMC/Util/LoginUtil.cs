@@ -100,13 +100,19 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Post("https://user.auth.xboxlive.com/user/authenticate",args,cancellationToken:cancellationToken).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetXSTSToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
+                string? xboxToken = jo["Token"]?.ToString();
+                string? uhs = jo["DisplayClaims"]?["xui"]?[0]?["uhs"]?.ToString();
+                if (string.IsNullOrEmpty(xboxToken) || string.IsNullOrEmpty(uhs)) {
+                    Console.WriteLine("Xbox Live Token 响应缺少必要字段");
+                    return "";
+                }
+                return await GetXSTSToken(xboxToken, uhs, cancellationToken:cancellationToken).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
         }
 
-        
+
         //获取XSTS Token
         private static async Task<string> GetXSTSToken(string xboxLiveToken,string uhs,CancellationToken cancellationToken) {
             Console.WriteLine("获取XSTS Token");
@@ -122,7 +128,13 @@ public class LoginUtil {
             var r = await HttpRequestUtil.Post("https://xsts.auth.xboxlive.com/xsts/authorize",args,cancellationToken:cancellationToken);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetMinecraftToken(jo["Token"].ToString(),jo["DisplayClaims"]["xui"][0]["uhs"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
+                string? xstsToken = jo["Token"]?.ToString();
+                string? xstsUhs = jo["DisplayClaims"]?["xui"]?[0]?["uhs"]?.ToString();
+                if (string.IsNullOrEmpty(xstsToken) || string.IsNullOrEmpty(xstsUhs)) {
+                    Console.WriteLine("XSTS Token 响应缺少必要字段");
+                    return "";
+                }
+                return await GetMinecraftToken(xstsToken, xstsUhs, cancellationToken:cancellationToken).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";

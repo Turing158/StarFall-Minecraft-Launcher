@@ -259,19 +259,17 @@ public partial class DownloadPage : Page {
         else {
             DownloadingAnim.RepeatBehavior = new RepeatBehavior(1);
         }
-        DownloadingAnim.Stop();
-        DownloadingAnim.Begin();
+        DownloadingAnim.Begin(this, true);
 
         // 借用方法调整按钮
         CancelAndCleanDownload.Content = DownloadUtil.IsFinished ? "清 空" : "取 消";
         CancelAndCleanDownload.ToolTip = DownloadUtil.IsFinished ? "清空下载列表" : "取消当前所有下载任务";
-        
+
     }
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         listScrollViewerChangeTimer?.Dispose();
-        ListScrollViewerChange.Stop();
-        ListScrollViewerChange.Begin();
+        ListScrollViewerChange.Begin(this, true);
         listScrollViewerChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {
                 ChangeDownloadNavi();

@@ -177,7 +177,7 @@ public partial class Home : Page {
             StringBuilder tips = new StringBuilder();
             if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
                 tips.Append("未选择Minecraft版本");
-                ((Storyboard)FindResource("GameEnter")).Begin();
+                ((Storyboard)FindResource("GameEnter")).Begin(this, true);
                 flag = false;
             }
             if (string.IsNullOrEmpty(viewModel.PlayerName) || viewModel.PlayerName == "未登录") {
@@ -185,7 +185,7 @@ public partial class Home : Page {
                     tips.Append("\n");
                 }
                 tips.Append("未选择Player角色");
-                ((Storyboard)FindResource("AvatarEnter")).Begin();
+                ((Storyboard)FindResource("AvatarEnter")).Begin(this, true);
                 flag = false;
             }
             if (!string.IsNullOrEmpty(tips.ToString())) {
@@ -201,7 +201,7 @@ public partial class Home : Page {
             minecraftStartCts = new CancellationTokenSource();
             GameStarting = true;
             StartingBorder.Visibility = Visibility.Visible;
-            ((Storyboard)FindResource("Starting")).Begin();
+            ((Storyboard)FindResource("Starting")).Begin(this, true);
             HomeTips.Show();
             Console.WriteLine("开始游戏");
             MinecraftUtil.StartMinecraft(viewModel.CurrentGame, viewModel.CurrentPlayer,cancellationToken:minecraftStartCts.Token);
@@ -218,7 +218,7 @@ public partial class Home : Page {
                 GameStarting = false;
                 StartingBorder.Visibility = Visibility.Collapsed;
                 HomeTips.Hide();
-                ((Storyboard)FindResource("Started")).Begin();
+                ((Storyboard)FindResource("Started")).Begin(this, true);
                 if (isStop) {
                     minecraftStartCts?.Cancel();
                     MinecraftUtil.StopMinecraft();
@@ -259,7 +259,7 @@ public partial class Home : Page {
         else {
             Downloading.RepeatBehavior = new RepeatBehavior(1);
         }
-        Downloading.Begin();
+        Downloading.Begin(this, true);
     }
 
     private void startingState(string state) {

@@ -176,10 +176,10 @@ public class MinecraftUtil {
         var patches = root["patches"];
         patches ??= new JArray();
         if (patches.Count() != 0) {
-            string loaderName = patches[patches.Count()-1]["id"].ToString().ToLower();
+            string? loaderName = patches[patches.Count()-1]["id"]?.ToString()?.ToLower() ?? "";
             if (loaderName.Contains("game")) {
                 item.Loader = MinecraftLoader.Minecraft;
-                if (root["type"].ToString() == "release") {
+                if (root["type"]?.ToString() == "release") {
                     item.Icon = "/assets/DefaultGameIcon/Minecraft.png";
                 }
                 else {
@@ -295,9 +295,11 @@ public class MinecraftUtil {
                 loaderName = "neoforged";
                 break;
         }
-        foreach (var patch in patches) {
-            if (patch["id"]?.ToString() == loaderName) {
-                return patch["version"]?.ToString() ?? "";
+        if (patches is JArray patchesArray) {
+            foreach (var patch in patchesArray) {
+                if (patch["id"]?.ToString() == loaderName) {
+                    return patch["version"]?.ToString() ?? "";
+                }
             }
         }
         return loaderVersion;
@@ -328,7 +330,8 @@ public class MinecraftUtil {
             foreach (var lib in libs) {
                 string path = "";
                 string fileName = "";
-                string name = lib["name"].ToString();
+                string? name = lib["name"]?.ToString();
+                if (string.IsNullOrEmpty(name)) continue;
                 var nameSplit = name.Split(':');
                 var nameSplit0Split = nameSplit[0].Split('.');
                 foreach (var j in nameSplit0Split) {
@@ -672,7 +675,7 @@ public class MinecraftUtil {
         ArgReplace(ref argsSb,"version_name",arg.version);
         ArgReplace(ref argsSb,"game_directory",Path.GetFullPath(arg.gameDir));
         ArgReplace(ref argsSb,"assets_root",Path.GetFullPath(arg.assetsDir));
-        ArgReplace(ref argsSb,"assets_index_name",args["assets"].ToString());
+        ArgReplace(ref argsSb,"assets_index_name",args["assets"]?.ToString() ?? "");
         ArgReplace(ref argsSb,"auth_uuid",arg.uuid);
         ArgReplace(ref argsSb,"auth_access_token",string.IsNullOrEmpty(arg.accessToken) ? Guid.NewGuid().ToString().Replace("-", "") : arg.accessToken);
         ArgReplace(ref argsSb,"user_type","msa");
@@ -934,6 +937,10 @@ public class MinecraftUtil {
         CheckAndGenerateLauncherProfile(currentDir);
         using ZipArchive archive = ZipFile.OpenRead(liteloaderInstallerPath);
         var installProfileEntry = archive.GetEntry("install_profile.json");
+        if (installProfileEntry == null) {
+            Console.WriteLine("install_profile.json not found in liteloader installer");
+            return;
+        }
         using var installProfileReader = new StreamReader(installProfileEntry.Open());
         string installProfile = installProfileReader.ReadToEnd();
         string mcVersion = string.Empty;
@@ -1598,8 +1605,7 @@ public class MinecraftUtil {
             return RunMinecraft(minecraft, java, memory, jvmArgs, minecraftArgs, isLaunch);
         }
         catch (OperationCanceledException) {
-            MessageTips.Show("Minecraft启动取消");
-            Console.WriteLine("启动被取消");
+            Console.WriteLine("StartMinecraft取消");
         }
         catch (Exception e){
             Console.WriteLine("启动出现问题："+e);
@@ -1802,8 +1808,7 @@ public class MinecraftUtil {
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallOptiFine取消");
         }
         catch(Exception e){
             Console.WriteLine(e);
@@ -1814,7 +1819,7 @@ public class MinecraftUtil {
 
         return true;
     }
-    
+
     // 转换OptiFine的Json
     public static JObject TransformOptiFineJson(string json, string versionName, string outputJsonStr) {
         var Json = JObject.Parse(json);
@@ -2001,8 +2006,7 @@ public class MinecraftUtil {
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallOptiFine取消");
         }
         catch (Exception e) {
             Console.WriteLine(e);
@@ -2012,7 +2016,7 @@ public class MinecraftUtil {
         }
         return true;
     }
-    
+
     // 转换LiteLoader的Json
     public static JObject TransformLiteLoaderJson(string json, string versionName, string liteloaderInstaller) {
         var Json = ParseVersionJson(json,versionName);
@@ -2145,8 +2149,7 @@ public class MinecraftUtil {
             DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallLiteloader取消");
         }
         catch (Exception e) {
             Console.WriteLine(e);
@@ -2156,7 +2159,7 @@ public class MinecraftUtil {
         }
         return true;
     }
-    
+
     // 转换Forge或NeoForge安装器中的版本json文件
     public static JObject TransformForgeJson(string json, string versionName, string installer) {
         var Json = ParseVersionJson(json,versionName);
@@ -2198,13 +2201,19 @@ public class MinecraftUtil {
             var installProfile = reader.ReadToEnd();
             var installProfileJson = JObject.Parse(installProfile);
             var versionInfo = installProfileJson["versionInfo"] as JObject;
+            if (versionInfo == null) {
+                Console.WriteLine("install_profile.json 中缺少 versionInfo");
+                return Json;
+            }
             Console.WriteLine("替换参数");
-            Json["mainClass"] = versionInfo["mainClass"];
+            Json["mainClass"] = versionInfo["mainClass"]?.ToString() ?? "";
             VersionArgumentParse(ref Json,versionInfo);
             Console.WriteLine("添加lib");
             JArray libraries = Json["libraries"] as JArray;
-            foreach (var i in versionInfo["libraries"] as JArray) {
-                libraries.Add(i);
+            if (versionInfo["libraries"] is JArray libsArray) {
+                foreach (var i in libsArray) {
+                    libraries.Add(i);
+                }
             }
             Console.WriteLine("处理Pathches字段");
             try {
@@ -2420,8 +2429,7 @@ public class MinecraftUtil {
             }
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallForge取消");
         }
         catch (Exception e) {
             Console.WriteLine(e);
@@ -2431,7 +2439,7 @@ public class MinecraftUtil {
         }
         return processKey;
     }
-    
+
     // 转换Fabric的Json
     public static async Task<JObject> TransformFabricJson(string json,string versionName,FabricLoader FabricLoader, CancellationToken ct = default) {
         var fabricJsonResult = await HttpRequestUtil.Get($"https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/{FabricLoader.Mcversion}/{FabricLoader.Version}/profile/json");
@@ -2546,8 +2554,7 @@ public class MinecraftUtil {
             }
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallFabric取消");
         }
         catch (Exception e) {
             Console.WriteLine(e);
@@ -2557,7 +2564,7 @@ public class MinecraftUtil {
         }
         return processKey;
     }
-    
+
     // 安装NeoForge Minecraft
     public async static Task<string> StartDownloadInstallNeoForge(
         string minecraftVersion, 
@@ -2688,11 +2695,10 @@ public class MinecraftUtil {
             if (isNeedAutoFinish) {
                 DownloadPage.ChangeProcessStatus(processKey, ProcessStatus.Complete, true);
             }
-            
+
         }
         catch (OperationCanceledException) {
-            MessageTips.Show($"{versionName} 安装取消");
-            Console.WriteLine("安装被取消");
+            Console.WriteLine("StartDownloadInstallNeoForge取消");
         }
         catch (Exception e) {
             Console.WriteLine(e);

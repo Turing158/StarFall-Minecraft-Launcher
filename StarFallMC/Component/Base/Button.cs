@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -7,25 +8,33 @@ using StarFallMC.Util;
 namespace StarFallMC.Component;
 
 public class Button : ButtonBase {
-    
+
     private Border _container;
 
     private ColorAnimation EnterAnim;
     private ColorAnimation LeaveAnim;
     private DoubleAnimation DownAnim;
     private DoubleAnimation UpAnim;
-    
+
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
         InitElement();
         InitColor();
         InitAnimation();
-        ThemeUtil.updateColor += () => {
-            Dispatcher.BeginInvoke(() => {
-                InitColor();
-                InitAnimation();
-            });
-        };
+        ThemeUtil.updateColor += OnThemeColorChanged;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e) {
+        ThemeUtil.updateColor -= OnThemeColorChanged;
+        Unloaded -= OnUnloaded;
+    }
+
+    private void OnThemeColorChanged() {
+        Dispatcher.BeginInvoke(() => {
+            InitColor();
+            InitAnimation();
+        });
     }
 
     public void InitElement() {

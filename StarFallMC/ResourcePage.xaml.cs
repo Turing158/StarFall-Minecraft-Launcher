@@ -82,7 +82,7 @@ public partial class ResourcePage : Page {
         if (theFirstEnter) {
             return;
         }
-        NaviBarChangeAnim.Begin();
+        NaviBarChangeAnim.Begin(this, true);
         NaviBarChangeTimer?.Dispose();
         NaviBarChangeTimer = new Timer(o => {
             this.Dispatcher.BeginInvoke(() => {

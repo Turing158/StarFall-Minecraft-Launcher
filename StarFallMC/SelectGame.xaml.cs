@@ -168,7 +168,7 @@ public partial class SelectGame : Page {
     
     private void loadGameByDir() {
         var dir = (DirItem)DirSelect.SelectedItem;
-        GameListChangeAnim.Begin();
+        GameListChangeAnim.Begin(this, true);
         if (GameSelectChangeTimer != null) {
             GameSelectChangeTimer.Dispose();
         }
