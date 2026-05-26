@@ -3,5 +3,6 @@
 public enum MessageBoxResult {
     Confirm,
     Cancel,
-    Custom
+    Custom,
+    Close
 }

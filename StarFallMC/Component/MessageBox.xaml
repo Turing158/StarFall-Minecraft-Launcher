@@ -41,10 +41,11 @@
                     <TextBlock Text="{Binding Title}"
                                FontSize="20" Margin="15 8 40 0" 
                                VerticalAlignment="Center"></TextBlock>
-                    <local:PlainButton Width="25" Height="25" 
-                                       HorizontalAlignment="Right" VerticalAlignment="Center" 
-                                       Margin="0 0 6 0" 
-                                       Visibility="{Binding CloseBtnVisibility}">
+                    <local:PlainButton Width="25" Height="25"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Margin="0 0 6 0"
+                                       Visibility="{Binding CloseBtnVisibility}"
+                                       Click="CloseBtn_OnClick">
                         <TextBlock Text="&#xe90b;" FontFamily="{StaticResource IconFontFamily}"></TextBlock>
                     </local:PlainButton>
                     <Border Margin="10 0" Height="1.5" 

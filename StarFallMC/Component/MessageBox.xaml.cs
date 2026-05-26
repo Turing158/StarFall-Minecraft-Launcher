@@ -157,6 +157,10 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
         _tcs?.TrySetResult(this);
     }
 
+    private void CloseBtn_OnClick(object sender, RoutedEventArgs e) {
+        CloseFunc(MessageBoxResult.Close);
+    }
+
     private void Mask_OnClickMask(object sender, RoutedEventArgs e) {
         HighlightBox.Begin(this, true);
     }
