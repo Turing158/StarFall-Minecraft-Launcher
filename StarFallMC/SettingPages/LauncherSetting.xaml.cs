@@ -213,17 +213,19 @@ public partial class LauncherSetting : Page {
         var isShow = toggleButton.IsChecked.Value;
         MessageTips.Show((isShow ? "始終" :"下載時") + "顯示下載按鈕");
         PropertiesUtil.launcherArgs.ShowDownloadBtn = isShow;
-        if (isShow) {
-            DownloadUtil.SetTimerToHideDownloadBtn(false);
-        }
-        else {
-            if (DownloadUtil.IsFinished || DownloadPage.HasProcessDoing?.Invoke() != true) {
-                DownloadUtil.SetTimerToHideDownloadBtn(true);
+        this.Dispatcher.BeginInvoke(() => {
+            if (isShow) {
+                DownloadUtil.SetTimerToHideDownloadBtn(false);
             }
             else {
-                DownloadUtil.SetTimerToHideDownloadBtn(false);
-                    
+                if (DownloadUtil.IsFinished || DownloadPage.HasProcessDoing?.Invoke() != true) {
+                    DownloadUtil.SetTimerToHideDownloadBtn(true);
+                }
+                else {
+                    DownloadUtil.SetTimerToHideDownloadBtn(false);
+                        
+                }
             }
-        }
+        });
     }
 }

@@ -267,8 +267,6 @@ public class DownloadUtil {
     }
     
     public static void SetTimerToHideDownloadBtn(bool flag) {
-        Console.WriteLine("!PropertiesUtil.launcherArgs.ShowDownloadBtn :{0}",!PropertiesUtil.launcherArgs.ShowDownloadBtn);
-        Console.WriteLine("flag ：{0}",flag);
         if (!PropertiesUtil.launcherArgs.ShowDownloadBtn) {
             if (flag) {
                 if (hideDownloadBtnTimer == null) {

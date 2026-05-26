@@ -93,16 +93,22 @@ public class CollapsePanel : UserControl{
     
     public CollapsePanel() {
         Loaded += CollapsePanel_OnLoaded;
+        Unloaded += CollapsePanel_OnUnloaded;
         IsEnabledChanged += OnIsEnabledChanged;
     }
-    
-    ~CollapsePanel() {
+
+    private void CollapsePanel_OnUnloaded(object sender, RoutedEventArgs e) {
         Loaded -= CollapsePanel_OnLoaded;
+        Unloaded -= CollapsePanel_OnUnloaded;
         IsEnabledChanged -= OnIsEnabledChanged;
-        _triggerBorder.MouseLeave -= Top_OnMouseLeave;
-        _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
-        _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
-        _contentPresenter.SizeChanged -= Content_OnSizeChanged;
+        if (_triggerBorder != null) {
+            _triggerBorder.MouseLeave -= Top_OnMouseLeave;
+            _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
+            _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
+        }
+        if (_contentPresenter != null) {
+            _contentPresenter.SizeChanged -= Content_OnSizeChanged;
+        }
     }
 
     private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
