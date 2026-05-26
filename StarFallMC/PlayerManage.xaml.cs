@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using Microsoft.Win32;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Component;
 using StarFallMC.Entity;
@@ -45,6 +46,7 @@ public partial class PlayerManage : Page {
     private string tmpDeviceCode ="";
     private Timer Logintimer;
     private int retryCount = 0;
+    private bool isChange = false;
     private CancellationTokenSource loginCts;
     
     public PlayerManage() {
@@ -161,8 +163,25 @@ public partial class PlayerManage : Page {
                                 );
                                 player.RefreshToken = refreshToken;
                                 player.AccessToken = joInfo["access_token"].ToString();
-                                var currentPlayer = viewModel.Players.First(i => i.UUID == player.UUID && i.IsOnline);
-                                if (currentPlayer == null) {
+                                bool directAddPlayer = false;
+                                Player currentPlayer = null;
+                                if (viewModel.Players != null && viewModel.Players.Count != 0) {
+                                    try
+                                    {
+                                        viewModel.Players.FirstOrDefault(i => i.UUID == player.UUID && i.IsOnline);
+                                    }
+                                    catch(Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                    }
+                                    currentPlayer = viewModel.Players.FirstOrDefault(i => i.UUID == player.UUID && i.IsOnline);
+                                    directAddPlayer = currentPlayer == null;
+                                }
+                                else {
+                                    viewModel.Players = new ();
+                                    directAddPlayer = true;
+                                }
+                                if (directAddPlayer) {
                                     viewModel.Players.Add(player);
                                     PlayerListView.SelectedIndex = viewModel.Players.Count-1;
                                     NoUser.Opacity = 0;
@@ -173,7 +192,6 @@ public partial class PlayerManage : Page {
                                         viewModel.Players[index] = player;
                                         PlayerListView.SelectedIndex = index;
                                     }
-                                    
                                 }
                                 updatePlayerSkinFunc(player);
                                 MessageTips.Show("正版登录认证成功！");
@@ -265,6 +283,8 @@ public partial class PlayerManage : Page {
 
     private void OutlineBackBtn_OnClick(object sender, RoutedEventArgs e) {
         OutlinePageHide.Begin();
+        isChange = false;
+        OutlineInput.Text = "";
     }
 
     private void OutlineConfirm_OnClick(object sender, RoutedEventArgs e) {
@@ -290,10 +310,23 @@ public partial class PlayerManage : Page {
             ((Storyboard)FindResource("NameTipsShow")).Begin(this, true);
             return;
         }
-        var player = new Player(OutlineInput.Text,DefaultSKin,false,Guid.NewGuid().ToString().Replace("-", ""));
-        MessageTips.Show($"成功添加Player\n{player.Name}");
-        viewModel.Players.Add(player);
-        PlayerListView.SelectedIndex = viewModel.Players.Count-1;
+        if (isChange) {
+            var index = viewModel.Players.IndexOf(viewModel.CurrentPlayer);
+            if (index != -1) {
+                PlayerListView.SelectedIndex = -1;
+                var cp = viewModel.CurrentPlayer;
+                MessageTips.Show($"成功修改Player\n{cp.Name} => {OutlineInput.Text}");
+                cp.Name = OutlineInput.Text;
+                viewModel.Players[index] = cp;
+                PlayerListView.SelectedIndex = index;
+            }
+        }
+        else {
+            var player = new Player(OutlineInput.Text,DefaultSKin,false,Guid.NewGuid().ToString().Replace("-", ""));
+            MessageTips.Show($"成功添加Player\n{player.Name}");
+            viewModel.Players.Add(player);
+            PlayerListView.SelectedIndex = viewModel.Players.Count-1;
+        }
         NoUser.Opacity = 0;
         LoginPageHide.Begin();
         OutlinePageHide.Begin();
@@ -348,8 +381,43 @@ public partial class PlayerManage : Page {
             NetworkUtil.OpenUrl("https://www.minecraft.net/zh-hans/msaprofile/mygames/editskin");
         }
         else {
-            
+            if (viewModel.CurrentPlayer.Skin == null 
+                || string.IsNullOrEmpty(viewModel.CurrentPlayer.Skin) 
+                || viewModel.CurrentPlayer.Skin.Equals("pack://application:,,,/;component/assets/steve.png")
+            ) {
+                selectAndChangeOutlineSkin();
+                return;
+            }
+            MessageBox.Show("请选择重置成steve皮肤还是再次选择皮肤文件","更换皮肤",MessageBoxBtnType.ConfirmAndCancel,result => {
+                if (result == MessageBoxResult.Confirm) {
+                    selectAndChangeOutlineSkin();
+                }
+                else if(result == MessageBoxResult.Cancel) {
+                    changeOutlineSkin("pack://application:,,,/;component/assets/steve.png");
+                }
+            },confirmBtnText: "选择皮肤",cancelBtnText: "重置皮肤",showCloseBtn: true);
         }
+    }
+
+    private void selectAndChangeOutlineSkin() {
+        OpenFileDialog ofd = new OpenFileDialog();
+        ofd.Filter = "PNG 图片|*.png";
+        ofd.Title = "选择皮肤文件(.png)";
+        ofd.InitialDirectory = DirFileUtil.CurrentDirPosition;
+        if (ofd.ShowDialog() == true) {
+            MessageTips.Show("测试换肤功能（未实装游戏效果）");
+            string selectedPath = ofd.FileName;
+            changeOutlineSkin(selectedPath);
+        }
+    }
+
+    private void changeOutlineSkin(string path){
+        PlayerListView.SelectedIndex = -1;
+        var player = viewModel.CurrentPlayer;
+        var index = viewModel.Players.IndexOf(player);
+        player.Skin = path;
+        viewModel.Players[index] = player;
+        PlayerListView.SelectedIndex = index;
     }
 
     private void NameChangeBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -360,7 +428,9 @@ public partial class PlayerManage : Page {
             NetworkUtil.OpenUrl("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile");
         }
         else {
-            
+            isChange = true;
+            OutlineInput.Text = viewModel.CurrentPlayer.Name;
+            OutlinePageShow.Begin();
         }
     }
 
@@ -378,7 +448,6 @@ public partial class PlayerManage : Page {
         var box = MessageBox.Show($"正在刷新 {viewModel.CurrentPlayer.Name} 玩家信息，请稍等...","刷新玩家信息",MessageBoxBtnType.None);
         var result = await LoginUtil.RefreshMicrosoftToken(viewModel.CurrentPlayer,refreshCts.Token).ConfigureAwait(true);
         if (result != null) {
-            Console.WriteLine(result);
             MessageTips.Show($"刷新 {result.Name} 玩家信息成功！");
             await MessageBox.ShowAsync(
                 content:$"刷新完成！ {result.Name} 在启动器中的档案已更新",

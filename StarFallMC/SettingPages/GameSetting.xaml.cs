@@ -214,7 +214,6 @@ public partial class GameSetting : Page {
     }
 
     private async void AddJavaList_OnClick(object sender, RoutedEventArgs routedEventArgs) {
-        MinecraftUtil.GetJavaVersion("E:\\Programmer");
         OpenFileDialog ofd = new OpenFileDialog();
         ofd.Filter = "Java Executable|javaw.exe;java.exe";
         ofd.Title = "选择Java可执行文件";
