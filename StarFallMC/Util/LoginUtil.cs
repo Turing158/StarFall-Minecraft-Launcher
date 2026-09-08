@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using StarFallMC.Component;
 using StarFallMC.Entity;
+using StarFallMC.Services;
 
 namespace StarFallMC.Util;
 
@@ -29,7 +29,11 @@ public class LoginUtil {
         }
 
         //刷新Microsoft Token
-        public static async Task<Player> RefreshMicrosoftToken(Player player,CancellationToken cancellationToken) {
+        public static async Task<Player> RefreshMicrosoftToken(
+            Player player,
+            CancellationToken cancellationToken,
+            IProgress<string>? statusProgress = null,
+            Action<string>? notifyError = null) {
             Console.WriteLine("刷新Microsoft Token");
             Dictionary<string,Object> args = new () {
                 {"client_id",KeyUtil.MICROSOFT_KEY_CLIENT_ID},
@@ -41,7 +45,11 @@ public class LoginUtil {
             if(r.IsSuccess){
                 JObject jo = JObject.Parse(r.Content);
                 var refreshToken = jo["refresh_token"].ToString();
-                var result = await GetXboxLiveToken(jo["access_token"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
+                var result = await GetXboxLiveToken(
+                    jo["access_token"].ToString(),
+                    cancellationToken,
+                    statusProgress,
+                    notifyError).ConfigureAwait(true);
                 if (!string.IsNullOrEmpty(result)) {
                     var jo2 = JObject.Parse(result);
                     if (jo2["error"] == null) {
@@ -63,31 +71,23 @@ public class LoginUtil {
         }
 
         public static void RefreshPlayer(Player player) {
-            PlayerManage.ViewModel pmvm = PlayerManage.GetViewModel?.Invoke();
-            if (pmvm != null) {
-                var currentPlayer = pmvm.Players.First(i => i.UUID == player.UUID && i.IsOnline);
-                var index = pmvm.Players.IndexOf(currentPlayer);
-                if (index != -1) {
-                    PlayerManage.GetViewModel.Invoke().Players[index] = player;
-                }
-                PlayerManage.SetPlayerListItem.Invoke(player);
+            var players = ApplicationState.Players;
+            var currentPlayer = players.Players.FirstOrDefault(i => i.UUID == player.UUID && i.IsOnline);
+            var index = players.Players.IndexOf(currentPlayer);
+            if (index != -1) {
+                players.Players[index] = player;
             }
-            else {
-                PropertiesUtil.loadJson["player"]["player"] = JObject.FromObject(player);
-                var objs = PropertiesUtil.loadJson["player"]["players"].ToObject<List<Player>>();
-                int index = objs.FindIndex(i => i.UUID == player.UUID && i.IsOnline);
-                if (index != -1) {
-                    objs[index] = player;
-                }
-                PropertiesUtil.loadJson["player"]["players"] = JArray.FromObject(objs);
-                Home.SetPlayer?.Invoke(player);
-            }
+            players.CurrentPlayer = player;
         }
         
         //获取Xbox Live Token
-        public static async Task<string> GetXboxLiveToken(string accessToken,CancellationToken cancellationToken) {
+        public static async Task<string> GetXboxLiveToken(
+            string accessToken,
+            CancellationToken cancellationToken,
+            IProgress<string>? statusProgress = null,
+            Action<string>? notifyError = null) {
             Console.WriteLine("获取Xbox Live Token");
-            PlayerManage.SetLoadingText?.Invoke("获取Xbox Live Token中...");
+            statusProgress?.Report("获取Xbox Live Token中...");
             Dictionary<string,Object> args = new (){
                 {"Properties",new Dictionary<string,Object> {
                     {"AuthMethod","RPS"},
@@ -106,7 +106,7 @@ public class LoginUtil {
                     Console.WriteLine("Xbox Live Token 响应缺少必要字段");
                     return "";
                 }
-                return await GetXSTSToken(xboxToken, uhs, cancellationToken:cancellationToken).ConfigureAwait(true);
+                return await GetXSTSToken(xboxToken, uhs, cancellationToken, statusProgress, notifyError).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
@@ -114,9 +114,14 @@ public class LoginUtil {
 
 
         //获取XSTS Token
-        private static async Task<string> GetXSTSToken(string xboxLiveToken,string uhs,CancellationToken cancellationToken) {
+        private static async Task<string> GetXSTSToken(
+            string xboxLiveToken,
+            string uhs,
+            CancellationToken cancellationToken,
+            IProgress<string>? statusProgress,
+            Action<string>? notifyError) {
             Console.WriteLine("获取XSTS Token");
-            PlayerManage.SetLoadingText?.Invoke("获取XSTS Token中...");
+            statusProgress?.Report("获取XSTS Token中...");
             Dictionary<string,Object> args = new () {
                 {"Properties",new Dictionary<string,Object> {
                     {"SandboxId","RETAIL"},
@@ -134,35 +139,43 @@ public class LoginUtil {
                     Console.WriteLine("XSTS Token 响应缺少必要字段");
                     return "";
                 }
-                return await GetMinecraftToken(xstsToken, xstsUhs, cancellationToken:cancellationToken).ConfigureAwait(true);
+                return await GetMinecraftToken(xstsToken, xstsUhs, cancellationToken, statusProgress, notifyError).ConfigureAwait(true);
             }
             Console.WriteLine(r.ErrorMessage);
             return "";
         }
 
         //获取Minecraft Token
-        public static async Task<string> GetMinecraftToken(string XTSTtoken,string uhs,CancellationToken cancellationToken) {
+        public static async Task<string> GetMinecraftToken(
+            string XTSTtoken,
+            string uhs,
+            CancellationToken cancellationToken,
+            IProgress<string>? statusProgress = null,
+            Action<string>? notifyError = null) {
             Console.WriteLine("获取Minecraft Token");
-            PlayerManage.SetLoadingText?.Invoke("获取Minecraft Token中...");
+            statusProgress?.Report("获取Minecraft Token中...");
             Dictionary<string,Object> args = new () {
                     {"identityToken",$"XBL3.0 x={uhs};{XTSTtoken}"}
                 };
             var r = await HttpRequestUtil.Post("https://api.minecraftservices.com/authentication/login_with_xbox",args,cancellationToken:cancellationToken).ConfigureAwait(true);
             if (r.IsSuccess) {
                 JObject jo = JObject.Parse(r.Content);
-                return await GetMinecraftInfo(jo["access_token"].ToString(),cancellationToken:cancellationToken).ConfigureAwait(true);
+                return await GetMinecraftInfo(jo["access_token"].ToString(), cancellationToken, statusProgress).ConfigureAwait(true);
             }
             else {
-                MessageTips.Show("获取Minecraft Token失败");
+                notifyError?.Invoke("获取Minecraft Token失败");
             }
             Console.WriteLine($"获取Minecraft Token失败：{r.ErrorMessage}");
             return "";
         }
 
         //获取Minecraft用户信息
-        public static async Task<string> GetMinecraftInfo(string accessToken,CancellationToken cancellationToken) {
+        public static async Task<string> GetMinecraftInfo(
+            string accessToken,
+            CancellationToken cancellationToken,
+            IProgress<string>? statusProgress = null) {
             Console.WriteLine("获取Minecraft用户信息");
-            PlayerManage.SetLoadingText?.Invoke("获取Minecraft用户信息中...");
+            statusProgress?.Report("获取Minecraft用户信息中...");
             Dictionary<string,string> headers = new () {
                 {"Authorization",$"Bearer {accessToken}"}
             };

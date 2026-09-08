@@ -1,5 +1,7 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
+
 namespace StarFallMC.Component;
 
 public partial class LittleTips : UserControl {
@@ -24,37 +26,71 @@ public partial class LittleTips : UserControl {
     private Storyboard HideStoryboard;
     private Storyboard TipsStoryboard;
 
-    private Timer changeTimer;
-    private Timer textTimer;
+    private DispatcherTimer? changeTimer;
+    private DispatcherTimer? textTimer;
     
     public LittleTips() {
         InitializeComponent();
         ShowStoryboard = (Storyboard)FindResource("Show");
         HideStoryboard = (Storyboard)FindResource("Hide");
         TipsStoryboard = (Storyboard)FindResource("TipsChange");
+        Unloaded += LittleTips_OnUnloaded;
     }
 
     public void Show() {
+        HideTimers();
         ShowStoryboard.Begin(this, true);
         getRandomTip();
         int dur = (int)duration*1000;
-        changeTimer = new Timer(s => {
-            this.Dispatcher.BeginInvoke(() => {
-                TipsStoryboard.Begin(this, true);
-                textTimer = new Timer(s => {
-                    this.Dispatcher.BeginInvoke(() => {
-                        getRandomTip();
-                        textTimer.Dispose();
-                    });
-                },null,200,0);
-            });
-        },null,dur, dur);
+        changeTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(dur)
+        };
+        changeTimer.Tick += ChangeTimer_OnTick;
+        changeTimer.Start();
     }
 
     public void Hide() {
-        changeTimer?.Dispose();
-        textTimer?.Dispose();
+        HideTimers();
         HideStoryboard.Begin(this, true);
+    }
+
+    private void ChangeTimer_OnTick(object? sender, EventArgs e) {
+        TipsStoryboard.Begin(this, true);
+        if (textTimer != null) {
+            textTimer.Stop();
+            textTimer.Tick -= TextTimer_OnTick;
+        }
+        textTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        textTimer.Tick += TextTimer_OnTick;
+        textTimer.Start();
+    }
+
+    private void TextTimer_OnTick(object? sender, EventArgs e) {
+        if (textTimer != null) {
+            textTimer.Stop();
+            textTimer.Tick -= TextTimer_OnTick;
+            textTimer = null;
+        }
+        getRandomTip();
+    }
+
+    private void HideTimers() {
+        if (changeTimer != null) {
+            changeTimer.Stop();
+            changeTimer.Tick -= ChangeTimer_OnTick;
+            changeTimer = null;
+        }
+        if (textTimer != null) {
+            textTimer.Stop();
+            textTimer.Tick -= TextTimer_OnTick;
+            textTimer = null;
+        }
+    }
+
+    private void LittleTips_OnUnloaded(object sender, System.Windows.RoutedEventArgs e) {
+        HideTimers();
     }
     
     private void getRandomTip() {

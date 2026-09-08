@@ -17,7 +17,7 @@ public class ResourcePageExtension{
         EasingFunction = new CubicEase()
     };
     
-    public static void ReloadList(FrameworkElement contentViewer,FrameworkElement loadingViewer,FrameworkElement emptyViewer = null) {
+    public static void ReloadList(FrameworkElement contentViewer,FrameworkElement loadingViewer,FrameworkElement? emptyViewer = null) {
         contentViewer.BeginAnimation(Page.OpacityProperty,ValueTo0);
         contentViewer.IsHitTestVisible = false;
         loadingViewer.Visibility = Visibility.Visible;
@@ -30,7 +30,7 @@ public class ResourcePageExtension{
 
     
 
-    public static void AlreadyLoaded(Page page,FrameworkElement contentViewer,FrameworkElement loadingViewer,FrameworkElement emptyViewer = null,bool resourceEmpty = true) {
+    public static void AlreadyLoaded(Page page,FrameworkElement contentViewer,FrameworkElement loadingViewer,FrameworkElement? emptyViewer = null,bool resourceEmpty = true) {
         page.Dispatcher.BeginInvoke(() => {
             contentViewer.BeginAnimation(Page.OpacityProperty, ValueTo1);
             contentViewer.IsHitTestVisible = true;

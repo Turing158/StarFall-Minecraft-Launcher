@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using StarFallMC.Entity.Enum;
 using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
@@ -12,7 +13,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     
     private Action<MessageBoxResult> _callback;
     
-    private Timer HideTimer;
+    private DispatcherTimer? HideTimer;
     private Storyboard HighlightBox;
     private TaskCompletionSource<MessageBox> _tcs;
     
@@ -144,17 +145,31 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
 
     private void CloseFunc(MessageBoxResult result) {
         Mask.Hide();
-        HideTimer = new Timer((s) => {
-            this.Dispatcher.Invoke(() => {
-                var mainWindow = Application.Current.MainWindow;
-                if (mainWindow != null && mainWindow.Content is Grid gird) {
-                    gird.Children.Remove(this);
-                }
-                HideTimer.Dispose();
-            });
-        },null, 300, 0);
+        StopHideTimer();
+        HideTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
+        HideTimer.Tick += HideTimer_OnTick;
+        HideTimer.Start();
         _callback?.Invoke(result);
         _tcs?.TrySetResult(this);
+    }
+
+    private void HideTimer_OnTick(object? sender, EventArgs e) {
+        StopHideTimer();
+        var mainWindow = Application.Current.MainWindow;
+        if (mainWindow != null && mainWindow.Content is Grid grid) {
+            grid.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Remove(this);
+        }
+    }
+
+    private void StopHideTimer() {
+        if (HideTimer == null) {
+            return;
+        }
+        HideTimer.Stop();
+        HideTimer.Tick -= HideTimer_OnTick;
+        HideTimer = null;
     }
 
     private void CloseBtn_OnClick(object sender, RoutedEventArgs e) {
@@ -166,9 +181,7 @@ public partial class MessageBox : UserControl,INotifyPropertyChanged {
     }
     
     public static void Delete(MessageBox box) {
-        if (box.HideTimer != null) {
-            box.HideTimer.Dispose();
-        }
+        box.StopHideTimer();
         var mainWindow = Application.Current.MainWindow;
         if (mainWindow != null && mainWindow.Content is Grid gird) {
             gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageBoxContainer")?.Children.Remove(box);

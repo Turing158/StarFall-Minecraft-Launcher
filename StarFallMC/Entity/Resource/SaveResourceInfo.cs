@@ -8,7 +8,9 @@ public class SaveResourceInfo : SavesResource{
             }
 
             public static SaveResourceInfo FromSavesResource(SavesResource baseObj) {
-                return new SaveResourceInfo(baseObj.nbt, baseObj.DirName,baseObj.Path,baseObj.RefreshDate);
+                var resource = new SaveResourceInfo(baseObj.nbt, baseObj.DirName,baseObj.Path,baseObj.RefreshDate);
+                resource.CopyIconStateFrom(baseObj);
+                return resource;
             }
             
             public string Difficulty {

@@ -195,7 +195,7 @@
                                    HorizontalAlignment="Left"
                                    VerticalAlignment="Center"
                                    Margin="10"
-                                   Source="{Binding Resource.Logo}"></Image>
+                                   Source="{Binding Resource.LogoImage}"></Image>
                             <Border Width="60" Height="60"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"

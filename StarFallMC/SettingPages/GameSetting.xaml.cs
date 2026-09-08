@@ -9,31 +9,32 @@ using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using StarFallMC.Services;
+using StarFallMC.Services.Minecraft;
 using Path = System.IO.Path;
 
 namespace StarFallMC.SettingPages;
 
 public partial class GameSetting : Page {
 
-    private ViewModel viewModel = new ();
-    public static Func<ViewModel> GetViewModel;
-    public static Action<object,RoutedEventArgs> unloadedAction;
+    private readonly GameSettingsState viewModel = ApplicationState.GameSettings;
+    private readonly MinecraftServiceContainer minecraftServices;
     
     private StringBuilder sb;
     
-    public GameSetting() {
+    public GameSetting(MinecraftServiceContainer? services = null) {
+        minecraftServices = services ?? MinecraftServices.Current;
         InitializeComponent();
         DataContext = viewModel;
-        GetViewModel += GetViewModelFunc;
-        unloadedAction += GameSetting_OnUnloaded;
         initInfo();
     }
     
     private void initInfo() {
-        var freeMemory = MinecraftUtil.GetMemoryAllInfo()[MinecraftUtil.MemoryName.FreeMemory];
-        viewModel.MemoryValue = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
+        var freeMemory = minecraftServices.Memory.GetAllInfo()[MemoryName.FreeMemory];
+        if (viewModel.MemoryValue <= 0) {
+            viewModel.MemoryValue = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
+        }
         CurrentMemory.Text = viewModel.MemoryValue + "mb";
-        PropertiesUtil.LoadGameSettingArgs(ref viewModel);
         RefleshMemory();
         JvmExtraArea.ToolTip = "JVM参数\n\n"+
                                "-X、-XX参数\n" +
@@ -61,8 +62,8 @@ public partial class GameSetting : Page {
     }
 
     private void RefleshMemory() {
-        Dictionary<MinecraftUtil.MemoryName,double> memoryAllInfo = MinecraftUtil.GetMemoryAllInfo();
-        var freeMemory = memoryAllInfo[MinecraftUtil.MemoryName.FreeMemory];
+        IReadOnlyDictionary<MemoryName, double> memoryAllInfo = minecraftServices.Memory.GetAllInfo();
+        var freeMemory = memoryAllInfo[MemoryName.FreeMemory];
         MemorySlider.Maximum = freeMemory;
         MemorySlider.Minimum = freeMemory*1/9 < 656 ? 656 : freeMemory*1/9;
         MemorySlider.MinimumText = (MemorySlider.Minimum/1024).ToString("F1")+"G";
@@ -72,7 +73,7 @@ public partial class GameSetting : Page {
         }
     }
     
-    public class ViewModel : INotifyPropertyChanged {
+    public class ViewModel : INotifyPropertyChanged, IGameSettingsState {
         private int _currentJavaVersionIndex;
         public int CurrentJavaVersionIndex {
             get { return _currentJavaVersionIndex; }
@@ -197,17 +198,13 @@ public partial class GameSetting : Page {
         }
     }
     
-    private ViewModel GetViewModelFunc() {
-        return viewModel;
-    }
-    
     private void Auto_OnClick(object sender, RoutedEventArgs routedEventArgs) {
         refreshJavaVersions();
         MessageTips.Show("自动导入Java版本成功");
     }
     
     private void refreshJavaVersions() {
-        var javaVersions = MinecraftUtil.GetJavaVersions();
+        var javaVersions = minecraftServices.Java.DiscoverInstalled().ToList();
         javaVersions.Insert(0,new JavaItem("自动选择Java","", ""));
         viewModel.JavaVersions = new ObservableCollection<JavaItem>(javaVersions);
         JavaList.SelectedIndex = 0;
@@ -225,9 +222,9 @@ public partial class GameSetting : Page {
                 MessageTips.Show("该Java已存在",MessageTips.MessageType.Warning);
                 return;
             }
-            string version = await MinecraftUtil.GetJavaVersion(path).ConfigureAwait(false);
+            string? version = await minecraftServices.Java.ProbeVersionAsync(path).ConfigureAwait(false);
             if (version != null) {
-                Dispatcher.BeginInvoke(() => {
+                await Dispatcher.BeginInvoke(() => {
                     viewModel.JavaVersions.Add(new JavaItem(Path.GetFileName(path), path, version));
                     MessageTips.Show("添加Java成功");
                 });

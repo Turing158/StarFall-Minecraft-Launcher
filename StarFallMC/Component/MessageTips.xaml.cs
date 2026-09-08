@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using StarFallMC.Util;
 
 namespace StarFallMC.Component;
@@ -21,10 +22,11 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
     private Storyboard MouseUpAnim;
     private Storyboard ChangeTextAnim;
     
-    private Timer HideTimer;
-    private Timer DeleteTimer;
-    private Timer MessageTimer;
-    private Timer SizeTimer;
+    private DispatcherTimer? HideTimer;
+    private DispatcherTimer? DeleteTimer;
+    private DispatcherTimer? MessageTimer;
+    private string pendingMessage = string.Empty;
+    private MessageType pendingMessageType;
 
     private bool isClosing = false;
     
@@ -53,7 +55,7 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
         DataContext = this;
         
         initColor();
-        ThemeUtil.updateColor += initColor;
+        ThemeUtil.AddColorChangedHandler(OnThemeColorChanged);
         Unloaded += OnUnloaded;
         Main.Width = 0;
         Main.Height = 0;
@@ -63,27 +65,27 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
     }
 
     private void OnUnloaded(object sender, RoutedEventArgs e) {
-        ThemeUtil.updateColor -= initColor;
-        Unloaded -= OnUnloaded;
+        StopAllTimers();
+        ThemeUtil.RemoveColorChangedHandler(OnThemeColorChanged);
     }
 
     private void initColor() {
         MessageColor = ThemeUtil.SecondaryBrush_1.Color.ToString();
     }
 
+    private void OnThemeColorChanged(object? sender, EventArgs e) => initColor();
+
     public void SetMessage(string message, MessageType messageType) {
         ChangeTextAnim.Begin(this, true);
-        MessageTimer?.Dispose();
+        StopMessageTimer();
+        pendingMessage = message;
+        pendingMessageType = messageType;
         HideContent.Text = message;
-        Dispatcher.BeginInvoke(() => {
-            MessageTimer = new Timer(o => {
-                this.Dispatcher.BeginInvoke(() => {
-                    Message = message;
-                    TextColorChange(messageType);
-                    MessageTimer?.Dispose();
-                });
-            }, null, 120, 0);
-        });
+        MessageTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(120)
+        };
+        MessageTimer.Tick += MessageTimer_OnTick;
+        MessageTimer.Start();
     }
 
     public static void Show(string message, MessageType messageType = MessageType.None) {
@@ -110,31 +112,25 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
     }
 
     public void Hide() {
-        HideTimer?.Dispose();
-        DeleteTimer?.Dispose();
-        HideTimer = new Timer(o => {
-            HideImmediately();
-        }, null, 1500, 0);
+        StopHideTimer();
+        StopDeleteTimer();
+        HideTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(1500)
+        };
+        HideTimer.Tick += HideTimer_OnTick;
+        HideTimer.Start();
     }
 
     public void HideImmediately() {
-        HideTimer?.Dispose();
-        DeleteTimer?.Dispose();
-        this.Dispatcher.BeginInvoke(() => {
-            isClosing = true;
-            HideAnim.Begin(this, true);
-            DeleteTimer = new Timer(o => {
-                this.Dispatcher.BeginInvoke(() => {
-                    var mainWindow = Application.Current.MainWindow;
-                    if (mainWindow != null && mainWindow.Content is Grid gird) {
-                        gird.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageTipContainer")?.Children
-                            .Remove(this);
-                    }
-                });
-                DeleteTimer?.Dispose();
-            },null,300, 0);
-            HideTimer?.Dispose();
-        });
+        StopHideTimer();
+        StopDeleteTimer();
+        isClosing = true;
+        HideAnim.Begin(this, true);
+        DeleteTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(300)
+        };
+        DeleteTimer.Tick += DeleteTimer_OnTick;
+        DeleteTimer.Start();
     }
 
     public void TextColorChange(MessageType messageType) {
@@ -153,8 +149,8 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
 
     private void Main_OnMouseEnter(object sender, MouseEventArgs e) {
         if (!isClosing) {
-            HideTimer?.Dispose();
-            DeleteTimer?.Dispose();
+            StopHideTimer();
+            StopDeleteTimer();
         }
     }
 
@@ -181,6 +177,52 @@ public partial class MessageTips : UserControl ,INotifyPropertyChanged{
             HideImmediately();
         }
         isDown = false;
+    }
+
+    private void MessageTimer_OnTick(object? sender, EventArgs e) {
+        StopMessageTimer();
+        Message = pendingMessage;
+        TextColorChange(pendingMessageType);
+    }
+
+    private void HideTimer_OnTick(object? sender, EventArgs e) {
+        StopHideTimer();
+        HideImmediately();
+    }
+
+    private void DeleteTimer_OnTick(object? sender, EventArgs e) {
+        StopDeleteTimer();
+        var mainWindow = Application.Current.MainWindow;
+        if (mainWindow != null && mainWindow.Content is Grid grid) {
+            grid.Children.OfType<Grid>().FirstOrDefault(i => i.Name == "MessageTipContainer")?.Children.Remove(this);
+        }
+    }
+
+    private void StopAllTimers() {
+        StopHideTimer();
+        StopDeleteTimer();
+        StopMessageTimer();
+    }
+
+    private void StopHideTimer() {
+        if (HideTimer == null) return;
+        HideTimer.Stop();
+        HideTimer.Tick -= HideTimer_OnTick;
+        HideTimer = null;
+    }
+
+    private void StopDeleteTimer() {
+        if (DeleteTimer == null) return;
+        DeleteTimer.Stop();
+        DeleteTimer.Tick -= DeleteTimer_OnTick;
+        DeleteTimer = null;
+    }
+
+    private void StopMessageTimer() {
+        if (MessageTimer == null) return;
+        MessageTimer.Stop();
+        MessageTimer.Tick -= MessageTimer_OnTick;
+        MessageTimer = null;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

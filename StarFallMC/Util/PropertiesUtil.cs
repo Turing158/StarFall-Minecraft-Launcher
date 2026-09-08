@@ -2,7 +2,8 @@
 using System.IO;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
-using StarFallMC.SettingPages;
+using StarFallMC.Services;
+using StarFallMC.Services.Minecraft;
 
 namespace StarFallMC.Util;
 
@@ -14,6 +15,7 @@ public class PropertiesUtil {
     public static DateTime LastCheckUpdateTime = DateTime.MinValue;
     public static UpdateInfo LastUpdateInfo = new();
     public static JObject loadJson;
+    private static readonly object SaveLock = new();
     public static void LoadPropertiesJson() {
         if (!File.Exists(jsonPath) || File.ReadAllText(jsonPath) == "") {
             loadJson = new JObject();
@@ -29,37 +31,45 @@ public class PropertiesUtil {
     }
     
     public static void Save() {
-        PlayerManage.unloadedAction?.Invoke(null,null);
-        SelectGame.unloadedAction?.Invoke(null,null);
-        GameSetting.unloadedAction?.Invoke(null,null);
-        SaveLauncherArgs();
-        if (!Directory.Exists(Path.GetDirectoryName(jsonPath))) {
-            Directory.CreateDirectory(Path.GetDirectoryName(jsonPath));
+        lock (SaveLock) {
+            SaveGameSettingArgs();
+            SavePlayerManageArgs();
+            SaveSelectGameArgs();
+            SaveLauncherArgs();
+            var directory = Path.GetDirectoryName(jsonPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) {
+                Directory.CreateDirectory(directory);
+            }
+            File.WriteAllText(jsonPath,loadJson.ToString());
         }
-        File.WriteAllText(jsonPath,loadJson.ToString());
     }
 
     public static void SaveGameSettingArgs() {
-        Console.WriteLine("SaveGameSettingArgs");
-        GameSetting.ViewModel gameSettingVm = GameSetting.GetViewModel?.Invoke();
-        loadJson["gameArgs"] = GameSettingArgs(gameSettingVm);
+        lock (SaveLock) {
+            Console.WriteLine("SaveGameSettingArgs");
+            loadJson["gameArgs"] = GameSettingArgs(ApplicationState.GameSettings);
+        }
     }
     
     public static void SavePlayerManageArgs() {
-        PlayerManage.ViewModel playerManageVm = PlayerManage.GetViewModel?.Invoke();
-        loadJson["player"] = PlayerManageArgs(playerManageVm);
+        lock (SaveLock) {
+            loadJson["player"] = PlayerManageArgs(ApplicationState.Players);
+        }
     }
     
     public static void SaveSelectGameArgs() {
-        SelectGame.ViewModel selectGameVm = SelectGame.GetViewModel?.Invoke();
-        loadJson["game"] = SelectGameArgs(selectGameVm);
+        lock (SaveLock) {
+            loadJson["game"] = SelectGameArgs(ApplicationState.GameSelection);
+        }
     }
     
     public static void SaveLauncherArgs() {
-        loadJson["launcher"] = LauncherArgsArgs();
+        lock (SaveLock) {
+            loadJson["launcher"] = LauncherArgsArgs();
+        }
     }
 
-    private static JObject GameSettingArgs(GameSetting.ViewModel vm) {
+    private static JObject GameSettingArgs(IGameSettingsState vm) {
         JObject GameArgs = new JObject();
         JObject Java = new JObject();
         Java["index"] = vm.CurrentJavaVersionIndex;
@@ -100,7 +110,7 @@ public class PropertiesUtil {
         return GameArgs;
     }
 
-    private static JObject PlayerManageArgs(PlayerManage.ViewModel vm) {
+    private static JObject PlayerManageArgs(IPlayerState vm) {
         JObject PlayerArgs = new JObject();
         PlayerArgs["player"] = JObject.FromObject(vm.CurrentPlayer ?? new Player());
         PlayerArgs["players"] = JArray.FromObject(vm.Players == null || vm.Players.Count == 0 ? new List<Player>() : vm.Players);
@@ -108,7 +118,7 @@ public class PropertiesUtil {
         return PlayerArgs;
     }
 
-    private static JObject SelectGameArgs(SelectGame.ViewModel vm){
+    private static JObject SelectGameArgs(IGameSelectionState vm){
         JObject SelectArgs = new JObject();
         SelectArgs["minecraft"] = JObject.FromObject(vm.CurrentGame ?? new MinecraftItem());
         SelectArgs["dir"] = JObject.FromObject(vm.CurrentDir ?? new DirItem());
@@ -129,7 +139,7 @@ public class PropertiesUtil {
         return LauncherArgs;
     }
 
-    public static void LoadGameSettingArgs(ref GameSetting.ViewModel vm) {
+    public static void LoadGameSettingArgs(IGameSettingsState vm) {
         if (loadJson == null) {
             return;
         }
@@ -177,7 +187,7 @@ public class PropertiesUtil {
                         vm.MemoryValue = memory["value"].Value<int>();
                     }
                     catch (Exception e){
-                        var freeMemory = MinecraftUtil.GetMemoryAllInfo()[MinecraftUtil.MemoryName.FreeMemory];
+                        var freeMemory = MinecraftServices.Current.Memory.GetAllInfo()[MemoryName.FreeMemory];
                         int suitMemory = (int)(freeMemory * 2 / 3 < 656 ? 656 : freeMemory * 2 / 3);
                         vm.MemoryValue = suitMemory;
                         memory["value"] = suitMemory;
@@ -237,7 +247,7 @@ public class PropertiesUtil {
             }
         }
         else {
-            List<JavaItem> javaItems = MinecraftUtil.GetJavaVersions();
+            List<JavaItem> javaItems = MinecraftServices.Current.Java.DiscoverInstalled().ToList();
             javaItems.Insert(0, new JavaItem("自动选择Java", "", ""));
             vm.JavaVersions = new ObservableCollection<JavaItem>(javaItems);
         }
@@ -277,7 +287,7 @@ public class PropertiesUtil {
         
     }
 
-    public static void LoadPlayerManage(ref PlayerManage.ViewModel vm) {
+    public static void LoadPlayerManage(IPlayerState vm) {
         var (player, players) = loadPlayers();
         vm.Players = new ObservableCollection<Player>(players);
         if (players.Contains(player)) {
@@ -288,7 +298,7 @@ public class PropertiesUtil {
         }
     }
 
-    public static void LoadSelectGameArgs(ref SelectGame.ViewModel vm) {
+    public static void LoadSelectGameArgs(IGameSelectionState vm) {
         if (loadJson == null) {
             return;
         }

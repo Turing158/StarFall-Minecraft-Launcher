@@ -17,7 +17,7 @@ dotnet run --project StarFallMC/StarFallMC.csproj
 ```
 
 - Output binary: `StarFallMC/bin/Debug/net8.0-windows/StarFallMC.exe`
-- No test projects exist in this solution.
+- Tests live in `StarFallMC.Tests/`; memory scenarios live in `StarFallMC.MemoryHarness/`.
 - IDE: JetBrains Rider (`.idea/`) and/or Visual Studio (`.sln`)
 
 ## Architecture
@@ -38,7 +38,7 @@ WPF `Frame`-based navigation with multiple named frames in `MainWindow`:
 Cross-page communication uses **static `Action`/`Func` delegates** (not a messenger/mediator). Examples:
 - `MainWindow.SubFrameNavigate` — static `Action<string, string>`
 - `Home.SetGameInfo` — static `Action<MinecraftItem>`
-- `DownloadPage.ProgressInit` — static `Action<List<DownloadFile>, bool>`
+- Download progress is relayed from the application-level `DownloadManager` as immutable session snapshots.
 
 ### Key Directories
 
@@ -62,7 +62,7 @@ Cross-page communication uses **static `Action`/`Func` delegates** (not a messen
 |-------|---------|
 | `MinecraftUtil` | Core MC logic: version discovery, Java detection, game launching, JSON parsing |
 | `PropertiesUtil` | Settings persistence via `SFMCL.json` (auto-saves every 5 min) |
-| `DownloadUtil` | Multi-threaded download manager (default: 30 connections, 10 threads) |
+| `DownloadManager` / `DownloadService` | Session-owned streaming download engine (default: 8 workers; configured range: 1–30) and compatibility adapter |
 | `LoginUtil` | Microsoft OAuth / Xbox Live / Minecraft authentication flow |
 | `HttpRequestUtil` | HTTP client wrapper with cancellation support |
 | `ResourceUtil` | Resource/mod management, CurseForge & Modrinth API integration |

@@ -8,116 +8,119 @@ using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
+using StarFallMC.Navigation;
 using StarFallMC.Util.Extension;
+using StarFallMC.Services;
+using StarFallMC.Services.Resources;
 
 namespace StarFallMC.ResourcePages;
 
-public partial class ModResources : Page {
+public partial class ModResources : Page, IPageLifecycle {
+    private readonly LauncherUiCoordinator uiCoordinator;
 
     private ViewModel viewModel = new();
 
-    private CancellationTokenSource cancellationTokenSource;
-    public static Action<ResourceType> InitResourcePage;
-    public ModResources() {
+    private CancellationTokenSource? pageCancellationTokenSource;
+    private CancellationTokenSource? activeLoadCancellationTokenSource;
+    private CancellationTokenSource? thumbnailCancellationTokenSource = new();
+    private readonly SemaphoreSlim loadGate = new(1, 1);
+    private readonly object thumbnailTaskLock = new();
+    private readonly HashSet<Task> thumbnailTasks = new();
+    private Task activeLoadTask = Task.CompletedTask;
+    private readonly ResourceType initialResourceType;
+    private bool isActive;
+    private long loadGeneration;
+    public ModResources(ResourceType resourceType = ResourceType.Mod, LauncherUiCoordinator? uiCoordinator = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
         InitializeComponent();
         DataContext = viewModel;
-        cancellationTokenSource = new CancellationTokenSource();
         viewModel.PercentText = "正在加载Mod列表... 0%";
-        InitResourcePage = initResourcePage;
+        initialResourceType = resourceType;
+        ConfigureResourceType(resourceType);
     }
     
     
-    private async Task InitResource(CancellationToken ct) {
+    private async Task LoadAsync(PageResourceQuery query, long generation, CancellationToken ct) {
         try {
             ct.ThrowIfCancellationRequested();
-            VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
-            VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
-            ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
-            viewModel.Mods = new ObservableCollection<MinecraftResource>();
-            viewModel.UseCurseForge = false;
-            ct.ThrowIfCancellationRequested();
-            if (ResourceUtil.ModResourceCache != null &&
-                ResourceUtil.ModResourceCache.ContainsKey(viewModel.ResourceType)) {
-                ct.ThrowIfCancellationRequested();
-                var cache = ResourceUtil.ModResourceCache[viewModel.ResourceType];
-                viewModel.UseCurseForge = cache.UseCurseForge;
-                Pagination.CurrentPage = cache.CurrentPage;
-                Pagination.TotalCount = cache.TotalCount;
-                viewModel.SearchText = cache.SearchText;
-                viewModel.SelectedLoader = cache.SelectedLoader;
-                viewModel.SelectedVersion = cache.SelectedVersion;
-                viewModel.SelectedCategory = cache.SelectedCategory;
-                viewModel.Mods = new ObservableCollection<MinecraftResource>(cache.List);
-                Console.WriteLine(cache.TotalCount);
-            }
-            else {
-                ct.ThrowIfCancellationRequested();
-                Dispatcher.BeginInvoke(() => { Pagination.CurrentPage = 1; });
-                await GetModResource(ct).ConfigureAwait(false);
-            }
-            ct.ThrowIfCancellationRequested();
-            ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, viewModel.Mods.Count == 0);
-        }
-        catch (OperationCanceledException) {
-            Console.WriteLine("LoadModResources取消");
-        }
-        catch (Exception e){
-            Console.WriteLine(e);
-        }
-    }
+            ResourceServiceContainer services = ResourceServices.Current;
+            string gamePath = ApplicationState.GameSelection.CurrentGame?.Path ?? string.Empty;
+            string gameVersion = ApplicationState.GameSelection.CurrentGame?.Name ?? string.Empty;
+            services.Cache.ClearForVersion(gamePath);
+            var displayQuery = new StarFallMC.Services.Resources.ResourceQuery(
+                query.ResourceType,
+                query.UseCurseForge,
+                query.Page,
+                query.SearchText,
+                query.SelectedLoader,
+                query.SelectedVersion,
+                query.SelectedCategory,
+                gameVersion,
+                gamePath);
 
-    private async Task GetModResource(CancellationToken ct) {
-        try {
+            if (query.IsInitialLoad &&
+                services.Cache.TryGetLastQuery(query.ResourceType, out var savedQuery, out var savedKey) &&
+                string.Equals(savedKey.DirectoryVersion, gamePath, StringComparison.Ordinal) &&
+                string.Equals(savedKey.GameVersion, gameVersion, StringComparison.Ordinal) &&
+                services.Cache.TryGet(savedKey, out var savedPage)) {
+                ApplyCachedResult(savedQuery, savedPage);
+                return;
+            }
+
+            string apiCategory = query.UseCurseForge
+                ? query.SelectedCategory
+                : ResourceCategory.ModrinthCategoryToString(query.SelectedCategory);
+            var apiQuery = displayQuery with { SelectedCategory = apiCategory };
+            ResourceCacheKey cacheKey = ResourceCacheKey.FromQuery(apiQuery);
+            ResourcePageDto<CommunityResourceDto> page = await services.Cache.GetOrCreateAsync(
+                cacheKey,
+                async requestToken => {
+                    ApiResult<ResourcePageDto<CommunityResourceDto>> response = query.UseCurseForge
+                        ? await services.CurseForge.SearchAsync(
+                            apiQuery,
+                            ResourceCategory.CurseForgeCategoriesToInt(query.SelectedCategory, query.ResourceType),
+                            cancellationToken: requestToken)
+                        : await services.Modrinth.SearchAsync(apiQuery, cancellationToken: requestToken);
+                    if (response.ErrorKind == ResourceErrorKind.Cancelled) {
+                        throw new OperationCanceledException(requestToken);
+                    }
+                    if (!response.Success || response.Value == null) {
+                        throw new ResourceApiException(
+                            response.Error ?? "Resource API request failed.",
+                            response.ErrorKind,
+                            response.StatusCode);
+                    }
+                    return response.Value;
+                },
+                ct);
+            var tmp = page.Items.Select(item => services.Mapper.Map(item, services.Localizations)).ToList();
+            int totalCount = page.TotalCount;
             ct.ThrowIfCancellationRequested();
-            //获取网络mod资源，分为Modrinth和curseforge
-            var tmp = new List<MinecraftResource>();
-            int totalCount = 0;
-            ct.ThrowIfCancellationRequested();
-            if (viewModel.UseCurseForge) {
+            await Dispatcher.InvokeAsync(() => {
                 ct.ThrowIfCancellationRequested();
-                (tmp , totalCount) = await ResourceUtil.GetCurseForgeModResources(
-                    token: ct,
-                    page: Pagination.CurrentPage,
-                    query: viewModel.SearchText,
-                    loader: viewModel.SelectedLoader,
-                    version: viewModel.SelectedVersion,
-                    category: ResourceCategory.CurseForgeCategoriesToInt(viewModel.SelectedCategory, viewModel.ResourceType),
-                    resourceType: viewModel.ResourceType
-                );
-            }
-            else {
-                (tmp , totalCount) = await ResourceUtil.GetModrinthModResources(
-                    ct: ct,
-                    page: Pagination.CurrentPage,
-                    query: viewModel.SearchText,
-                    loader: viewModel.SelectedLoader,
-                    version: viewModel.SelectedVersion,
-                    category: ResourceCategory.ModrinthCategoryToString(viewModel.SelectedCategory),
-                    resourceType: viewModel.ResourceType
-                );
-            }
-            ct.ThrowIfCancellationRequested();
-            if (ResourceUtil.ModResourceCache == null) {
-                ResourceUtil.ModResourceCache = new Dictionary<ResourceType, ModResourceCache>();
-            }
-            if (!ResourceUtil.ModResourceCache.ContainsKey(viewModel.ResourceType)) {
-                ct.ThrowIfCancellationRequested();
-                ResourceUtil.ModResourceCache[viewModel.ResourceType] = new ModResourceCache {
-                    UseCurseForge = false,
-                    List = tmp,
-                    TotalCount = totalCount,
-                    CurrentPage = 1
-                };
-                Console.WriteLine($"存入cache 共{totalCount}条");
-            }
-            ct.ThrowIfCancellationRequested();
-            viewModel.Mods = new ObservableCollection<MinecraftResource>(tmp);
-            Pagination.TotalCount = totalCount;
-            Console.WriteLine(totalCount);
-            ct.ThrowIfCancellationRequested();
+                if (!IsCurrentGeneration(generation)) {
+                    return;
+                }
+
+                viewModel.Mods = new ObservableCollection<MinecraftResource>(tmp);
+                Pagination.CurrentPage = query.Page;
+                Pagination.TotalCount = totalCount;
+                services.Cache.RememberQuery(displayQuery, cacheKey);
+                ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, tmp.Count == 0);
+            });
         }
         catch (OperationCanceledException) {
             Console.WriteLine("GetModFileInfo取消");
+        }
+        catch (ResourceApiException exception) {
+            Console.WriteLine(exception.Message);
+            await Dispatcher.InvokeAsync(() => {
+                if (!IsCurrentGeneration(generation)) return;
+                viewModel.Mods = new ObservableCollection<MinecraftResource>();
+                Pagination.CurrentPage = query.Page;
+                Pagination.TotalCount = 0;
+                ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, true);
+            });
         }
         catch (Exception e){
             Console.WriteLine(e);
@@ -126,14 +129,14 @@ public partial class ModResources : Page {
     
     public class ViewModel : INotifyPropertyChanged {
 
-        private ObservableCollection<MinecraftResource> _mods;
+        private ObservableCollection<MinecraftResource> _mods = new();
 
         public ObservableCollection<MinecraftResource> Mods {
             get => _mods;
             set => SetField(ref _mods, value);
         }
         
-        private string _percentText;
+        private string _percentText = string.Empty;
         
         public string PercentText {
             get => _percentText;
@@ -178,7 +181,7 @@ public partial class ModResources : Page {
             "Quilt"
         };
 
-        public List<string> _categories;
+        public List<string> _categories = ResourceCategory.ModCategories;
         public List<string> Categories {
             get => _categories;
             set => SetField(ref _categories, value);
@@ -230,10 +233,7 @@ public partial class ModResources : Page {
     }
     
 
-    private void initResourcePage(ResourceType resourceType) {
-        // ModResources_OnUnloaded(null, null);
-        cancellationTokenSource.Cancel();
-        cancellationTokenSource = new CancellationTokenSource();
+    private void ConfigureResourceType(ResourceType resourceType) {
         string resourceTypeString;
         switch (resourceType) {
             case ResourceType.ModPack:
@@ -254,51 +254,169 @@ public partial class ModResources : Page {
         }
         viewModel.PercentText = $"正在加载{resourceTypeString}列表...";
         viewModel.ResourceType = resourceType;
-        InitResource(cancellationTokenSource.Token).ConfigureAwait(false);
+    }
+
+    private void ApplyCachedResult(
+        StarFallMC.Services.Resources.ResourceQuery query,
+        ResourcePageDto<CommunityResourceDto> page) {
+        ResourceServiceContainer services = ResourceServices.Current;
+        viewModel.UseCurseForge = query.UseCurseForge;
+        Pagination.CurrentPage = query.Page;
+        Pagination.TotalCount = page.TotalCount;
+        viewModel.SearchText = query.SearchText;
+        viewModel.SelectedLoader = query.SelectedLoader;
+        viewModel.SelectedVersion = query.SelectedVersion;
+        viewModel.SelectedCategory = query.SelectedCategory;
+        viewModel.Mods = new ObservableCollection<MinecraftResource>(
+            page.Items.Select(item => services.Mapper.Map(item, services.Localizations)));
+        ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist, viewModel.Mods.Count == 0);
+    }
+
+    private bool IsCurrentGeneration(long generation) => isActive && generation == Volatile.Read(ref loadGeneration);
+
+    private PageResourceQuery CaptureQuery(bool isInitialLoad = false) => new(
+        viewModel.ResourceType,
+        viewModel.UseCurseForge,
+        Math.Max(1, Pagination.CurrentPage),
+        viewModel.SearchText ?? string.Empty,
+        viewModel.SelectedLoader ?? "全部",
+        viewModel.SelectedVersion ?? "全部",
+        viewModel.SelectedCategory ?? "全部",
+        isInitialLoad);
+
+    private async Task StartLatestQueryAsync(PageResourceQuery query) {
+        long generation = Interlocked.Increment(ref loadGeneration);
+        CancellationTokenSource? loadCts = null;
+        CancellationToken loadToken = default;
+        Task loadTask = Task.CompletedTask;
+        await loadGate.WaitAsync();
+        try {
+            var previousCts = activeLoadCancellationTokenSource;
+            var previousTask = activeLoadTask;
+            activeLoadCancellationTokenSource = null;
+            activeLoadTask = Task.CompletedTask;
+            previousCts?.Cancel();
+            await AwaitPreviousLoadAsync(previousTask);
+            previousCts?.Dispose();
+
+            if (!IsCurrentGeneration(generation) || pageCancellationTokenSource == null) {
+                return;
+            }
+
+            loadCts = CancellationTokenSource.CreateLinkedTokenSource(pageCancellationTokenSource.Token);
+            loadToken = loadCts.Token;
+            loadTask = LoadAsync(query, generation, loadToken);
+            activeLoadCancellationTokenSource = loadCts;
+            activeLoadTask = loadTask;
+        }
+        finally {
+            loadGate.Release();
+        }
+
+        try {
+            await loadTask;
+        }
+        catch (OperationCanceledException) when (loadToken.IsCancellationRequested || !isActive) {
+        }
+    }
+
+    private static async Task AwaitPreviousLoadAsync(Task previousTask) {
+        try {
+            await previousTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        catch (Exception exception) {
+            Console.WriteLine(exception);
+        }
+    }
+
+    private sealed record PageResourceQuery(
+        ResourceType ResourceType,
+        bool UseCurseForge,
+        int Page,
+        string SearchText,
+        string SelectedLoader,
+        string SelectedVersion,
+        string SelectedCategory,
+        bool IsInitialLoad);
+
+    private async void LogoImage_OnLoaded(object sender, RoutedEventArgs e) {
+        await EnsureLogoLoadedAsync((sender as FrameworkElement)?.DataContext as MinecraftResource);
+    }
+
+    private async void LogoImage_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e) {
+        await EnsureLogoLoadedAsync(e.NewValue as MinecraftResource);
+    }
+
+    private async Task EnsureLogoLoadedAsync(MinecraftResource? resource) {
+        if (!isActive || resource == null) {
+            return;
+        }
+
+        var thumbnailCts = thumbnailCancellationTokenSource;
+        if (thumbnailCts == null) {
+            return;
+        }
+
+        var loadTask = resource.EnsureLogoLoadedAsync(thumbnailCts.Token);
+        lock (thumbnailTaskLock) {
+            thumbnailTasks.Add(loadTask);
+        }
+        try {
+            await loadTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        catch (Exception exception) {
+            Console.WriteLine(exception);
+        }
+        finally {
+            lock (thumbnailTaskLock) {
+                thumbnailTasks.Remove(loadTask);
+            }
+        }
     }
     
-    private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
-        ChangePage().ConfigureAwait(false);
+    private async void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
+        await ChangePage();
     }
 
     private async Task ChangePage() {
-        Dispatcher.BeginInvoke(async () => {
-            viewModel.Mods = new ObservableCollection<MinecraftResource>();
-            ScrollViewerExtensions.AnimateScroll(MainScrollViewer, 0);
-            ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
-            await GetModResource(cancellationTokenSource.Token);
-            ResourcePageExtension.AlreadyLoaded(this, ResourceContent, LoadingBorder, NotExist,
-                viewModel.Mods.Count == 0);
-        });
+        await ResetThumbnailRequestsAsync();
+        viewModel.Mods = new ObservableCollection<MinecraftResource>();
+        ScrollListToTop();
+        ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
+        await StartLatestQueryAsync(CaptureQuery());
     }
 
-    private void Platform_OnClick(object sender, RoutedEventArgs e) {
+    private async void Platform_OnClick(object sender, RoutedEventArgs e) {
         Pagination.CurrentPage = 1;
-        ChangePage().ConfigureAwait(false);
+        await ChangePage();
     }
 
     private void ComboBox_OnDropDownOpened(object? sender, EventArgs e) {
-        ScrollViewerExtensions.ScrollEnabled(MainScrollViewer, false);
+        SetListScrollEnabled(false);
     }
     
     private void ComboBox_OnDropDownClosed(object? sender, EventArgs e) {
-        ScrollViewerExtensions.ScrollEnabled(MainScrollViewer, true);
+        SetListScrollEnabled(true);
     }
 
-    private void Search_OnClick(object sender, RoutedEventArgs e) {
-        SearchResource().ConfigureAwait(false);
+    private async void Search_OnClick(object sender, RoutedEventArgs e) {
+        await SearchResource();
     }
 
     private async Task SearchResource() {
+        await ResetThumbnailRequestsAsync();
         Pagination.CurrentPage = 1;
         viewModel.Mods = new ObservableCollection<MinecraftResource>();
         if (string.IsNullOrEmpty(viewModel.SelectedVersion)) {
             viewModel.SelectedVersion = "全部";
         }
-        ScrollViewerExtensions.AnimateScroll(MainScrollViewer,0);
+        ScrollListToTop();
         ResourcePageExtension.ReloadList(ResourceContent,LoadingBorder,NotExist);
-        await GetModResource(cancellationTokenSource.Token);
-        ResourcePageExtension.AlreadyLoaded(this,ResourceContent,LoadingBorder,NotExist, viewModel.Mods.Count == 0);
+        await StartLatestQueryAsync(CaptureQuery());
     }
 
     private void Reset_OnClick(object sender, RoutedEventArgs e) {
@@ -308,7 +426,7 @@ public partial class ModResources : Page {
         viewModel.SelectedVersion = "全部";
     }
 
-    private void ListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+    private async void ListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         var listView = sender as ListView;
         if (listView == null) {
             return;
@@ -318,15 +436,90 @@ public partial class ModResources : Page {
         }
         
         var resource = listView.SelectedItem as MinecraftResource;
-        (sender as ListView).SelectedIndex = -1;
+        listView.SelectedIndex = -1;
         if (resource == null) {
             return;
         }
         
-        MainWindow.SubFrameNavigate.Invoke("/ResourcePages/SubPage/ModInfo",resource.DisplayName);
-        Dispatcher.BeginInvoke(() => {
-            ModInfo.SetResource?.Invoke(resource);
-        });
+        await uiCoordinator.ShowModInfoAsync(resource);
+    }
+
+    private void ScrollListToTop() {
+        var scrollViewer = ScrollViewerExtensions.FindScrollViewer(ListView);
+        if (scrollViewer != null) {
+            ScrollViewerExtensions.AnimateScroll(scrollViewer, 0);
+        }
+    }
+
+    private void SetListScrollEnabled(bool enabled) {
+        var scrollViewer = ScrollViewerExtensions.FindScrollViewer(ListView);
+        if (scrollViewer != null) {
+            ScrollViewerExtensions.ScrollEnabled(scrollViewer, enabled);
+        }
+    }
+
+    public Task ActivateAsync(CancellationToken cancellationToken) {
+        cancellationToken.ThrowIfCancellationRequested();
+        isActive = true;
+        pageCancellationTokenSource?.Dispose();
+        pageCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        if (thumbnailCancellationTokenSource == null || thumbnailCancellationTokenSource.IsCancellationRequested) {
+            thumbnailCancellationTokenSource?.Dispose();
+            thumbnailCancellationTokenSource = new CancellationTokenSource();
+        }
+        ConfigureResourceType(initialResourceType);
+        VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
+        VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
+        ResourcePageExtension.ReloadList(ResourceContent, LoadingBorder, NotExist);
+        viewModel.Mods = new ObservableCollection<MinecraftResource>();
+        return StartLatestQueryAsync(CaptureQuery(isInitialLoad: true));
+    }
+
+    public async Task DeactivateAsync() {
+        isActive = false;
+        Interlocked.Increment(ref loadGeneration);
+        pageCancellationTokenSource?.Cancel();
+        await ResetThumbnailRequestsAsync(renew: false);
+        await loadGate.WaitAsync();
+        try {
+            var loadCts = activeLoadCancellationTokenSource;
+            var loadTask = activeLoadTask;
+            activeLoadCancellationTokenSource = null;
+            activeLoadTask = Task.CompletedTask;
+            loadCts?.Cancel();
+            await AwaitPreviousLoadAsync(loadTask);
+            loadCts?.Dispose();
+        }
+        finally {
+            loadGate.Release();
+        }
+        pageCancellationTokenSource?.Dispose();
+        pageCancellationTokenSource = null;
+    }
+
+    private async Task ResetThumbnailRequestsAsync(bool renew = true) {
+        var thumbnailCts = thumbnailCancellationTokenSource;
+        thumbnailCancellationTokenSource = null;
+        thumbnailCts?.Cancel();
+        while (true) {
+            Task[] pending;
+            lock (thumbnailTaskLock) {
+                pending = thumbnailTasks.ToArray();
+            }
+            if (pending.Length == 0) {
+                break;
+            }
+            await AwaitPreviousLoadAsync(Task.WhenAll(pending));
+            lock (thumbnailTaskLock) {
+                foreach (var task in pending) {
+                    thumbnailTasks.Remove(task);
+                }
+            }
+        }
+        thumbnailCts?.Dispose();
+        if (renew && isActive) {
+            thumbnailCancellationTokenSource = new CancellationTokenSource();
+        }
     }
     
 }

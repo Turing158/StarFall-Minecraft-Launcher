@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -9,66 +9,84 @@ using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
 using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
+using StarFallMC.Navigation;
+using StarFallMC.Services.Resources;
+using StarFallMC.Services.Download;
 using Button = StarFallMC.Component.Button;
 using MessageBox = StarFallMC.Component.MessageBox;
 using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC.ResourcePages.SubPage;
 
-public partial class ModInfo : Page {
-    public static Action<MinecraftResource> SetResource;
-
+public partial class ModInfo : Page, IPageLifecycle {
+    private readonly LauncherUiCoordinator uiCoordinator;
+    private readonly DownloadCoordinator downloadCoordinator;
     private ViewModel viewModel = new();
     private CancellationTokenSource cts;
-    public ModInfo() {
+    private CancellationTokenSource logoCancellationTokenSource = new();
+    private Task activeLoadTask = Task.CompletedTask;
+    private readonly bool loadRemoteData;
+    public ModInfo(
+        MinecraftResource? resource = null,
+        bool loadRemoteData = true,
+        LauncherUiCoordinator? uiCoordinator = null,
+        DownloadCoordinator? downloadCoordinator = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        this.downloadCoordinator = downloadCoordinator ?? new DownloadCoordinator(this.uiCoordinator);
         InitializeComponent();
         DataContext = viewModel;
-        SetResource = setResource;
+        this.loadRemoteData = loadRemoteData;
+        cts = new CancellationTokenSource();
+        if (resource != null) {
+            setResource(resource);
+        }
     }
     
     private void setResource(MinecraftResource resource) {
-        Dispatcher.BeginInvoke(() => {
-            viewModel.Resource = resource;
-            if (!string.IsNullOrEmpty(resource.ModrinthSha1) && resource.CurseForgeSha1 != 0) {
-                viewModel.PlatFormVisibility = Visibility.Visible;
-            }
-            else {
-                viewModel.PlatFormVisibility = Visibility.Collapsed;
-            }
-            if (resource.CurseForgeSha1 != 0 || resource.CurseForgeId != 0) {
-                viewModel.IsCurseForgeSource = true;
-            }
-            else {
-                viewModel.IsCurseForgeSource = false;
-            }
-            GetDownloadFiles();
-            Pagination.TotalCount = 1;
-            Pagination.CurrentPage = 1;
-        });
+        viewModel.Resource = resource;
+        viewModel.PlatFormVisibility = !string.IsNullOrEmpty(resource.ModrinthSha1) && resource.CurseForgeSha1 != 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        viewModel.IsCurseForgeSource = resource.CurseForgeSha1 != 0 || resource.CurseForgeId != 0;
+        Pagination.TotalCount = 1;
+        Pagination.CurrentPage = 1;
+    }
+
+    private async Task LoadLogoAsync() {
+        var resource = viewModel.Resource;
+        if (resource == null || string.IsNullOrWhiteSpace(resource.Logo)) {
+            return;
+        }
+
+        try {
+            await resource.EnsureLogoLoadedAsync(logoCancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException) {
+        }
     }
     
     private async Task GetDownloadFiles(bool init = true) {
-        if (viewModel.Resource == null) {
+        var resource = viewModel.Resource;
+        if (resource == null) {
             return;
         }
         cts?.Cancel();
+        cts?.Dispose();
         cts = new CancellationTokenSource();
         NoDownloadSource.Visibility = Visibility.Collapsed;
         Loading.Visibility = Visibility.Visible;
         viewModel.Downloaders = new List<ModDownloader>();
         if (init) {
             if (viewModel.IsCurseForgeSource) {
-                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
-                viewModel.CurseForgeDownloaders = curseForge;
+                viewModel.CurseForgeDownloaders = await GetCurseForgeDownloadersAsync(resource, cts.Token);
             }
             else {
-                var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
+                var modrinth = await GetModrinthDownloadersAsync(resource, cts.Token);
                 viewModel.ModrinthDownloaders = modrinth;
                 viewModel.IsCurseForgeSource = false;
                 if (modrinth.Count == 0) {
                     viewModel.IsCurseForgeSource = true;
-                    var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
-                    viewModel.CurseForgeDownloaders = curseForge;
+                    viewModel.CurseForgeDownloaders = await GetCurseForgeDownloadersAsync(resource, cts.Token);
                 }
             }
             
@@ -76,13 +94,11 @@ public partial class ModInfo : Page {
         else {
             if (viewModel.IsCurseForgeSource) {
                 viewModel.CurseForgeDownloaders.Clear();
-                var curseForge = await ResourceUtil.GetModDownloaderByCurseForge(viewModel.Resource, cts.Token);
-                viewModel.CurseForgeDownloaders = curseForge;
+                viewModel.CurseForgeDownloaders = await GetCurseForgeDownloadersAsync(resource, cts.Token);
             }
             else {
                 viewModel.ModrinthDownloaders.Clear();
-                var modrinth = await ResourceUtil.GetModDownloaderByModrinth(viewModel.Resource, cts.Token);
-                viewModel.ModrinthDownloaders = modrinth;
+                viewModel.ModrinthDownloaders = await GetModrinthDownloadersAsync(resource, cts.Token);
             }
         }
         Pagination.CurrentPage = 1;
@@ -91,9 +107,9 @@ public partial class ModInfo : Page {
 
     public class ViewModel : INotifyPropertyChanged {
         
-        private MinecraftResource _resource;
+        private MinecraftResource? _resource;
         
-        public MinecraftResource Resource {
+        public MinecraftResource? Resource {
             get => _resource;
             set => SetField(ref _resource, value);
         }
@@ -149,14 +165,15 @@ public partial class ModInfo : Page {
             return;
         }
 
-        if (!NetworkUtil.IsValidUrl(item.Tag.ToString())) {
+        var link = item.Tag.ToString();
+        if (string.IsNullOrWhiteSpace(link) || !NetworkUtil.IsValidUrl(link)) {
             MessageTips.Show("Mod 资源页面 URL 无效");
             return;
         }
-        NetworkUtil.OpenUrl(item.Tag.ToString());
+        NetworkUtil.OpenUrl(link);
     }
 
-    private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
+    private async void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         var listView = sender as ListView;
         if (listView == null) {
             return;
@@ -165,16 +182,16 @@ public partial class ModInfo : Page {
             return;
         }
         
-        var modDownloader = listView.SelectedItem as ModDownloader;
-        (sender as ListView).SelectedIndex = -1;
-        if (modDownloader.File == null) {
+        if (listView.SelectedItem is not ModDownloader modDownloader || modDownloader.File is null) {
+            listView.SelectedIndex = -1;
             return;
         }
+        listView.SelectedIndex = -1;
         
-        DownloadFile(modDownloader.File);
+        await DownloadFileAsync(modDownloader.File);
     }
     
-    private async void DownloadFile(DownloadFile download) {
+    private async Task DownloadFileAsync(DownloadFile download) {
         Console.WriteLine($"下载文件：{download}");
         SaveFileDialog sfd = new SaveFileDialog();
         sfd.Title = $"请选择保存 {download.Name} 的文件夹";
@@ -183,7 +200,7 @@ public partial class ModInfo : Page {
         if (sfd.ShowDialog() == true) {
             download.FilePath = Path.Combine(sfd.FileName);
             MessageTips.Show($"正在下载 {download.Name}");
-            var result = await DownloadUtil.SingalDownload(download);
+            var result = await downloadCoordinator.DownloadSingle(download);
             if (result) {
                 MessageBox.Show(
                     $"文件 {download.Name} 下载完成，已保存至({download.FilePath})",
@@ -237,15 +254,15 @@ public partial class ModInfo : Page {
         }
     }
 
-    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
-        GetDownloadFiles(false).ConfigureAwait(false);
+    private async void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        await GetDownloadFiles(false);
     }
 
     private bool isFirstChangePlatform = true;
-    private void Platform_OnClick(object sender, RoutedEventArgs e) {
+    private async void Platform_OnClick(object sender, RoutedEventArgs e) {
         if (isFirstChangePlatform) {
             isFirstChangePlatform = false;
-            GetDownloadFiles(false).ConfigureAwait(false);
+            await GetDownloadFiles(false);
         }
         else {
             Pagination.CurrentPage = 1;
@@ -259,5 +276,72 @@ public partial class ModInfo : Page {
         }
         
         SetDownloaderPage();
+    }
+
+    private static async Task<List<ModDownloader>> GetModrinthDownloadersAsync(
+        MinecraftResource resource,
+        CancellationToken cancellationToken)
+    {
+        ApiResult<IReadOnlyList<ResourceFileDto>> result = await ResourceServices.Current.Modrinth.GetFilesAsync(
+            resource.ModrinthProjectId,
+            cancellationToken);
+        if (!result.Success || result.Value == null) {
+            if (!string.IsNullOrWhiteSpace(result.Error)) Console.WriteLine(result.Error);
+            return [];
+        }
+        return result.Value.Select(ResourceServices.Current.Mapper.Map).ToList();
+    }
+
+    private static async Task<List<ModDownloader>> GetCurseForgeDownloadersAsync(
+        MinecraftResource resource,
+        CancellationToken cancellationToken)
+    {
+        if (resource.CurseForgeId == 0 && resource.CurseForgeSha1 != 0) {
+            ApiResult<int> match = await ResourceServices.Current.CurseForge.ResolveProjectIdByFingerprintAsync(
+                resource.CurseForgeSha1,
+                cancellationToken);
+            if (match.Success && match.Value > 0) resource.CurseForgeId = match.Value;
+        }
+        ApiResult<IReadOnlyList<ResourceFileDto>> result = await ResourceServices.Current.CurseForge.GetFilesAsync(
+            resource.CurseForgeId,
+            cancellationToken);
+        if (!result.Success || result.Value == null) {
+            if (!string.IsNullOrWhiteSpace(result.Error)) Console.WriteLine(result.Error);
+            return [];
+        }
+        return result.Value.Select(ResourceServices.Current.Mapper.Map).ToList();
+    }
+
+    public Task ActivateAsync(CancellationToken cancellationToken) {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (logoCancellationTokenSource.IsCancellationRequested) {
+            logoCancellationTokenSource.Dispose();
+            logoCancellationTokenSource = new CancellationTokenSource();
+        }
+        var logoTask = LoadLogoAsync();
+        if (!loadRemoteData) {
+            activeLoadTask = logoTask;
+            return activeLoadTask;
+        }
+        if (cts.IsCancellationRequested) {
+            cts.Dispose();
+            cts = new CancellationTokenSource();
+        }
+        activeLoadTask = Task.WhenAll(GetDownloadFiles(), logoTask);
+        return activeLoadTask;
+    }
+
+    public async Task DeactivateAsync() {
+        cts.Cancel();
+        logoCancellationTokenSource.Cancel();
+        try {
+            await activeLoadTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        cts.Dispose();
+        cts = new CancellationTokenSource();
+        logoCancellationTokenSource.Dispose();
+        logoCancellationTokenSource = new CancellationTokenSource();
     }
 }

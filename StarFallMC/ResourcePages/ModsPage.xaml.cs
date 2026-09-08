@@ -7,19 +7,30 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using StarFallMC.Component;
+using StarFallMC.Entity;
 using StarFallMC.Entity.Resource;
 using StarFallMC.ResourcePages.SubPage;
 using StarFallMC.Util;
+using StarFallMC.Navigation;
+using StarFallMC.Services;
+using StarFallMC.Services.Resources;
 using Path = System.IO.Path;
 
 namespace StarFallMC.ResourcePages;
 
-public partial class ModsPage : Page {
+public partial class ModsPage : Page, IPageLifecycle {
+    private readonly LauncherUiCoordinator uiCoordinator;
 
     private ViewModel viewModel = new();
 
     private CancellationTokenSource cancellationTokenSource;
-    public ModsPage() {
+    private CancellationTokenSource thumbnailCancellationTokenSource = new();
+    private Task activeLoadTask = Task.CompletedTask;
+    private bool isActive;
+    private long loadGeneration;
+    private readonly List<MinecraftResource> resourceSnapshot = new();
+    public ModsPage(LauncherUiCoordinator? uiCoordinator = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
         InitializeComponent();
         DataContext = viewModel;
         cancellationTokenSource = new CancellationTokenSource();
@@ -28,75 +39,72 @@ public partial class ModsPage : Page {
     
     private Dictionary<string,int> _modIndexCache = new();
     
-    private async void InitResource() {
+    private async Task InitResource(long generation, CancellationToken cancellationToken) {
         VirtualizingStackPanel.SetIsVirtualizing(ListView, true);
         VirtualizingStackPanel.SetVirtualizationMode(ListView, VirtualizationMode.Recycling);
-        if (ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0) {
-            ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder,NotExist);
-            var progress = new Progress<int>(percent => {
-                viewModel.PercentText = $"加载Mod列表... {percent}%";
-                if (percent >= 99) {
-                    viewModel.TotalMods = ResourceUtil.LocalModResources ?? new List<MinecraftResource>();
-                    for (int i = 0; i < viewModel.TotalMods.Count; i++) {
-                        _modIndexCache[viewModel.TotalMods[i].ModrinthSha1] = i;
-                    }
-                }
-                if (percent == 100) {
-                    ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
-                    viewModel.PercentText = "加载完成";
-                    if (!cancellationTokenSource.IsCancellationRequested) {
-                        MessageTips.Show($"获取到{viewModel.TotalMods.Count}个Mods资源");
-                    }
-                }
-            });
-            try {
-                cancellationTokenSource.Token.ThrowIfCancellationRequested();
-                await ResourceUtil.GetModResources(cancellationTokenSource.Token,progress).ConfigureAwait(false);
-                cancellationTokenSource.Token.ThrowIfCancellationRequested();
+        ResourcePageExtension.ReloadList(MainScrollViewer,LoadingBorder,NotExist);
+        IProgress<int> progress = new Progress<int>(percent => {
+            if (IsCurrentGeneration(generation)) viewModel.PercentText = $"加载Mod列表... {percent}%";
+        });
+        try {
+            cancellationToken.ThrowIfCancellationRequested();
+            MinecraftItem game = ApplicationState.GameSelection.CurrentGame;
+            IReadOnlyList<MinecraftResource> loadedResources = [];
+            IReadOnlyList<ResourceError> errors = [];
+            if (game == null || string.IsNullOrWhiteSpace(game.Path)) {
+                progress.Report(100);
             }
-            catch (OperationCanceledException) {
-                Console.WriteLine("LoadMods取消");
-                return;
+            else {
+                ResourceScanResult<MinecraftResource> result = await ResourceServices.Current.LocalCatalog.ScanModsAsync(
+                    game.Path,
+                    ApplicationState.GameSettings.IsIsolation,
+                    progress,
+                    cancellationToken);
+                loadedResources = result.Items;
+                errors = result.Errors;
             }
-            catch (Exception e){
-                Console.WriteLine(e);
-            }
-        }
-        else {
-            if (ResourceUtil.LocalModResources.Count > 50) {
-                MessageTips.Show("获取的Mod数量比较多，可能会造成一小会的卡顿");
-            }
-            await Task.Delay(250);
-            viewModel.TotalMods = ResourceUtil.LocalModResources;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!IsCurrentGeneration(generation)) return;
+            resourceSnapshot.Clear();
+            resourceSnapshot.AddRange(loadedResources);
+            viewModel.TotalMods = resourceSnapshot.ToList();
+            _modIndexCache.Clear();
             for (int i = 0; i < viewModel.TotalMods.Count; i++) {
                 _modIndexCache[viewModel.TotalMods[i].ModrinthSha1] = i;
             }
-            ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,ResourceUtil.LocalModResources == null || ResourceUtil.LocalModResources.Count == 0);
-        }
-
-        Dispatcher.BeginInvoke(() => {
+            if (errors.Count != 0) Console.WriteLine($"Skipped {errors.Count} local mod files.");
+            ResourcePageExtension.AlreadyLoaded(this,MainScrollViewer,LoadingBorder,NotExist,viewModel.TotalMods.Count == 0);
+            viewModel.PercentText = "加载完成";
+            MessageTips.Show($"获取到{viewModel.TotalMods.Count}个Mods资源");
             Pagination.CurrentPage = 1;
             SetModsPages();
-        });
+        }
+        catch (OperationCanceledException) {
+            Console.WriteLine("LoadMods取消");
+            return;
+        }
+        catch (Exception e){
+            Console.WriteLine(e);
+        }
     }
     
     public class ViewModel : INotifyPropertyChanged {
 
-        private ObservableCollection<MinecraftResource> _mods;
+        private ObservableCollection<MinecraftResource> _mods = new();
 
         public ObservableCollection<MinecraftResource> Mods {
             get => _mods;
             set => SetField(ref _mods, value);
         }
 
-        private List<MinecraftResource> _TotalMods;
+        private List<MinecraftResource> _TotalMods = new();
         public List<MinecraftResource> TotalMods {
             get => _TotalMods;
             set => SetField(ref _TotalMods, value);
         }
 
         
-        private string _percentText;
+        private string _percentText = string.Empty;
         
         public string PercentText {
             get => _percentText;
@@ -117,20 +125,31 @@ public partial class ModsPage : Page {
         }
     }
     
-    private void ModsPage_OnUnloaded(object sender, RoutedEventArgs e) {
-        cancellationTokenSource.Cancel();
-    }
-
-    private void ModsPage_OnLoaded(object sender, RoutedEventArgs e) {
-        InitResource();
-    }
-
-    private void ModInfo_OnClick(object sender, RoutedEventArgs e) {
+    private async void ModInfo_OnClick(object sender, RoutedEventArgs e) {
         var item = (sender as TextButton)?.Tag as MinecraftResource;
-        MainWindow.SubFrameNavigate.Invoke("/ResourcePages/SubPage/ModInfo",item.DisplayName);
-        Dispatcher.BeginInvoke(() => {
-            ModInfo.SetResource?.Invoke(item);
-        });
+        if (item != null) {
+            await uiCoordinator.ShowModInfoAsync(item);
+        }
+    }
+
+    private async void LogoImage_OnLoaded(object sender, RoutedEventArgs e) {
+        await EnsureLogoLoadedAsync((sender as FrameworkElement)?.DataContext as MinecraftResource);
+    }
+
+    private async void LogoImage_OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e) {
+        await EnsureLogoLoadedAsync(e.NewValue as MinecraftResource);
+    }
+
+    private async Task EnsureLogoLoadedAsync(MinecraftResource? resource) {
+        if (!isActive || resource == null) {
+            return;
+        }
+
+        try {
+            await resource.EnsureLogoLoadedAsync(thumbnailCancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException) {
+        }
     }
 
     private void ModPosition_OnClick(object sender, RoutedEventArgs e) {
@@ -149,7 +168,10 @@ public partial class ModsPage : Page {
             return;
         }
         
-        string dirPath = Path.GetDirectoryName(item.FilePath);
+        if (Path.GetDirectoryName(item.FilePath) is not string dirPath) {
+            MessageTips.Show($"模组禁用失败:{item.DisplayName}");
+            return;
+        }
         if (Path.GetFileName(dirPath) == ".disabled") {
             MessageTips.Show($"模组已禁用:{item.DisplayName}");
             return;
@@ -169,15 +191,8 @@ public partial class ModsPage : Page {
             int index = -1;
             if (_modIndexCache.TryGetValue(item.ModrinthSha1, out index)) {
                 if (index >= 0) {
-                    ResourceUtil.LocalModResources[index] = item;
+                    resourceSnapshot[index] = item;
                     viewModel.TotalMods[index] = item;
-                    Dispatcher.BeginInvoke(() => {
-                        var parent = textButton.TemplatedParent as ListViewItem;
-                        (parent.Template.FindName("Disabled", parent) as Border)?.RenderTransform.BeginAnimation(
-                            ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
-                        (parent.Template.FindName("DisabledBg", parent) as Border)?.RenderTransform.BeginAnimation(
-                            ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo1);
-                    }, DispatcherPriority.Render);
                 }
             }
         }
@@ -194,13 +209,20 @@ public partial class ModsPage : Page {
         if (item == null) {
             return;
         }
-        string dirPath = Path.GetDirectoryName(item.FilePath);
+        if (Path.GetDirectoryName(item.FilePath) is not string dirPath) {
+            MessageTips.Show($"模组启用失败:{item.DisplayName}");
+            return;
+        }
         if (Path.GetFileName(dirPath) != ".disabled") {
             MessageTips.Show($"模组已启用:{item.DisplayName}");
             return;
         }
 
-        string enabledFilePath = Path.Combine(Path.GetDirectoryName(dirPath), item.FileName);
+        if (Path.GetDirectoryName(dirPath) is not string enabledDirectoryPath) {
+            MessageTips.Show($"模组启用失败:{item.DisplayName}");
+            return;
+        }
+        string enabledFilePath = Path.Combine(enabledDirectoryPath, item.FileName);
 
         if (!File.Exists(item.FilePath)) {
             MessageTips.Show($"模组已启用:{item.DisplayName}");
@@ -212,16 +234,10 @@ public partial class ModsPage : Page {
             item.FilePath = enabledFilePath;
             item.Disabled = false;
             MessageTips.Show($"模组已启用:{item.DisplayName}");
-            int index = ResourceUtil.LocalModResources.FindIndex(i => item.DisplayName == i.DisplayName);
+            int index = resourceSnapshot.FindIndex(i => item.DisplayName == i.DisplayName);
             if (index >= 0) {
-                ResourceUtil.LocalModResources[index] = item;
+                resourceSnapshot[index] = item;
                 viewModel.TotalMods[index] = item;
-                var parent = textButton.TemplatedParent as ListViewItem;
-                var border = parent.Template.FindName("Disabled", parent) as Border;
-                var disabledBg = parent.Template.FindName("DisabledBg", parent) as Border;
-                border.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, ResourcePageExtension.ValueTo0);
-                disabledBg.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,
-                    ResourcePageExtension.ValueTo0);
             }
         }
         catch (Exception exception){
@@ -230,30 +246,20 @@ public partial class ModsPage : Page {
         }
     }
 
-    private void Disabled_OnLoaded(object sender, RoutedEventArgs e) {
-        var item = sender as Border;
-        bool disabled = false;
-        if (item.Tag is bool _disabled) {
-            disabled = _disabled;
-        }
-        ScaleTransform st = new ScaleTransform();
-        if (disabled) {
-            st.ScaleX = 1;
-        }
-        else {
-            st.ScaleX = 0;
-        }
-        (sender as Border).RenderTransform = st;
-    }
-
-    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
-        cancellationTokenSource?.Cancel();
+    private async void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+        Interlocked.Increment(ref loadGeneration);
+        cancellationTokenSource.Cancel();
+        await WaitForActiveLoadAsync();
+        cancellationTokenSource.Dispose();
         cancellationTokenSource = new CancellationTokenSource();
-        ResourceUtil.LocalModResources?.Clear();
-        InitResource();
+        resourceSnapshot.Clear();
+        viewModel.TotalMods = new List<MinecraftResource>();
+        activeLoadTask = StartLoad();
+        await activeLoadTask;
     }
     
     private void SetModsPages() {
+        ResetThumbnailRequests();
         var tmp = NetworkUtil.GetPageList(viewModel.TotalMods, Pagination.CurrentPage, 20);
         viewModel.Mods = new ObservableCollection<MinecraftResource>(tmp);
         Pagination.TotalCount = viewModel.TotalMods?.Count ?? 0;
@@ -261,5 +267,48 @@ public partial class ModsPage : Page {
 
     private void Pagination_OnPageChanged(object sender, SelectionChangedEventArgs e) {
         SetModsPages();
+    }
+
+    public Task ActivateAsync(CancellationToken cancellationToken) {
+        cancellationToken.ThrowIfCancellationRequested();
+        isActive = true;
+        if (cancellationTokenSource.IsCancellationRequested) {
+            cancellationTokenSource.Dispose();
+            cancellationTokenSource = new CancellationTokenSource();
+        }
+        activeLoadTask = StartLoad();
+        return activeLoadTask;
+    }
+
+    public async Task DeactivateAsync() {
+        isActive = false;
+        Interlocked.Increment(ref loadGeneration);
+        cancellationTokenSource.Cancel();
+        ResetThumbnailRequests();
+        await WaitForActiveLoadAsync();
+        cancellationTokenSource.Dispose();
+        cancellationTokenSource = new CancellationTokenSource();
+    }
+
+    private async Task WaitForActiveLoadAsync() {
+        try {
+            await activeLoadTask;
+        }
+        catch (OperationCanceledException) {
+        }
+    }
+
+    private Task StartLoad() {
+        long generation = Interlocked.Increment(ref loadGeneration);
+        return InitResource(generation, cancellationTokenSource.Token);
+    }
+
+    private bool IsCurrentGeneration(long generation) =>
+        isActive && generation == Volatile.Read(ref loadGeneration);
+
+    private void ResetThumbnailRequests() {
+        thumbnailCancellationTokenSource.Cancel();
+        thumbnailCancellationTokenSource.Dispose();
+        thumbnailCancellationTokenSource = new CancellationTokenSource();
     }
 }

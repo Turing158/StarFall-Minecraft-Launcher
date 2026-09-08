@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarFallMC", "StarFallMC\StarFallMC.csproj", "{EFB8CB27-9610-487B-BD77-B31D0B4F50B6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarFallMC.Tests", "StarFallMC.Tests\StarFallMC.Tests.csproj", "{2BD16B0D-4C38-4B6A-8D84-0AA469BF0E12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarFallMC.MemoryHarness", "StarFallMC.MemoryHarness\StarFallMC.MemoryHarness.csproj", "{64A1CB23-2D47-4B6A-8B71-18F64EA2F1D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,13 @@ Global
 		{EFB8CB27-9610-487B-BD77-B31D0B4F50B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFB8CB27-9610-487B-BD77-B31D0B4F50B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFB8CB27-9610-487B-BD77-B31D0B4F50B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BD16B0D-4C38-4B6A-8D84-0AA469BF0E12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BD16B0D-4C38-4B6A-8D84-0AA469BF0E12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BD16B0D-4C38-4B6A-8D84-0AA469BF0E12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BD16B0D-4C38-4B6A-8D84-0AA469BF0E12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64A1CB23-2D47-4B6A-8B71-18F64EA2F1D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64A1CB23-2D47-4B6A-8B71-18F64EA2F1D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64A1CB23-2D47-4B6A-8B71-18F64EA2F1D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64A1CB23-2D47-4B6A-8B71-18F64EA2F1D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

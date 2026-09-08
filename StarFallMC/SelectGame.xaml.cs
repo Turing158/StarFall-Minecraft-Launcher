@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -7,106 +7,60 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
+using StarFallMC.Services;
+using StarFallMC.Services.Minecraft;
+using StarFallMC.Services.Download;
+using StarFallMC.Navigation;
 using MessageBox = StarFallMC.Component.MessageBox;
 using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
-public partial class SelectGame : Page {
+public partial class SelectGame : Page, IPageLifecycle {
 
-    private ViewModel viewModel = new ViewModel();
-    public static Func<ViewModel> GetViewModel;
-    public static Action<object,RoutedEventArgs> unloadedAction;
-    public static Action<Object, RoutedEventArgs> GameInfoShow;
+    private readonly GameSelectionState viewModel = ApplicationState.GameSelection;
+    private readonly MinecraftServiceContainer minecraftServices;
+    private readonly LauncherUiCoordinator uiCoordinator;
+    private readonly DownloadCoordinator downloadCoordinator;
 
     private Storyboard GameListChangeAnim;
-    Timer GameSelectChangeTimer;
-    Timer globalTimer;
+    private DispatcherTimer? GameSelectChangeTimer;
+    private string? pendingDirectoryPath;
+    private bool lifecycleActive = true;
     
-    public SelectGame() {
+    public SelectGame(
+        MinecraftServiceContainer? services = null,
+        LauncherUiCoordinator? uiCoordinator = null,
+        DownloadCoordinator? downloadCoordinator = null) {
+        minecraftServices = services ?? MinecraftServices.Current;
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        this.downloadCoordinator = downloadCoordinator ?? new DownloadCoordinator(this.uiCoordinator);
         InitializeComponent();
         DataContext = viewModel;
-        GetViewModel = GetViewModelFunc;
-        unloadedAction = SelectGame_OnUnloaded;
-        GameInfoShow = GameInfo_OnClick;
-        PropertiesUtil.LoadSelectGameArgs(ref viewModel);
+        this.uiCoordinator.Register(this);
         GameListChangeAnim = (Storyboard) FindResource("GameListChangeAnim");
         DirSelect.SelectedIndex = viewModel.Dirs.IndexOf(viewModel.CurrentDir);
         reloadGameByDir(viewModel.CurrentDir.Path);
     }
-    public class ViewModel : INotifyPropertyChanged {
-        private MinecraftItem _currentGame;
-        public MinecraftItem CurrentGame {
-            get => _currentGame;
-            set => SetField(ref _currentGame, value);
-        }
-        private DirItem _currentDir;
-        public DirItem CurrentDir {
-            get => _currentDir;
-            set => SetField(ref _currentDir, value);
-        }
-        
-        private ObservableCollection<MinecraftItem> _games;
-        public ObservableCollection<MinecraftItem> Games {
-            get => _games;
-            set => SetField(ref _games, value);
-        }
-
-        private ObservableCollection<DirItem> _dirs;
-
-        public ObservableCollection<DirItem> Dirs {
-            get => _dirs;
-            set => SetField(ref _dirs, value);
-        }
-
-        private string _renameVersionText;
-        public string RenameVersionText {
-            get=> _renameVersionText;
-            set => SetField(ref _renameVersionText, value);
-        }
-        
-        private string _renameVersionTips;
-        public string RenameVersionTips {
-            get=> _renameVersionTips;
-            set => SetField(ref _renameVersionTips, value);
-        }
-        
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null) {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-    }
-    
-    private ViewModel GetViewModelFunc() {
-        return viewModel;
-    }
-    
     private void GameSelect_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         var game = (MinecraftItem)GameSelect.SelectedItem;
-        if (game!= null && !MinecraftUtil.GetMinecraftVersionExists(game)) {
+        if (game!= null && !minecraftServices.Paths.IsVersionPresent(game)) {
             reloadGameByDir(viewModel.CurrentDir.Path);
         }
         Console.WriteLine("当前游戏版本："+GameSelect.SelectedIndex);
         if (game == null || game.Name == "") {
-            Home.SetGameInfo?.Invoke(null);
+            uiCoordinator.SetHomeGame(null);
         }
         else {
-            Home.SetGameInfo?.Invoke(game);
+            uiCoordinator.SetHomeGame(game);
         }
-        viewModel.CurrentGame = game;
+        viewModel.CurrentGame = game ?? new MinecraftItem();
     }
     
     private void DirSelect_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
@@ -143,7 +97,9 @@ public partial class SelectGame : Page {
 
     private void DelDir_OnClick(object sender, RoutedEventArgs e) {
         if (DirSelect.SelectedIndex != 0) {
-            var dirItem = DirSelect.SelectedItem as DirItem;
+            if (DirSelect.SelectedItem is not DirItem dirItem) {
+                return;
+            }
             MessageBox.Show($"是否要删除当前选中文件夹[{dirItem.Name}]\n[tips:只会在这里删除显示，并不会真正删除该文件夹内容]", "提示", MessageBoxBtnType.ConfirmAndCancel, result => {
                 if (result == MessageBoxResult.Confirm) {
                     var index = DirSelect.SelectedIndex;
@@ -169,29 +125,29 @@ public partial class SelectGame : Page {
     private void loadGameByDir() {
         var dir = (DirItem)DirSelect.SelectedItem;
         GameListChangeAnim.Begin(this, true);
-        if (GameSelectChangeTimer != null) {
-            GameSelectChangeTimer.Dispose();
-        }
-        GameSelectChangeTimer = new Timer(new TimerCallback(state => {
-            this.Dispatcher.BeginInvoke(() => {
-                reloadGameByDir(dir.Path);
-                GameSelectChangeTimer.Dispose();
-            });
-        }), null, 250, 0);
+        StopGameSelectTimer();
+        pendingDirectoryPath = dir.Path;
+        GameSelectChangeTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        GameSelectChangeTimer.Tick += GameSelectChangeTimer_OnTick;
+        GameSelectChangeTimer.Start();
     }
 
     private void reloadGameByDir(string path) {
         var item = viewModel.CurrentGame;
-        viewModel.Games = new ObservableCollection<MinecraftItem>(MinecraftUtil.GetMinecraft(path));
+        viewModel.Games = new ObservableCollection<MinecraftItem>(minecraftServices.Paths.ScanGames(path, minecraftServices.Resolver));
         if (viewModel.Games == null || viewModel.Games.Count == 0) {
             GameSelect.SelectedIndex = -1;
             NoGame.Visibility = Visibility.Visible;
-            Home.SetGameInfo?.Invoke(null);
+            uiCoordinator.SetHomeGame(null);
         }
         else {
             if (item != null && viewModel.Games.Any(i=>i.Name == item.Name)) {
                 var currentGame = viewModel.Games.FirstOrDefault(i => i.Name == item.Name);
-                GameSelect.SelectedIndex = viewModel.Games.IndexOf(currentGame);
+                if (currentGame is not null) {
+                    GameSelect.SelectedIndex = viewModel.Games.IndexOf(currentGame);
+                }
             }
             else {
                 GameSelect.SelectedIndex = 0;
@@ -201,6 +157,8 @@ public partial class SelectGame : Page {
     }
 
     private void SelectGame_OnUnloaded(object sender, RoutedEventArgs e) {
+        StopGameSelectTimer();
+        uiCoordinator.Unregister(this);
         PropertiesUtil.SaveSelectGameArgs();
     }
 
@@ -208,6 +166,48 @@ public partial class SelectGame : Page {
         if (viewModel.CurrentGame != null && viewModel.CurrentGame.Name != "" && viewModel.Games.Count != 0) {
             GameInfoMaskControl.Show();
         }
+    }
+
+    public Task ActivateAsync(CancellationToken cancellationToken) {
+        cancellationToken.ThrowIfCancellationRequested();
+        lifecycleActive = true;
+        uiCoordinator.Register(this);
+        return Task.CompletedTask;
+    }
+
+    public async Task DeactivateAsync() {
+        lifecycleActive = false;
+        var currentCts = fixResourceCts;
+        var currentTask = activeFixResourceTask;
+        fixResourceCts = null;
+        activeFixResourceTask = Task.CompletedTask;
+        currentCts?.Cancel();
+        try {
+            await currentTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        currentCts?.Dispose();
+        StopGameSelectTimer();
+        uiCoordinator.Unregister(this);
+        PropertiesUtil.SaveSelectGameArgs();
+    }
+
+    private void GameSelectChangeTimer_OnTick(object? sender, EventArgs e) {
+        StopGameSelectTimer();
+        if (lifecycleActive && !string.IsNullOrEmpty(pendingDirectoryPath)) {
+            reloadGameByDir(pendingDirectoryPath);
+        }
+        pendingDirectoryPath = null;
+    }
+
+    private void StopGameSelectTimer() {
+        if (GameSelectChangeTimer == null) {
+            return;
+        }
+        GameSelectChangeTimer.Stop();
+        GameSelectChangeTimer.Tick -= GameSelectChangeTimer_OnTick;
+        GameSelectChangeTimer = null;
     }
     
     private void DelGame_OnClick(object sender, RoutedEventArgs e) {
@@ -270,44 +270,61 @@ public partial class SelectGame : Page {
 
     private bool isFixing = false;
     private string isFixingVersion = string.Empty;
-    private void FixResourceFile_OnClick(object sender, RoutedEventArgs e) {
+    private CancellationTokenSource? fixResourceCts;
+    private Task activeFixResourceTask = Task.CompletedTask;
+    private async void FixResourceFile_OnClick(object sender, RoutedEventArgs e) {
         if (!isFixing && string.IsNullOrEmpty(isFixingVersion)) {
-            FixResource().ConfigureAwait(false);
+            var currentCts = new CancellationTokenSource();
+            fixResourceCts = currentCts;
+            activeFixResourceTask = FixResource(currentCts.Token);
+            try {
+                await activeFixResourceTask;
+            }
+            finally {
+                if (ReferenceEquals(fixResourceCts, currentCts)) {
+                    fixResourceCts = null;
+                    activeFixResourceTask = Task.CompletedTask;
+                    currentCts.Dispose();
+                }
+            }
         }
         else {
             MessageTips.Show($"当前正在补全 {isFixingVersion} 的资源文件");
         }
     }
 
-    private async Task FixResource() {
+    private async Task FixResource(CancellationToken cancellationToken) {
         MinecraftItem minecraftItem = viewModel.CurrentGame.Clone();
         isFixingVersion = minecraftItem.Name;
         isFixing = true;
         try {
             string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(minecraftItem.Path));
             string json = File.ReadAllText($"{minecraftItem.Path}/{minecraftItem.Name}.json");
-            List<Lib> libs = MinecraftUtil.GetLibs(json);
+            List<Lib> libs = minecraftServices.Resolver.GetLibs(json);
             MessageTips.Show("检查文件完整性...");
-            var libFiles = MinecraftUtil.GetNeedLibrariesFile(libs, currentDir);
-            var forgeFmlFile = MinecraftUtil.GetForgeFmlDownloadFile(json, currentDir);
+            var libFiles = minecraftServices.Loader.GetNeedLibrariesFile(libs, currentDir);
+            var forgeFmlFile = minecraftServices.Loader.GetForgeFmlDownloadFile(json, currentDir);
             if (forgeFmlFile != null && minecraftItem.Loader == MinecraftLoader.Forge) {
                 libFiles.Add(forgeFmlFile);
             }
 
-            var assetFiles = await MinecraftUtil.GetAssetsFile(json, currentDir);
-            var needDownloadFiles = MinecraftUtil.GetNeedDownloadFile(assetFiles.Concat(libFiles).ToList());
+            cancellationToken.ThrowIfCancellationRequested();
+            var assetFiles = await minecraftServices.Loader.GetAssetsFileAsync(json, currentDir, cancellationToken: cancellationToken);
+            var needDownloadFiles = LoaderInstallService.GetNeedDownloadFile(assetFiles.Concat(libFiles));
             
             if (needDownloadFiles.Count != 0) {
                 MessageTips.Show("补全文件中...");
-                await DownloadUtil.StartDownload(needDownloadFiles);
-                while (DownloadUtil.errorDownloadFiles.Count != 0) {
+                var downloadResult = await downloadCoordinator.StartDownload(needDownloadFiles, cancellationToken: cancellationToken);
+                var errorFiles = downloadResult.Files.Where(result => !result.Success && !result.Cancelled).Select(result => result.File).ToList();
+                while (errorFiles.Count != 0) {
                     bool retry = false;
                     await MessageBox.ShowAsync(
-                        $"下载文件出现问题，共 {DownloadUtil.errorDownloadFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
+                        $"下载文件出现问题，共 {errorFiles.Count} 个文件出现错误。\n可能是网络波动问题，可选择重新下载 或 尝试重新启动 以及 前往 “版本属性” 处重新补全下载。",
                         "下载失败", MessageBoxBtnType.ConfirmAndCancel, r => { retry = r == MessageBoxResult.Confirm; },
                         confirmBtnText: "重新下载", cancelBtnText: "跳过");
                     if (retry) {
-                        await DownloadUtil.StartDownload(DownloadUtil.errorDownloadFiles.ToList());
+                        downloadResult = await downloadCoordinator.StartDownload(errorFiles, cancellationToken: cancellationToken);
+                        errorFiles = downloadResult.Files.Where(result => !result.Success && !result.Cancelled).Select(result => result.File).ToList();
                     }
                     else {
                         MessageTips.Show($"补全 {minecraftItem.Name} 的资源文件时出现问题");
@@ -325,17 +342,19 @@ public partial class SelectGame : Page {
                 if ((launchwrapperLib != null && OptiFineLib != null) &&
                     (!File.Exists($"{currentDir}/libraries/{OptiFineLib.path}") ||
                      !File.Exists($"{currentDir}/libraries/{launchwrapperLib.path}"))) {
-                    await MinecraftUtil.InstallOptifine(OptiFineLib, launchwrapperLib, minecraftItem);
+                    await minecraftServices.Loader.RepairOptifineAsync(OptiFineLib, currentDir, minecraftItem.Name, ApplicationState.GameSettings.IsIsolation, cancellationToken);
                 }
             }
 
             if (forgeFmlFile != null && minecraftItem.Loader == MinecraftLoader.Forge) {
                 MessageTips.Show("补全Forge文件中...");
-                await MinecraftUtil.InstallForge(json,forgeFmlFile.FilePath, currentDir, minecraftItem.Name);
+                await minecraftServices.Loader.RepairForgeAsync(json, forgeFmlFile.FilePath, currentDir, minecraftItem.Name, cancellationToken);
             }
 
-            await Task.Delay(500);
+            await Task.Delay(500, cancellationToken);
             MessageTips.Show($"补全 {minecraftItem.Name} 的资源文件完成");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) {
         }
         catch (Exception e){
             Console.WriteLine(e);
@@ -360,7 +379,9 @@ public partial class SelectGame : Page {
             MessageTips.Show($"当前正在补全 {isFixingVersion} 的资源文件，不能修改版本名称");
             return;
         }
-        var tb = sender as TextBox;
+        if (sender is not TextBox tb) {
+            return;
+        }
         viewModel.RenameVersionText = tb.Text;
         if (tb.Text.Length == 0) {
             viewModel.RenameVersionTips = "名称不能为空";
@@ -377,7 +398,7 @@ public partial class SelectGame : Page {
         else {
             viewModel.RenameVersionTips = "";
             if (e.Key == Key.Enter) {
-                var item = MinecraftUtil.RenameVersion(viewModel.CurrentGame, tb.Text);
+                var item = minecraftServices.Paths.RenameVersion(viewModel.CurrentGame, tb.Text);
                 if (item == null) {
                     viewModel.RenameVersionTips = "已存在该名称文件夹或版本，请删除后重试";
                     return;

@@ -17,13 +17,12 @@
                                 ItemsSource="{Binding Navi}"
                                 SelectionChanged="NaviBar_OnSelectionChanged"></comp:NavigationBar>
         </Border>
-        <Frame Name="PageFrame" 
-               Source="Blank.xaml" 
+        <ContentControl Name="PageFrame"
                Margin="160 10 0 10"
                Style="{StaticResource SettingAndResourceFrame}">
-            <Frame.RenderTransform>
+            <ContentControl.RenderTransform>
                 <TranslateTransform Y="0"></TranslateTransform>
-            </Frame.RenderTransform>
-        </Frame>
+            </ContentControl.RenderTransform>
+        </ContentControl>
     </Grid>
 </Page>

@@ -34,7 +34,7 @@
         <Setter Property="Orientation" Value="Vertical"></Setter>
     </Style>
 
-    <Style x:Key="SettingAndResourceFrame" TargetType="Frame">
+    <Style x:Key="SettingAndResourceFrame" TargetType="ContentControl">
         <Setter Property="Margin" Value="180 10 0 10"></Setter>
     </Style>
     

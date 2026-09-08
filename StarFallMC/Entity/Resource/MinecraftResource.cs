@@ -1,17 +1,26 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
 using StarFallMC.Entity.Enum;
+using StarFallMC.Util;
 
 namespace StarFallMC.Entity.Resource;
 
 public class MinecraftResource : INotifyPropertyChanged{
+    private readonly object _logoLoadGate = new();
+    private ImageSource _logoImage = ImageLoader.Placeholder;
+    private string _logo = string.Empty;
+    private string? _completedLogoSource;
+    private string? _loadingLogoSource;
+    private Task<ImageSource>? _logoLoadTask;
+
     public string DisplayName {
         get => !string.IsNullOrEmpty(ChineseName) ? ChineseName : !string.IsNullOrEmpty(EnglishName) ? EnglishName : OriginalName;
     }
-    public string ChineseName { get; set; }
+    public string ChineseName { get; set; } = string.Empty;
     
-    private string _englishName;
+    private string _englishName = string.Empty;
     public string EnglishName {
         get {
             if (!string.IsNullOrEmpty(_englishName)) {
@@ -39,28 +48,40 @@ public class MinecraftResource : INotifyPropertyChanged{
         }
     }
 
-    public string OriginalName { get; set; }
-    public string Slug { get; set; }
-    public string Logo { get; set; }
+    public string OriginalName { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string Logo {
+        get => _logo;
+        set {
+            if (SetField(ref _logo, value ?? string.Empty)) {
+                ResetLogoLoad();
+            }
+        }
+    }
+
+    public ImageSource LogoImage {
+        get => _logoImage;
+        private set => SetField(ref _logoImage, value);
+    }
     public ResourceType Type { get; set; }
-    public string ResourceVersion { get; set; }
-    public string FilePath { get; set; }
+    public string ResourceVersion { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
     public string FileName { get => Path.GetFileName(FilePath); }
     public string FileNameWithExtension { get => Path.GetFileNameWithoutExtension(FilePath); }
-    public string Description { get; set; }
-    public string Author { get; set; }
-    public string AuthorUrl { get; set; }
-    public string WebsiteUrl { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string AuthorUrl { get; set; } = string.Empty;
+    public string WebsiteUrl { get; set; } = string.Empty;
     
     public List<string> Loaders { get; set; } = new();
     public List<string> GameVersions { get; set; } = new();
     public List<string> Categories { get; set; } = new();
     
-    public string ResourceSource { get; set; }
+    public string ResourceSource { get; set; } = string.Empty;
     
-    public string ModrinthProjectId { get; set; }
-    public string ModrinthAuthorId { get; set; }
-    public string ModrinthSha1 { get; set; }
+    public string ModrinthProjectId { get; set; } = string.Empty;
+    public string ModrinthAuthorId { get; set; } = string.Empty;
+    public string ModrinthSha1 { get; set; } = string.Empty;
             
             
     public int CurseForgeId { get; set; }
@@ -100,7 +121,7 @@ public class MinecraftResource : INotifyPropertyChanged{
     }
     public int FollowsCount { get; set; }
     
-    public string LastUpdated { get; set; }
+    public string LastUpdated { get; set; } = string.Empty;
 
     public string UpdatedTimeAgo {
         get {
@@ -153,6 +174,55 @@ public class MinecraftResource : INotifyPropertyChanged{
             }
             return result != "今天" ? result + "前" : result;
         }
+    }
+
+    public async Task EnsureLogoLoadedAsync(CancellationToken cancellationToken = default) {
+        var source = Logo;
+        if (string.IsNullOrWhiteSpace(source)) {
+            return;
+        }
+
+        Task<ImageSource> loadTask;
+        lock (_logoLoadGate) {
+            if (string.Equals(_completedLogoSource, source, StringComparison.Ordinal)) {
+                return;
+            }
+
+            if (_logoLoadTask == null || _logoLoadTask.IsCompleted ||
+                !string.Equals(_loadingLogoSource, source, StringComparison.Ordinal)) {
+                _loadingLogoSource = source;
+                _logoLoadTask = ImageLoader.LoadSourceAsync(source, 160, 160, cancellationToken);
+            }
+
+            loadTask = _logoLoadTask;
+        }
+
+        var image = await loadTask.WaitAsync(cancellationToken);
+        if (!string.Equals(source, Logo, StringComparison.Ordinal)) {
+            return;
+        }
+
+        lock (_logoLoadGate) {
+            if (ImageLoader.IsPlaceholder(image)) {
+                _logoLoadTask = null;
+                _loadingLogoSource = null;
+            }
+            else {
+                _completedLogoSource = source;
+            }
+        }
+
+        LogoImage = image;
+    }
+
+    private void ResetLogoLoad() {
+        lock (_logoLoadGate) {
+            _completedLogoSource = null;
+            _loadingLogoSource = null;
+            _logoLoadTask = null;
+        }
+
+        LogoImage = ImageLoader.Placeholder;
     }
 
     public override string ToString() {

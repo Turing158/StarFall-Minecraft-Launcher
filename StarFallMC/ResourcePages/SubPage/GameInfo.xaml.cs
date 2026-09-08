@@ -11,127 +11,146 @@ using StarFallMC.Entity;
 using StarFallMC.Entity.Loader;
 using StarFallMC.Entity.Resource;
 using StarFallMC.Util;
+using StarFallMC.Services;
+using StarFallMC.Services.Minecraft;
+using StarFallMC.Navigation;
+using StarFallMC.Services.Resources;
 using ComboBox = StarFallMC.Component.ComboBox;
 
 namespace StarFallMC.ResourcePages.SubPage;
 
 
 
-public partial class GameInfo : Page {
+public partial class GameInfo : Page, IPageLifecycle {
 
     private ViewModel viewModel = new();
     
-    public static Action<MinecraftDownloader> SetMinecraftDownloader;
-    public static Action CancelLoading;
     private CancellationTokenSource cts;
+    private CancellationTokenSource? installCts;
+    private Task activeLoadTask = Task.CompletedTask;
+    private readonly bool loadRemoteData;
+    private readonly MinecraftServiceContainer minecraftServices;
+    private readonly LauncherUiCoordinator uiCoordinator;
+    private readonly ResourceWorkflowService resourceWorkflow;
     
-    public GameInfo() {
+    public GameInfo(
+        MinecraftDownloader? downloader = null,
+        bool loadRemoteData = true,
+        MinecraftServiceContainer? services = null,
+        LauncherUiCoordinator? uiCoordinator = null,
+        ResourceWorkflowService? resourceWorkflow = null) {
+        minecraftServices = services ?? MinecraftServices.Current;
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        this.resourceWorkflow = resourceWorkflow ?? new ResourceWorkflowService(this.uiCoordinator, minecraftServices);
         InitializeComponent();
         DataContext = viewModel;
+        this.loadRemoteData = loadRemoteData;
         cts = new CancellationTokenSource();
-        CancelLoading = cancelLoading;
-        SetMinecraftDownloader = setMinecraftDownloader;
+        this.uiCoordinator.Register(this);
+        if (downloader != null) {
+            setMinecraftDownloader(downloader);
+        }
     }
     
     public class ViewModel : INotifyPropertyChanged {
         
-        private MinecraftDownloader _downloader;
-        public MinecraftDownloader Downloader {
+        private MinecraftDownloader? _downloader;
+        public MinecraftDownloader? Downloader {
             get => _downloader;
             set => SetField(ref _downloader, value);
         }
 
-        private List<ForgeLoader> _forgeLoader;
+        private List<ForgeLoader> _forgeLoader = new();
         public List<ForgeLoader> ForgeLoader {
             get => _forgeLoader;
             set => SetField(ref _forgeLoader, value);
         }
         
-        private List<LiteLoader> _liteLoader;
+        private List<LiteLoader> _liteLoader = new();
         public List<LiteLoader> LiteLoader {
             get => _liteLoader;
             set => SetField(ref _liteLoader, value);
         }
         
-        private List<NeoForgeLoader> _neoForgeLoader;
+        private List<NeoForgeLoader> _neoForgeLoader = new();
         public List<NeoForgeLoader> NeoForgeLoader {
             get => _neoForgeLoader;
             set => SetField(ref _neoForgeLoader, value);
         }
         
-        private List<OptifineLoader> _optifineLoader;
+        private List<OptifineLoader> _optifineLoader = new();
         public List<OptifineLoader> OptifineLoader {
             get => _optifineLoader;
             set => SetField(ref _optifineLoader, value);
         }
         
-        private List<FabricLoader> _fabricLoader;
+        private List<FabricLoader> _fabricLoader = new();
         public List<FabricLoader> FabricLoader {
             get => _fabricLoader;
             set => SetField(ref _fabricLoader, value);
         }
         
-        private List<MinecraftResource> _fabricApiVersions;
+        private List<MinecraftResource> _fabricApiVersions = new();
         public List<MinecraftResource> FabricApiVersions {
             get => _fabricApiVersions;
             set => SetField(ref _fabricApiVersions, value);
         }
         
-        private List<QuiltLoader> _quiltLoader;
+        private List<QuiltLoader> _quiltLoader = new();
         public List<QuiltLoader> QuiltLoader {
             get => _quiltLoader;
             set => SetField(ref _quiltLoader, value);
         }
         
-        private ObservableCollection<ForgeLoader> _enabledForgeLoader;
+        private ObservableCollection<ForgeLoader> _enabledForgeLoader = new();
         public ObservableCollection<ForgeLoader> EnabledForgeLoader {
             get => _enabledForgeLoader;
             set => SetField(ref _enabledForgeLoader, value);
         }
 
-        private ObservableCollection<OptifineLoader> _enabledOptifineLoader;
+        private ObservableCollection<OptifineLoader> _enabledOptifineLoader = new();
         public ObservableCollection<OptifineLoader> EnabledOptifineLoader {
             get => _enabledOptifineLoader;
             set => SetField(ref _enabledOptifineLoader, value);
         }
         
-        private ForgeLoader _selectedForgeLoader;
-        public ForgeLoader SelectedForgeLoader {
+        private ForgeLoader? _selectedForgeLoader;
+        public ForgeLoader? SelectedForgeLoader {
             get => _selectedForgeLoader;
             set => SetField(ref _selectedForgeLoader, value);
         }
         
-        private LiteLoader _selectedLiteLoader;
-        public LiteLoader SelectedLiteLoader {
+        private LiteLoader? _selectedLiteLoader;
+        public LiteLoader? SelectedLiteLoader {
             get => _selectedLiteLoader;
             set => SetField(ref _selectedLiteLoader, value);
         }
         
-        private NeoForgeLoader _selectedNeoForgeLoader;
-        public NeoForgeLoader SelectedNeoForgeLoader {
+        private NeoForgeLoader? _selectedNeoForgeLoader;
+        public NeoForgeLoader? SelectedNeoForgeLoader {
             get => _selectedNeoForgeLoader;
             set => SetField(ref _selectedNeoForgeLoader, value);
         }
         
-        private OptifineLoader _selectedOptifineLoader;
-        public OptifineLoader SelectedOptifineLoader {
+        private OptifineLoader? _selectedOptifineLoader;
+        public OptifineLoader? SelectedOptifineLoader {
             get => _selectedOptifineLoader;
             set => SetField(ref _selectedOptifineLoader, value);
         }
         
-        private FabricLoader _selectedFabricLoader = new ();
-        public FabricLoader SelectedFabricLoader {
+        private FabricLoader? _selectedFabricLoader = new ();
+        public FabricLoader? SelectedFabricLoader {
             get => _selectedFabricLoader;
             set => SetField(ref _selectedFabricLoader, value);
         }
         
-        private QuiltLoader _selectedQuiltLoader;
-        public QuiltLoader SelectedQuiltLoader {
+        private QuiltLoader? _selectedQuiltLoader;
+        public QuiltLoader? SelectedQuiltLoader {
             get => _selectedQuiltLoader;
             set => SetField(ref _selectedQuiltLoader, value);
         }
         
-        private string _percentText;
+        private string _percentText = string.Empty;
         public string PercentText {
             get => _percentText;
             set => SetField(ref _percentText, value);
@@ -185,7 +204,7 @@ public partial class GameInfo : Page {
             set => SetField(ref _selectedFabricApiIndex, value);
         }
 
-        private string _versionName;
+        private string _versionName = string.Empty;
         public string VersionName {
             get => _versionName;
             set => SetField(ref _versionName, value);
@@ -197,7 +216,7 @@ public partial class GameInfo : Page {
             set => SetField(ref _isGoodName, value);
         }
         
-        private string _versionTips;
+        private string _versionTips = string.Empty;
         public string VersionTips {
             get => _versionTips;
             set => SetField(ref _versionTips, value);
@@ -218,22 +237,15 @@ public partial class GameInfo : Page {
     }
     
     private void setMinecraftDownloader(MinecraftDownloader downloader) {
-        Dispatcher.BeginInvoke(() => {
-            if (downloader == null) {
-                return;
-            }
-            cts = new CancellationTokenSource();
-            viewModel.Downloader = downloader;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}";
-            viewModel.VersionTips = "";
-            viewModel.IsGoodName = true;
-            InitLoader().ConfigureAwait(false);
-            Console.WriteLine($"选择{downloader.Name}");
-        });
+        viewModel.Downloader = downloader;
+        viewModel.VersionName = $"{downloader.Name}";
+        viewModel.VersionTips = "";
+        viewModel.IsGoodName = true;
+        Console.WriteLine($"选择{downloader.Name}");
     }
     
     private async Task InitLoader() {
-        if (viewModel.Downloader == null) {
+        if (viewModel.Downloader is not { } downloader) {
             return;
         }
         
@@ -287,7 +299,7 @@ public partial class GameInfo : Page {
                 viewModel.PercentText = $"加载中... {percent}%";
             }
         });
-        var loader = await ResourceUtil.GetAllLoaderByMinecraftDownloader(viewModel.Downloader.Name,cts.Token,progress);
+        var loader = await resourceWorkflow.GetAllLoaderByMinecraftDownloader(downloader.Name,cts.Token,progress);
         
         viewModel.SelectedFabricLoader = null;
         viewModel.ForgeLoader = loader.Item1;
@@ -325,7 +337,7 @@ public partial class GameInfo : Page {
 
     private void LoaderComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
         var item = sender as ComboBox;
-        if (item == null) {
+        if (item == null || viewModel.Downloader is not { } downloader) {
             return;
         }
         
@@ -334,7 +346,7 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedForgeLoader.DisplayName)}";
+            viewModel.VersionName = $"{downloader.Name}-{secureVersionName(forgeLoader.DisplayName)}";
             var enableOptifineLoader = new List<OptifineLoader>();
             enableOptifineLoader.AddRange(viewModel.OptifineLoader.Where(x => x.NeedForge == null || x.NeedForge.Build == forgeLoader.Build));
             viewModel.EnabledOptifineLoader = new ObservableCollection<OptifineLoader>(enableOptifineLoader);
@@ -345,7 +357,7 @@ public partial class GameInfo : Page {
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedLiteLoader.DisplayName)}";
+            viewModel.VersionName = $"{downloader.Name}-{secureVersionName(liteLoader.DisplayName)}";
         }
         else if (item.CurrentItem is NeoForgeLoader neoForgeLoader) {
             viewModel.EnableForge = false;
@@ -353,7 +365,7 @@ public partial class GameInfo : Page {
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedNeoForgeLoader.DisplayName)}";
+            viewModel.VersionName = $"{downloader.Name}-{secureVersionName(neoForgeLoader.DisplayName)}";
         }
         else if (item.CurrentItem is OptifineLoader optifineLoader) {
             viewModel.EnableLiteLoader = false;
@@ -361,7 +373,7 @@ public partial class GameInfo : Page {
             viewModel.EnableFabric = false;
             viewModel.EnableQuilt = false;
             if (viewModel.SelectedForgeLoader == null) {
-                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedOptifineLoader.DisplayName)}";
+                viewModel.VersionName =  $"{downloader.Name}-{secureVersionName(optifineLoader.DisplayName)}";
             }
             var enableForgeLoader = new List<ForgeLoader>();
             enableForgeLoader.AddRange(viewModel.ForgeLoader.Where(x => optifineLoader.NeedForge == null || optifineLoader.NeedForge.Build == x.Build));
@@ -373,7 +385,7 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableOptifine = false;
             viewModel.EnableQuilt = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedFabricLoader.DisplayName)}";
+            viewModel.VersionName = $"{downloader.Name}-{secureVersionName(fabricLoader.DisplayName)}";
         }
         else if (item.CurrentItem is QuiltLoader quiltLoader) {
             viewModel.EnableForge = false;
@@ -381,15 +393,15 @@ public partial class GameInfo : Page {
             viewModel.EnableNeoForge = false;
             viewModel.EnableOptifine = false;
             viewModel.EnableFabric = false;
-            viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedQuiltLoader.DisplayName)}";
+            viewModel.VersionName = $"{downloader.Name}-{secureVersionName(quiltLoader.DisplayName)}";
         }
         else {
             if (viewModel.SelectedOptifineLoader != null) {
-                viewModel.VersionName =  $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedOptifineLoader.DisplayName)}";
+                viewModel.VersionName =  $"{downloader.Name}-{secureVersionName(viewModel.SelectedOptifineLoader.DisplayName)}";
                 viewModel.EnabledOptifineLoader = new ObservableCollection<OptifineLoader>(viewModel.OptifineLoader);
             }
             else if (viewModel.SelectedForgeLoader != null) {
-                viewModel.VersionName = $"{viewModel.Downloader.Name}-{secureVersionName(viewModel.SelectedForgeLoader.DisplayName)}";
+                viewModel.VersionName = $"{downloader.Name}-{secureVersionName(viewModel.SelectedForgeLoader.DisplayName)}";
                 viewModel.EnabledForgeLoader = new ObservableCollection<ForgeLoader>(viewModel.ForgeLoader);
             }
             else {
@@ -399,7 +411,7 @@ public partial class GameInfo : Page {
                 viewModel.EnableOptifine = true;
                 viewModel.EnableFabric = true;
                 viewModel.EnableQuilt = true;
-                viewModel.VersionName = $"{viewModel.Downloader.Name}";
+                viewModel.VersionName = $"{downloader.Name}";
                 viewModel.EnabledOptifineLoader = new ObservableCollection<OptifineLoader>(viewModel.OptifineLoader);
                 viewModel.EnabledForgeLoader = new ObservableCollection<ForgeLoader>(viewModel.ForgeLoader);    
             }
@@ -413,13 +425,22 @@ public partial class GameInfo : Page {
             .Replace("?","_").Replace("\"","_").Replace("<","_").Replace(">","_").Replace("|","_");
     }
 
-    private void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
+    private async void RefreshBtn_OnClick(object sender, RoutedEventArgs e) {
         cts?.Cancel();
+        try {
+            await activeLoadTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        cts?.Dispose();
         cts = new CancellationTokenSource();
-        InitLoader();
+        activeLoadTask = InitLoader();
+        await activeLoadTask;
     }
     private void VersionNameInput_OnLostFocus(object sender, RoutedEventArgs e) {
-        var tb = sender as TextInput;
+        if (sender is not TextInput tb) {
+            return;
+        }
         viewModel.IsGoodName = true;
         if (string.IsNullOrEmpty(tb.Text) || tb.Text.Length == 0) {
             viewModel.VersionTips = "版本名称不能为空";
@@ -438,7 +459,7 @@ public partial class GameInfo : Page {
             viewModel.IsGoodName = false;
         }
         else {
-            var sgvm = SelectGame.GetViewModel?.Invoke();
+            var sgvm = ApplicationState.GameSelection;
             if (sgvm != null) {
                 var path = Path.Combine(sgvm.CurrentDir.Path, "versions", tb.Text);
                 Console.WriteLine(path);
@@ -449,6 +470,9 @@ public partial class GameInfo : Page {
             }
             else {
                 var dir = PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>();
+                if (dir is null) {
+                    return;
+                }
                 var path = Path.Combine(dir.Path, "versions", tb.Text);
                 Console.WriteLine(path);
                 if (Directory.Exists(path)) {
@@ -463,9 +487,7 @@ public partial class GameInfo : Page {
     }
     
     private bool isInstalling = false;
-    public static CancellationTokenSource installCts;
-    
-    private void StartInstall_OnClick(object sender, RoutedEventArgs e) {
+    private async void StartInstall_OnClick(object sender, RoutedEventArgs e) {
         if (viewModel.IsGoodName) {
             if (!isInstalling) {
                 if (viewModel.SelectedOptifineLoader != null && viewModel.SelectedOptifineLoader.NeedForge != null && viewModel.SelectedForgeLoader == null) {
@@ -478,7 +500,7 @@ public partial class GameInfo : Page {
                     return;
                 }
                 isInstalling = true;
-                PrepareInstall();
+                await PrepareInstallAsync();
             }
             else {
                 MessageTips.Show("请先完成当前安装任务", MessageTips.MessageType.Error);
@@ -489,79 +511,135 @@ public partial class GameInfo : Page {
         }
     }
 
-    public async void PrepareInstall() {
-        installCts = new CancellationTokenSource();
-        string currentDir;
-        var sgvm = SelectGame.GetViewModel?.Invoke();
-        if (sgvm != null) {
-            currentDir = sgvm.CurrentDir.Path;
-        }
-        else {
-            var dir = PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>();
-            currentDir = dir.Path;
-        }
-
-        if (viewModel.SelectedQuiltLoader != null) {
-            MessageTips.Show("暂不支持安装QuiltLoader");
+    public async Task PrepareInstallAsync() {
+        if (viewModel.Downloader is not { } downloader) {
             return;
         }
-        MainWindow.BackHandle.Invoke();
-        MainWindow.DownloadPageShow.Invoke();
-        if (viewModel.SelectedForgeLoader != null) {
-            await MinecraftUtil.StartDownloadInstallForge(
-                viewModel.Downloader.Name,
-                viewModel.VersionName,
-                currentDir, 
-                viewModel.SelectedForgeLoader,
-                viewModel.SelectedOptifineLoader);
+        installCts?.Cancel();
+        installCts?.Dispose();
+        var currentInstallCts = new CancellationTokenSource();
+        var installToken = currentInstallCts.Token;
+        installCts = currentInstallCts;
+        try {
+            string currentDir;
+            var sgvm = ApplicationState.GameSelection;
+            if (sgvm != null) {
+                currentDir = sgvm.CurrentDir.Path;
+            }
+            else {
+                var dir = PropertiesUtil.loadJson["game"]?["dir"]?.ToObject<DirItem>();
+                if (dir is null) {
+                    return;
+                }
+                currentDir = dir.Path;
+            }
+
+            if (viewModel.SelectedQuiltLoader != null) {
+                MessageTips.Show("暂不支持安装QuiltLoader");
+                return;
+            }
+            await uiCoordinator.GoBackAsync();
+            uiCoordinator.ShowDownloadPage();
+            if (viewModel.SelectedForgeLoader != null) {
+                await minecraftServices.Loader.InstallForgeAsync(
+                    downloader.Name,
+                    viewModel.VersionName,
+                    currentDir,
+                    viewModel.SelectedForgeLoader,
+                    viewModel.SelectedOptifineLoader,
+                    installToken);
+            }
+            else if (viewModel.SelectedOptifineLoader != null) {
+                await minecraftServices.Loader.InstallOptifineAsync(
+                    downloader.Name,
+                    viewModel.VersionName,
+                    currentDir,
+                    viewModel.SelectedOptifineLoader,
+                    isolation: ApplicationState.GameSettings.IsIsolation,
+                    cancellationToken: installToken);
+            }
+            else if (viewModel.SelectedLiteLoader != null) {
+                await minecraftServices.Loader.InstallLiteLoaderAsync(
+                    downloader.Name,
+                    viewModel.VersionName,
+                    currentDir,
+                    viewModel.SelectedLiteLoader,
+                    installToken);
+            }
+            else if (viewModel.SelectedNeoForgeLoader != null) {
+                await minecraftServices.Loader.InstallNeoForgeAsync(
+                    downloader.Name,
+                    viewModel.VersionName,
+                    currentDir,
+                    viewModel.SelectedNeoForgeLoader,
+                    installToken);
+            }
+            else if (viewModel.SelectedFabricLoader != null) {
+                await minecraftServices.Loader.InstallFabricAsync(
+                    downloader.Name,
+                    viewModel.VersionName,
+                    currentDir,
+                    viewModel.SelectedFabricLoader,
+                    viewModel.FabricApiVersions[viewModel.SelectedFabricApiIndex],
+                    installToken);
+            }
+            else {
+                await minecraftServices.Loader.InstallMinecraftAsync(downloader.Name, viewModel.VersionName, currentDir, installToken);
+            }
         }
-        else if (viewModel.SelectedOptifineLoader != null) {
-            await MinecraftUtil.StartDownloadInstallOptiFine(
-                viewModel.Downloader.Name,
-                viewModel.VersionName,
-                currentDir, 
-                viewModel.SelectedOptifineLoader,
-                installCts.Token);
+        finally {
+            isInstalling = false;
+            if (ReferenceEquals(installCts, currentInstallCts)) {
+                installCts = null;
+            }
+            currentInstallCts.Dispose();
+            uiCoordinator.Unregister(this);
         }
-        else if (viewModel.SelectedLiteLoader != null) {
-            await MinecraftUtil.StartDownloadInstallLiteloader(
-                viewModel.Downloader.Name,
-                viewModel.VersionName,
-                currentDir, 
-                viewModel.SelectedLiteLoader,
-                installCts.Token);
-        }
-        else if (viewModel.SelectedNeoForgeLoader != null) {
-            await MinecraftUtil.StartDownloadInstallNeoForge(
-                viewModel.Downloader.Name,
-                viewModel.VersionName,
-                currentDir, 
-                viewModel.SelectedNeoForgeLoader,
-                installCts.Token);
-        }                                                  
-        else if (viewModel.SelectedFabricLoader != null) {
-            await MinecraftUtil.StartDownloadInstallFabric(
-                viewModel.Downloader.Name,
-                viewModel.VersionName,
-                currentDir, 
-                viewModel.SelectedFabricLoader,
-                viewModel.FabricApiVersions[viewModel.SelectedFabricApiIndex],
-                installCts.Token);
-        }
-        else {
-            await MinecraftUtil.StartDownloadInstallMinecraft(viewModel.Downloader.Name, viewModel.VersionName,currentDir, installCts.Token);
-        }
-        isInstalling = false;
-        installCts.Cancel();
     }
 
     private void NeoForgeSelectComboBox_OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e) {
-        if (viewModel.Downloader.Name == "1.20.1" && (sender as ComboBox).IsOpened) {
+        if (viewModel.Downloader?.Name == "1.20.1" && sender is ComboBox comboBox && comboBox.IsOpened) {
             MessageTips.Show("请你别怀疑，这真的是NeoForge的加载器版本列表！");
         }
     }
 
     private void cancelLoading() {
         cts?.Cancel();
+    }
+
+    internal void CancelInstallFromService() => installCts?.Cancel();
+
+    public Task ActivateAsync(CancellationToken cancellationToken) {
+        cancellationToken.ThrowIfCancellationRequested();
+        uiCoordinator.Register(this);
+        if (!loadRemoteData) {
+            activeLoadTask = Task.CompletedTask;
+            return activeLoadTask;
+        }
+        if (cts.IsCancellationRequested) {
+            cts.Dispose();
+            cts = new CancellationTokenSource();
+        }
+        activeLoadTask = InitLoader();
+        return activeLoadTask;
+    }
+
+    public async Task DeactivateAsync() {
+        cts.Cancel();
+        if (!isInstalling) {
+            installCts?.Cancel();
+        }
+        try {
+            await activeLoadTask;
+        }
+        catch (OperationCanceledException) {
+        }
+        cts.Dispose();
+        cts = new CancellationTokenSource();
+        if (!isInstalling) {
+            installCts?.Dispose();
+            installCts = null;
+            uiCoordinator.Unregister(this);
+        }
     }
 }

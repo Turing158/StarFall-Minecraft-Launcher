@@ -9,7 +9,7 @@
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Style/DownloadPageStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/StarFallMC;component/Style/DownloadPageStyle.xaml"></ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
@@ -169,11 +169,16 @@
                                    Foreground="{DynamicResource SecondaryBrush}" 
                                    Text="没有任何下载项" 
                                    HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
-                        <ListView Name="ListScrollViewer" Margin="0 5" 
-                                  ItemsSource="{Binding Downloads}">
+                        <ListView Name="ListScrollViewer" Margin="0 5"
+                                  ItemsSource="{Binding Downloads}"
+                                  ScrollViewer.CanContentScroll="True"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel></VirtualizingStackPanel>
+                                    <VirtualizingStackPanel VirtualizationMode="Recycling"></VirtualizingStackPanel>
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
                         </ListView>

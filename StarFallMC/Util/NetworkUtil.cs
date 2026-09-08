@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using Newtonsoft.Json.Linq;
 using StarFallMC.Entity;
 
@@ -148,9 +149,9 @@ public class NetworkUtil {
         return string.Empty;
     }
 
-    public static void ExportErrorFile() {
+    public static void ExportErrorFile(IReadOnlyCollection<DownloadFile>? errorFiles = null) {
         StringBuilder sb = new StringBuilder();
-        foreach (var file in DownloadUtil.errorDownloadFiles) {
+        foreach (var file in errorFiles ?? Array.Empty<DownloadFile>()) {
             sb.Append($"文件名:{Path.GetFileName(file.FilePath)}\n");
             sb.Append($"文件位置:{file.FilePath}\n");
             sb.Append($"下载链接:{file.UrlPath}\n");
@@ -178,27 +179,33 @@ public class NetworkUtil {
     }
     
     public async static Task<string> GetNeedJavaScriptRedirectUrl(string url,string redirectKeyword,int timeout = 5000) {
-        var brower = new WebBrowser();
+        using var brower = new WebBrowser();
+        var tcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        NavigatingCancelEventHandler? navigatingHandler = null;
         try {
-            var tcs = new TaskCompletionSource<string>();
-            brower.Navigating += (sender, args) => {
+            navigatingHandler = (sender, args) => {
                 string uri = args.Uri.ToString();
                 if (uri.ToLower().Contains(redirectKeyword.ToLower())) {
                     args.Cancel = true;
                     tcs.TrySetResult(uri);
                 }
             };
+            brower.Navigating += navigatingHandler;
             brower.Navigate(url);
             var timeoutTask = Task.Delay(timeout);
             var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
             if (completedTask == tcs.Task) {
-                return tcs.Task.Result;
+                return await tcs.Task;
             }
         }
         catch (Exception e){
             Console.WriteLine(e);
         }
-        brower.Dispose();
+        finally {
+            if (navigatingHandler != null) {
+                brower.Navigating -= navigatingHandler;
+            }
+        }
         return url;
     }
 }

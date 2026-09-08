@@ -66,7 +66,9 @@
                                             VerticalAlignment="Center"
                                             Margin="5 0">
                                         <Image Width="40" Height="40"
-                                               Source="{Binding Logo}"></Image>
+                                               Source="{Binding LogoImage}"
+                                               Loaded="LogoImage_OnLoaded"
+                                               DataContextChanged="LogoImage_OnDataContextChanged"></Image>
                                     </Border>
                                     <Grid Margin="50 2 0 0">
                                         <Grid.RowDefinitions>
@@ -220,12 +222,12 @@
     </Page.Resources>
     <Grid>
         <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
-        <ScrollViewer Name="MainScrollViewer"
-                      Margin="0 0 2 0"
-                      Style="{StaticResource ResourcePageScrollViewer}"
-                      Opacity="1">
-            <StackPanel Margin="0 0 20 0">
-                <Border Style="{StaticResource RectByMargin}">
+        <Grid Name="MainScrollViewer" Margin="0 0 22 0" Opacity="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Style="{StaticResource RectByMargin}">
                     <StackPanel>
                         <Grid Margin="5 10">
                             <Grid.ColumnDefinitions>
@@ -344,25 +346,33 @@
                                          Click="Reset_OnClick">重置</comp:Button>
                         </Grid>
                     </StackPanel>
-                </Border>
-                <Grid>
-                    <comp:Loading x:Name="LoadingBorder" Height="100" PercentText="{Binding PercentText}" Margin="20 5"></comp:Loading>
+            </Border>
+            <Grid Grid.Row="1">
+                <comp:Loading x:Name="LoadingBorder" Height="100" PercentText="{Binding PercentText}" Margin="20 5"></comp:Loading>
                     <Border Name="ResourceContent" Style="{StaticResource NoAnimRect}" Margin="20 5">
                         <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
                             <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
                                 <TextBlock HorizontalAlignment="Center" 
                                            VerticalAlignment="Center"
                                            FontSize="16" Text="暂无模组资源"
                                            Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                             </Grid>
-                            <StackPanel>
+                            <Grid Grid.Row="0">
                                 <Border Name="LimitListViewItemDescriptionBorder" Height="1" Margin="75 0 10 0"></Border>
-                                <ListView Name="ListView" 
+                                <ListView Name="ListView"
                                           ItemContainerStyle="{StaticResource ModsListViewStyle}"
                                           ItemsSource="{Binding Mods}"
                                           SelectionChanged="ListView_OnSelectionChanged"
                                           ScrollViewer.IsDeferredScrollingEnabled="True"
                                           ScrollViewer.CanContentScroll="True"
+                                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                          VirtualizingPanel.IsVirtualizing="True"
+                                          VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                          VirtualizingPanel.VirtualizationMode="Recycling"
                                           Margin="0 10">
                                     <ListView.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -370,19 +380,18 @@
                                         </ItemsPanelTemplate>
                                     </ListView.ItemsPanel>
                                 </ListView>
-                                <comp:Pagination x:Name="Pagination" 
-                                                 Height="32" 
-                                                 PageNumVisibility="Collapsed"
-                                                 GoToButtonVisibility="Visible"
-                                                 HorizontalAlignment="Right" 
-                                                 Margin="10 5"
-                                                 PageChanged="Pagination_OnPageChanged"></comp:Pagination>
-                            </StackPanel>
+                            </Grid>
+                            <comp:Pagination Grid.Row="1" x:Name="Pagination"
+                                             Height="32"
+                                             PageNumVisibility="Collapsed"
+                                             GoToButtonVisibility="Visible"
+                                             HorizontalAlignment="Right"
+                                             Margin="10 5"
+                                             PageChanged="Pagination_OnPageChanged"></comp:Pagination>
                         </Grid>
                     </Border>
-                </Grid>
-            </StackPanel>
-        </ScrollViewer>
-        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
+            </Grid>
+        </Grid>
+        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=ListView}"></comp:TopButton>
     </Grid>
 </Page>

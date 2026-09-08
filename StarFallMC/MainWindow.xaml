@@ -23,10 +23,11 @@
         AllowDrop="True"
         PreviewDragOver="MainWindow_OnPreviewDragOver"
         PreviewDrop="MainWindow_OnPreviewDrop"
-        DragLeave="MainWindow_OnDragLeave">
+        DragLeave="MainWindow_OnDragLeave"
+        PreviewKeyDown="MainWindow_OnPreviewKeyDown">
     
     <Window.Resources>
-        <ResourceDictionary Source="/Style/MainWindowStyle.xaml"></ResourceDictionary>
+        <ResourceDictionary Source="/StarFallMC;component/Style/MainWindowStyle.xaml"></ResourceDictionary>
     </Window.Resources>
     
     <Window.Triggers>
@@ -48,34 +49,34 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid Grid.Row="1">
-                <Frame Name="MainFrame" Source="Home.xaml">
-                    <Frame.Effect>
+                <ContentControl Name="MainFrame">
+                    <ContentControl.Effect>
                         <BlurEffect Radius="0"></BlurEffect>
-                    </Frame.Effect>
-                    <Frame.RenderTransform>
+                    </ContentControl.Effect>
+                    <ContentControl.RenderTransform>
                         <TranslateTransform X="0"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="SettingFrame" Source="Setting.xaml" Opacity="0" IsHitTestVisible="False">
-                    <Frame.RenderTransform>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
+                <ContentControl Name="SettingFrame" Opacity="0" IsHitTestVisible="False">
+                    <ContentControl.RenderTransform>
                         <TranslateTransform X="50"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="DownloadGameFrame" Source="ResourcePage.xaml" Opacity="0" IsHitTestVisible="False">
-                    <Frame.RenderTransform>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
+                <ContentControl Name="DownloadGameFrame" Opacity="0" IsHitTestVisible="False">
+                    <ContentControl.RenderTransform>
                         <TranslateTransform X="50"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="SubFrame" Source="SelectGame.xaml" Opacity="0" IsHitTestVisible="False">
-                    <Frame.RenderTransform>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
+                <ContentControl Name="SubFrame" Opacity="0" IsHitTestVisible="False">
+                    <ContentControl.RenderTransform>
                         <TranslateTransform Y="-50"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
-                <Frame Name="DownloadFrame" Source="DownloadPage.xaml" Opacity="0" IsHitTestVisible="False">
-                    <Frame.RenderTransform>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
+                <ContentControl Name="DownloadFrame" Opacity="0" IsHitTestVisible="False">
+                    <ContentControl.RenderTransform>
                         <TranslateTransform Y="-50"></TranslateTransform>
-                    </Frame.RenderTransform>
-                </Frame>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
             </Grid>
             <Border Name="TopFrame" Height="55" CornerRadius="6,6,0,0" 
                     Background="{DynamicResource PrimaryBrush_3}" 

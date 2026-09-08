@@ -5,7 +5,6 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      KeepAlive="True"
       Title="PlayerManage" MinHeight="400" MinWidth="800"
       Unloaded="PlayerManage_OnUnloaded">
     <Page.Resources>

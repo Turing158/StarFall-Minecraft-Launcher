@@ -6,11 +6,12 @@
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
       Title="Home"  Background="Transparent"
-      Loaded="Home_OnLoaded">
+      Loaded="Home_OnLoaded"
+      SizeChanged="Home_OnSizeChanged">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Style/HomeStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/StarFallMC;component/Style/HomeStyle.xaml"></ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>

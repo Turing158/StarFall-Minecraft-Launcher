@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -6,33 +6,31 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
+using StarFallMC.Navigation;
+using StarFallMC.Services.Download;
 using StarFallMC.Util;
 using MessageBox = StarFallMC.Component.MessageBox;
 using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
-public partial class DownloadPage : Page {
+public partial class DownloadPage : Page, IPageLifecycle {
 
     private ViewModel viewModel = new ViewModel();
 
-    public static Action<List<DownloadFile>,bool> ProgressInit;
-    public static Action<DownloadFile,int,int> ProgressUpdate;
-    public static Action<bool> DownloadingAnimState;
-    public static Action<string,ProcessStatus,bool> ChangeProcessStatus;
-    public static Action<string,ProcessStatus,int,string> ChangeProcessStatusWithIndex;
-    public static Action<string,bool> ResetProcessStatus;
-    public static Func<string,List<string>,bool,string> AppendProcessProgress;
-    public static Action<string, Action<ProcessProgress>, bool> ChangeProcessProgressCallback;
-    public static Func<bool> HasProcessDoing;
-    
     private Storyboard DownloadingAnim;
     private Storyboard ListScrollViewerChange;
 
-    private Timer listScrollViewerChangeTimer;
-    private List<DownloadFile> TotalDownloads = new ();
+    private DispatcherTimer? listScrollViewerChangeTimer;
+    private readonly DownloadListStore downloadListStore;
+    private readonly DownloadFilterController downloadFilterController;
+    private readonly LauncherUiCoordinator uiCoordinator;
+    private readonly DownloadCoordinator downloadCoordinator;
+    private bool _isDownloadSubscribed;
+    private bool _isInitialized;
 
     private DoubleAnimation ValueTo1 = new() {
         To = 1,
@@ -44,23 +42,25 @@ public partial class DownloadPage : Page {
         Duration = TimeSpan.FromSeconds(0.2),
         EasingFunction = new CubicEase()
     };
-    public DownloadPage() {
+    public DownloadPage(
+        LauncherUiCoordinator? uiCoordinator = null,
+        DownloadCoordinator? downloadCoordinator = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        this.downloadCoordinator = downloadCoordinator ?? new DownloadCoordinator(this.uiCoordinator);
         InitializeComponent();
         DataContext = viewModel;
+        downloadListStore = new DownloadListStore(viewModel.Downloads);
+        downloadFilterController = new DownloadFilterController(viewModel.Downloads, Dispatcher);
+        downloadFilterController.ViewChanged += DownloadFilterController_OnViewChanged;
         DownloadingAnim = (Storyboard)FindResource("DownloadingAnim");
         ListScrollViewerChange = (Storyboard)FindResource("ListScrollViewerChange");
-        
-        ProgressInit = progressInit;
-        ProgressUpdate = progressUpdate;
-        DownloadingAnimState = downloadingAnimState;
-        ChangeProcessStatus = changeProcessStatus;
-        ChangeProcessStatusWithIndex = changeProcessStatusWithIndex;
-        ResetProcessStatus = resetProcessStatus;
-        AppendProcessProgress = appendProcessProgress;
-        ChangeProcessProgressCallback = changeProcessProgressCallback;
-        HasProcessDoing = hasProcessDoing;
+        this.downloadCoordinator.ProgressChanged += OnDownloadProgressChanged;
+        _isDownloadSubscribed = true;
+        this.uiCoordinator.Register(this);
 
         OperateBtn.Visibility = Visibility.Collapsed;
+        _isInitialized = true;
+        ChangeDownloadNavi();
     }
 
     public class ViewModel : INotifyPropertyChanged {
@@ -78,11 +78,7 @@ public partial class DownloadPage : Page {
             set => SetField(ref _downloadStates, value);
         }
         
-        private ObservableCollection<DownloadFile> _downloads = new ();
-        public ObservableCollection<DownloadFile> Downloads {
-            get => _downloads;
-            set => SetField(ref _downloads, value);
-        }
+        public ObservableCollection<DownloadListItem> Downloads { get; } = new();
 
         private ObservableCollection<ProcessProgress> _progresses = new();
         public ObservableCollection<ProcessProgress> Progresses {
@@ -147,112 +143,33 @@ public partial class DownloadPage : Page {
         }
     }
 
-    private void progressInit(List<DownloadFile> downloadFiles, bool isClear) {
-        if (isClear) {
-            viewModel.ProgressText = "0%";
-            viewModel.Finished = 0;
-            viewModel.ErrorCount = 0;
-        }
-        else {
-            viewModel.ProgressText =
-                $"{formatDouble((DownloadUtil.FinishCount + DownloadUtil.errorDownloadFiles.Count == 0 ? 0 : (double)(DownloadUtil.FinishCount + DownloadUtil.errorDownloadFiles.Count) / viewModel.Total) * 100, 2)}%";
-        }
-        OperateBtn.Visibility = Visibility.Visible;
-        viewModel.Total = downloadFiles.Count;
-        viewModel.Remaining = downloadFiles.Count - viewModel.Finished;
-        DownloadNavigationBar.SelectedIndex = 0;
-        TotalDownloads = downloadFiles;
-        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
-        viewModel.Downloads = new ObservableCollection<DownloadFile>(downloadFiles);
-        // ListScrollViewer.ItemsSource = viewModel.Downloads;
-        SetOperateBtn(DownloadUtil.IsCancel);
-    }
-    
-    private void progressUpdate(DownloadFile downloadFile,int FinishCount,int ErrorCount) {
-        try {
-            viewModel.Finished = FinishCount;
-            viewModel.ErrorCount = ErrorCount;
-            viewModel.Remaining = viewModel.Total - FinishCount;
-            viewModel.ProgressText =
-                $"{formatDouble((FinishCount + ErrorCount == 0 ? 0 : (double)(FinishCount + ErrorCount) / viewModel.Total) * 100, 2)}%";
-            TotalDownloads[TotalDownloads.FindIndex(i => i.FilePath == downloadFile.FilePath)] = downloadFile;
-            if (DownloadNavigationBar.SelectedIndex != 0) {
-                var item = viewModel.Downloads.FirstOrDefault(i => i.FilePath == downloadFile.FilePath);
-                switch (DownloadNavigationBar.SelectedIndex) {
-                    case 1:
-                        if (downloadFile.State == DownloadFile.StateType.Waiting) {
-                            viewModel.Downloads.Add(downloadFile);
-                        }
-                        else if (item != null) {
-                            viewModel.Downloads.Remove(item);
-                        }
-                        break;
-                    case 2:
-                        if (downloadFile.State == DownloadFile.StateType.Downloading) {
-                            viewModel.Downloads.Add(downloadFile);
-                        }
-                        else if (item != null) {
-                            viewModel.Downloads.Remove(item);
-                        }
-
-                        break;
-                    case 3:
-                        if (downloadFile.State == DownloadFile.StateType.Finished) {
-                            viewModel.Downloads.Add(downloadFile);
-                        }
-                        else if (item != null) {
-                            viewModel.Downloads.Remove(item);
-                        }
-                        break;
-                    case 4:
-                        if (downloadFile.State == DownloadFile.StateType.Error) {
-                            viewModel.Downloads.Add(downloadFile);
-                        }
-                        break;
-                }
-            }
-            else {
-                int index = viewModel.Downloads.IndexOf(viewModel.Downloads.FirstOrDefault(i =>
-                    i.FilePath == downloadFile.FilePath));
-                if (index >= 0) {
-                    viewModel.Downloads[index] = downloadFile;
-                }
-                else {
-                    viewModel.Downloads.Add(downloadFile);
-                }
-            }
-        }
-        catch (Exception e){
-            Console.WriteLine(e);
-            throw;
-        }
-        if (viewModel.Downloads.Count == 0) {
-            EmptyList.Opacity = 1;
-        }
-        else {
-            EmptyList.Opacity = 0;
-        }
+    private void OnDownloadProgressChanged(DownloadProgressSnapshot snapshot) {
+        Dispatcher.BeginInvoke(() => ApplySnapshot(snapshot));
     }
 
-    private string formatDouble(double input,int round) {
-        if (round == -1) {
-            return input.ToString();
-        }
-        if (round == 0) {
-            return Math.Floor(input).ToString();
+    private void ApplySnapshot(DownloadProgressSnapshot snapshot) {
+        if (downloadCoordinator.CurrentSnapshot?.SessionId != snapshot.SessionId) {
+            return;
         }
 
-        if (round > 16) {
-            round = 16;
+        var stateChanged = downloadListStore.Apply(snapshot);
+        viewModel.Total = snapshot.Total;
+        viewModel.Finished = snapshot.Succeeded;
+        viewModel.ErrorCount = snapshot.Failed;
+        viewModel.Remaining = snapshot.Pending + snapshot.Running;
+        var settled = snapshot.Succeeded + snapshot.Failed + snapshot.Cancelled;
+        viewModel.ProgressText = snapshot.Total == 0 ? "0%" : $"{Math.Round(100d * settled / snapshot.Total, 2):0.##}%";
+        OperateBtn.Visibility = snapshot.Total == 0 ? Visibility.Collapsed : Visibility.Visible;
+        if (stateChanged) {
+            downloadFilterController.NotifyStateChanged();
         }
-        string format = "0.";
-        for (int i = 0; i < round; i++) {
-            format += "#";
-        }
-        return Math.Round(input,round).ToString(format);
+        UpdateEmptyState();
+        var paused = snapshot.State is DownloadState.Paused or DownloadState.Pausing;
+        SetOperateBtn(paused);
+        SetDownloadingAnimation(snapshot.State is DownloadState.Running or DownloadState.Resuming or DownloadState.Pausing);
     }
 
-    private void downloadingAnimState(bool isStart) {
+    private void SetDownloadingAnimation(bool isStart) {
         if (isStart) {
             DownloadingAnim.RepeatBehavior = RepeatBehavior.Forever;
         }
@@ -262,73 +179,55 @@ public partial class DownloadPage : Page {
         DownloadingAnim.Begin(this, true);
 
         // 借用方法调整按钮
-        CancelAndCleanDownload.Content = DownloadUtil.IsFinished ? "清 空" : "取 消";
-        CancelAndCleanDownload.ToolTip = DownloadUtil.IsFinished ? "清空下载列表" : "取消当前所有下载任务";
+        var canClear = downloadCoordinator.IsFinished || downloadCoordinator.IsCancel;
+        CancelAndCleanDownload.Content = canClear ? "清 空" : "取 消";
+        CancelAndCleanDownload.ToolTip = canClear ? "清空下载列表" : "取消当前所有下载任务";
 
     }
 
     private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e) {
-        listScrollViewerChangeTimer?.Dispose();
+        if (!_isInitialized) {
+            return;
+        }
+
+        StopListScrollViewerChangeTimer();
         ListScrollViewerChange.Begin(this, true);
-        listScrollViewerChangeTimer = new Timer(o => {
-            this.Dispatcher.BeginInvoke(() => {
-                ChangeDownloadNavi();
-                listScrollViewerChangeTimer?.Dispose();
-            });
-        }, null, 200, 0);
+        listScrollViewerChangeTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        listScrollViewerChangeTimer.Tick += ListScrollViewerChangeTimer_OnTick;
+        listScrollViewerChangeTimer.Start();
     }
 
     private void ChangeDownloadNavi() {
-        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
-        switch (DownloadNavigationBar.SelectedIndex) {
-            case 0:
-                viewModel.Downloads = new ObservableCollection<DownloadFile>(TotalDownloads);
-                break;
-            case 1:
-                viewModel.Downloads = new ObservableCollection<DownloadFile>(
-                    TotalDownloads.Where(i => i.State == DownloadFile.StateType.Waiting));
-                break;
-            case 2:
-                viewModel.Downloads = new ObservableCollection<DownloadFile>(
-                    TotalDownloads.Where(i => i.State == DownloadFile.StateType.Downloading));
-                break;
-            case 3:
-                viewModel.Downloads = new ObservableCollection<DownloadFile>(
-                    TotalDownloads.Where(i => i.State == DownloadFile.StateType.Finished));
-                break;
-            case 4:
-                viewModel.Downloads = new ObservableCollection<DownloadFile>(
-                    DownloadUtil.errorDownloadFiles);
-                break;
-        }
-        // ListScrollViewer.ItemsSource = viewModel.Downloads;
-        if (viewModel.Downloads.Count == 0) {
-            EmptyList.Opacity = 1;
-        }
-        else {
-            EmptyList.Opacity = 0;
-        }
+        downloadFilterController.SetFilterIndex(DownloadNavigationBar.SelectedIndex);
+        UpdateEmptyState();
     }
 
-    private void CancelAndCleanDownload_OnClick(object sender, RoutedEventArgs e) {
-        if (DownloadUtil.IsCancel || DownloadUtil.IsFinished) {
+    private void DownloadFilterController_OnViewChanged(object? sender, EventArgs e) {
+        UpdateEmptyState();
+    }
+
+    private void UpdateEmptyState() {
+        EmptyList.Opacity = downloadFilterController.View.IsEmpty ? 1 : 0;
+    }
+
+    private async void CancelAndCleanDownload_OnClick(object sender, RoutedEventArgs e) {
+        if (downloadCoordinator.IsCancel || downloadCoordinator.IsFinished) {
             Console.WriteLine("清空下载列表");
             try {
-                MessageBox.Show("确定要清除当前的所有下载任务嘛！可能会造成某些事情的出现。", "清除当前下载任务", MessageBoxBtnType.ConfirmAndCancel, r => {
+                MessageBox.Show("确定要清除当前的所有下载任务嘛！可能会造成某些事情的出现。", "清除当前下载任务", MessageBoxBtnType.ConfirmAndCancel, async r => {
                     if (r == MessageBoxResult.Confirm) {
-                        DownloadUtil.ClearDownload();
-                        // PageUtil.CleanupListView(ListScrollViewer,ItemsControl.ItemsSourceProperty);
-                        viewModel.Downloads.Clear();
-                        // ListScrollViewer.ItemsSource = viewModel.Downloads;
+                        await downloadCoordinator.ClearDownload();
+                        downloadListStore.Clear();
                         viewModel.Total = 0;
                         viewModel.Remaining = 0;
                         viewModel.Finished = 0;
                         viewModel.ErrorCount = 0;
                         // viewModel.Speed = 0;
                         viewModel.ProgressText = "0%";
-                        TotalDownloads.Clear();
                         OperateBtn.Visibility = Visibility.Collapsed;
-                        SetOperateBtn(DownloadUtil.IsCancel);
+                        SetOperateBtn(downloadCoordinator.IsCancel);
                     }
                 });
             }
@@ -339,11 +238,8 @@ public partial class DownloadPage : Page {
         else {
             Console.WriteLine("取消下载");
             try {
-                DownloadUtil.CancelDownload();
-                if (DownloadNavigationBar.SelectedIndex == 2) {
-                    viewModel.Downloads.Clear();
-                }
-                SetOperateBtn(DownloadUtil.IsCancel);
+                await downloadCoordinator.CancelDownload();
+                SetOperateBtn(downloadCoordinator.IsCancel);
             }
             catch (Exception exception){
                 Console.WriteLine(exception);
@@ -351,33 +247,30 @@ public partial class DownloadPage : Page {
         }
     }
 
-    private void RetryAndContinueDownload_OnClick(object sender, RoutedEventArgs e) {
+    private async void RetryAndContinueDownload_OnClick(object sender, RoutedEventArgs e) {
         Console.WriteLine("重试或继续下载");
-        if (DownloadUtil.IsCancel) {
+        if (downloadCoordinator.IsCancel) {
             Console.WriteLine("继续下载");
             try {
-                DownloadUtil.ContinueDownload();
+                await downloadCoordinator.ContinueDownload();
             }
             catch (Exception exception){
                 Console.WriteLine(exception);
             }
         }
         else {
-            if (DownloadUtil.errorDownloadFiles.Count != 0) {
+            if (downloadCoordinator.ErrorDownloadFiles.Count != 0) {
                 Console.WriteLine("重试失败任务");
                 try {
-                    DownloadUtil.RetryDownload();
-                    if (DownloadNavigationBar.SelectedIndex == 4) {
-                        viewModel.Downloads.Clear();
-                    }
+                    await downloadCoordinator.RetryAsync();
                 }
                 catch (Exception exception){
                     Console.WriteLine(exception);
                 }
             }
         }
-        SetOperateBtn(DownloadUtil.IsCancel);
-        downloadingAnimState(true);
+        SetOperateBtn(downloadCoordinator.IsCancel);
+        SetDownloadingAnimation(true);
     }
 
     private void SetOperateBtn(bool isCancel) {
@@ -417,27 +310,69 @@ public partial class DownloadPage : Page {
 
     // 关于流程进度的方法
     
-    public void changeProcessStatus(string key,ProcessStatus status,bool ChangeNextStep) {
-        ProcessProgresses.ChangeProcessStatus(key,status,ChangeNextStep);
+    public void ChangeProcessStatus(string key,ProcessStatus status,bool changeNextStep) {
+        ProcessProgresses.ChangeProcessStatus(key,status,changeNextStep);
     }
 
-    public void changeProcessStatusWithIndex(string key,ProcessStatus status,int progressIndex, string progressName = null) {
+    public void ChangeProcessStatusWithIndex(string key,ProcessStatus status,int progressIndex, string? progressName = null) {
         ProcessProgresses.ChangeProcessStatusWithIndex(key,status,progressIndex,progressName);
     }
     
-    public void resetProcessStatus(string key, bool autoDoingFirst = false) {
+    public void ResetProcessStatus(string key, bool autoDoingFirst = false) {
         ProcessProgresses.ResetProcessStatus(key,autoDoingFirst);
     }
     
-    public string appendProcessProgress(string name, List<string> progressNames,bool autoDoingFirst = false) {
+    public string AppendProcessProgress(string name, List<string> progressNames,bool autoDoingFirst = false) {
         return ProcessProgresses.AppendProcessProgress(name,progressNames,autoDoingFirst);
     }
     
-    public void changeProcessProgressCallback(string key, Action<ProcessProgress> callback, bool isOnDelete = false) {
+    public void ChangeProcessProgressCallback(string key, Action<ProcessProgress> callback, bool isOnDelete = false) {
         ProcessProgresses.ChangeProcessProgressCallback(key,callback, isOnDelete);
     }
 
-    public bool hasProcessDoing() {
+    public bool HasProcessDoing() {
         return ProcessProgresses.HasProcessDoing();
+    }
+
+    public Task ActivateAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!_isDownloadSubscribed) {
+            downloadCoordinator.ProgressChanged += OnDownloadProgressChanged;
+            _isDownloadSubscribed = true;
+        }
+        uiCoordinator.Register(this);
+        var snapshot = downloadCoordinator.CurrentSnapshot;
+        if (snapshot != null) {
+            ApplySnapshot(snapshot);
+        }
+        return Task.CompletedTask;
+    }
+
+    public Task DeactivateAsync()
+    {
+        StopListScrollViewerChangeTimer();
+        downloadFilterController.CancelPendingRefresh();
+        if (_isDownloadSubscribed) {
+            downloadCoordinator.ProgressChanged -= OnDownloadProgressChanged;
+            _isDownloadSubscribed = false;
+        }
+        uiCoordinator.Unregister(this);
+
+        return Task.CompletedTask;
+    }
+
+    private void ListScrollViewerChangeTimer_OnTick(object? sender, EventArgs e) {
+        StopListScrollViewerChangeTimer();
+        ChangeDownloadNavi();
+    }
+
+    private void StopListScrollViewerChangeTimer() {
+        if (listScrollViewerChangeTimer == null) {
+            return;
+        }
+        listScrollViewerChangeTimer.Stop();
+        listScrollViewerChangeTimer.Tick -= ListScrollViewerChangeTimer_OnTick;
+        listScrollViewerChangeTimer = null;
     }
 }

@@ -1,21 +1,30 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Util;
+using StarFallMC.Navigation;
 using Button = System.Windows.Controls.Button;
+using StarFallMC.Services.Download;
 
 namespace StarFallMC.SettingPages;
 
 public partial class LauncherSetting : Page {
+    private readonly LauncherUiCoordinator uiCoordinator;
+    private readonly DownloadCoordinator downloadCoordinator;
     
     public ViewModel viewModel = new ViewModel();
     
-    public LauncherSetting() {
+    internal LauncherSetting(
+        LauncherUiCoordinator? uiCoordinator = null,
+        DownloadCoordinator? downloadCoordinator = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        this.downloadCoordinator = downloadCoordinator ?? new DownloadCoordinator(this.uiCoordinator);
         InitializeComponent();
         DataContext = viewModel;
         
@@ -37,6 +46,7 @@ public partial class LauncherSetting : Page {
         viewModel.IsShowNoticeEnabled = !PropertiesUtil.launcherArgs.EnableNotice;
         Console.WriteLine(PropertiesUtil.launcherArgs.ShowDownloadBtn);
         viewModel.IsShowDownloadButtonEnabled = PropertiesUtil.launcherArgs.ShowDownloadBtn;
+        Unloaded += LauncherSetting_OnUnloaded;
     }
     
     public class ViewModel : INotifyPropertyChanged {
@@ -112,7 +122,7 @@ public partial class LauncherSetting : Page {
             case 1:
                 PropertiesUtil.launcherArgs.BgType = "default";
                 DefaultImageBg.Visibility = Visibility.Visible;
-                Home.SettingBackground.Invoke();
+                uiCoordinator.SetHomeBackground();
                 break;
             case 2:
                 PropertiesUtil.launcherArgs.BgType = "local";
@@ -127,25 +137,25 @@ public partial class LauncherSetting : Page {
             default:
                 PropertiesUtil.launcherArgs.BgType = "none";
                 NoImageBg.Visibility = Visibility.Visible;
-                Home.SettingBackground.Invoke();
+                uiCoordinator.SetHomeBackground();
                 break;
         }
     }
 
     private void LocalBg_OnLostFocus(object sender, RoutedEventArgs e) {
         PropertiesUtil.launcherArgs.BgPath = LocalBgPath.Text;
-        Home.SettingBackground.Invoke();
+        uiCoordinator.SetHomeBackground();
     }
 
     private void NetworkBg_OnLostFocus(object sender, RoutedEventArgs e) {
         if (NetworkUtil.IsValidUrl(NetworkBgPath.Text)) {
             PropertiesUtil.launcherArgs.BgPath = NetworkBgPath.Text;
         }
-        Home.SettingBackground.Invoke();
+        uiCoordinator.SetHomeBackground();
     }
 
     private void DefaultBg_OnClick(object sender, RoutedEventArgs e) {
-        Home.SettingBackground.Invoke();
+        uiCoordinator.SetHomeBackground();
     }
 
     private void LocalBg_OnClick(object sender, RoutedEventArgs e) {
@@ -154,7 +164,7 @@ public partial class LauncherSetting : Page {
         if (dialog.ShowDialog() == true) {
             LocalBgPath.Text = dialog.FileName;
             PropertiesUtil.launcherArgs.BgPath = dialog.FileName;
-            Home.SettingBackground.Invoke();
+            uiCoordinator.SetHomeBackground();
         }
     }
 
@@ -165,7 +175,7 @@ public partial class LauncherSetting : Page {
         }
 
         PropertiesUtil.launcherArgs.HardwareAcceleration = !toggleButton.IsChecked.Value;
-        App.HardwareAccelerationSetting?.Invoke();
+        App.ApplyHardwareAccelerationSetting();
     }
 
     private void ShowNotice_OnClick(object sender, RoutedEventArgs e) {
@@ -177,22 +187,22 @@ public partial class LauncherSetting : Page {
         MessageTips.Show("是否開啓公告：" + (isShowNotice ? "是" : "否"));
         PropertiesUtil.launcherArgs.EnableNotice = isShowNotice;
         viewModel.IsShowRefreshNoticeBtn = isShowNotice ? Visibility.Visible : Visibility.Collapsed;
-        Home.SwitchHomeNotice?.Invoke(!toggleButton.IsChecked.Value);
+        uiCoordinator.SetHomeNotice(!toggleButton.IsChecked.Value);
     }
 
-    private Timer refreshNoticeTimer;
+    private DispatcherTimer? refreshNoticeTimer;
     private bool canRefreshNotice = true;
     private void RefreshNotice_OnClick(object sender, RoutedEventArgs e) {
         if (refreshNoticeTimer == null){
-            refreshNoticeTimer = new Timer(s =>{
-                canRefreshNotice = true;
-                refreshNoticeTimer.Dispose();
-                refreshNoticeTimer = null;
-            },null , TimeSpan.FromSeconds(3) ,TimeSpan.Zero);
+            refreshNoticeTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+                Interval = TimeSpan.FromSeconds(3)
+            };
+            refreshNoticeTimer.Tick += RefreshNoticeTimer_OnTick;
+            refreshNoticeTimer.Start();
         }
         if (canRefreshNotice){
             MessageTips.Show("刷新公告");
-            Notices.RefreshNotices?.Invoke();
+                Notices.RefreshAll();
             canRefreshNotice = false;
         }
         else{
@@ -201,8 +211,22 @@ public partial class LauncherSetting : Page {
 
     }
 
+    private void RefreshNoticeTimer_OnTick(object? sender, EventArgs e) {
+        if (refreshNoticeTimer == null) {
+            return;
+        }
+        refreshNoticeTimer.Stop();
+        refreshNoticeTimer.Tick -= RefreshNoticeTimer_OnTick;
+        refreshNoticeTimer = null;
+        canRefreshNotice = true;
+    }
+
+    private void LauncherSetting_OnUnloaded(object sender, RoutedEventArgs e) {
+        RefreshNoticeTimer_OnTick(null, EventArgs.Empty);
+    }
+
     private void ShowDownload_OnClick(object sender, RoutedEventArgs e) {
-        MainWindow.DownloadPageShow?.Invoke();
+        uiCoordinator.ShowDownloadPage();
     }
 
     private void IsShowDownload_OnClick(object sender, RoutedEventArgs e) {
@@ -215,14 +239,14 @@ public partial class LauncherSetting : Page {
         PropertiesUtil.launcherArgs.ShowDownloadBtn = isShow;
         this.Dispatcher.BeginInvoke(() => {
             if (isShow) {
-                DownloadUtil.SetTimerToHideDownloadBtn(false);
+                downloadCoordinator.SetTimerToHideDownloadButton(false);
             }
             else {
-                if (DownloadUtil.IsFinished || DownloadPage.HasProcessDoing?.Invoke() != true) {
-                    DownloadUtil.SetTimerToHideDownloadBtn(true);
+                if (downloadCoordinator.IsFinished || uiCoordinator.HasProcessDoing() != true) {
+                    downloadCoordinator.SetTimerToHideDownloadButton(true);
                 }
                 else {
-                    DownloadUtil.SetTimerToHideDownloadBtn(false);
+                    downloadCoordinator.SetTimerToHideDownloadButton(false);
                         
                 }
             }

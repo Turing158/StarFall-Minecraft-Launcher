@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using StarFallMC.Util;
 
 namespace StarFallMC.Component;
@@ -90,6 +91,7 @@ public class CollapsePanel : UserControl{
     private Storyboard CloseAnim;
     private Storyboard MouseDownAnim;
     private Storyboard MouseUpAnim;
+    private DispatcherOperation? sizeChangeOperation;
     
     public CollapsePanel() {
         Loaded += CollapsePanel_OnLoaded;
@@ -98,17 +100,15 @@ public class CollapsePanel : UserControl{
     }
 
     private void CollapsePanel_OnUnloaded(object sender, RoutedEventArgs e) {
-        Loaded -= CollapsePanel_OnLoaded;
-        Unloaded -= CollapsePanel_OnUnloaded;
-        IsEnabledChanged -= OnIsEnabledChanged;
-        if (_triggerBorder != null) {
-            _triggerBorder.MouseLeave -= Top_OnMouseLeave;
-            _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
-            _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
-        }
-        if (_contentPresenter != null) {
-            _contentPresenter.SizeChanged -= Content_OnSizeChanged;
-        }
+        DetachTemplateEvents();
+        sizeChangeOperation?.Abort();
+        sizeChangeOperation = null;
+        isSizeChanging = false;
+        _main?.BeginAnimation(HeightProperty, null);
+        OpenAnim?.Remove(this);
+        CloseAnim?.Remove(this);
+        MouseDownAnim?.Remove(this);
+        MouseUpAnim?.Remove(this);
     }
 
     private void OnIsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e) {
@@ -117,25 +117,27 @@ public class CollapsePanel : UserControl{
 
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
+        DetachTemplateEvents();
+        if (OpenHeightAnim != null) {
+            OpenHeightAnim.Completed -= OpenHeightAnim_OnCompleted;
+        }
         _main = (Border)Template.FindName("Main",this);
         _entirePanel = (StackPanel)Template.FindName("EntirePanel",this);
         _stateIcon = (TextBlock)Template.FindName("StateIcon",this);
         _triggerBorder = (Border)Template.FindName("TriggerBorder",this);
         _contentPresenter = (ContentPresenter)Template.FindName("ContentPresenter",this);
 
-        _triggerBorder.MouseLeave += Top_OnMouseLeave;
-        _triggerBorder.MouseLeftButtonDown += Top_OnMouseLeftButtonDown;
-        _triggerBorder.MouseLeftButtonUp += Top_OnMouseLeftButtonUp;
-        _contentPresenter.SizeChanged += Content_OnSizeChanged;
-
         OpenHeightAnim = new DoubleAnimation {
             To = 0,
             Duration = new Duration(TimeSpan.FromMilliseconds(200)),
             EasingFunction = new CubicEase()
         };
+        OpenHeightAnim.Completed += OpenHeightAnim_OnCompleted;
+        AttachTemplateEvents();
     }
     
     private void CollapsePanel_OnLoaded(object sender, RoutedEventArgs e) {
+        AttachTemplateEvents();
         OpenAnim = (FindResource("OpenAnim") as Storyboard).Clone();
         OpenAnim.Children[0].SetValue(Storyboard.TargetProperty, _stateIcon);
         CloseAnim = (FindResource("CloseAnim") as Storyboard).Clone();
@@ -184,6 +186,10 @@ public class CollapsePanel : UserControl{
     public void Hide() {
         RaiseEvent(new RoutedEventArgs(ClosedEvent));
         IsOpen = false;
+        sizeChangeOperation?.Abort();
+        sizeChangeOperation = null;
+        isSizeChanging = false;
+        _main.BeginAnimation(HeightProperty, null);
         CloseAnim.Begin(this, true);
     }
 
@@ -197,15 +203,47 @@ public class CollapsePanel : UserControl{
     private bool isSizeChanging;
     private void Content_OnSizeChanged(object sender, SizeChangedEventArgs e) {
         if (!isSizeChanging && IsOpen && Content != null) {
-            var content = sender as ContentPresenter;
             isSizeChanging = true;
-            Dispatcher.BeginInvoke(() => {
-                OpenHeightAnim.To = content.ActualHeight + MainHeight + 1;
-                OpenHeightAnim.Completed += (o, args) => {
+            sizeChangeOperation = Dispatcher.InvokeAsync(() => {
+                sizeChangeOperation = null;
+                if (!IsOpen || !IsLoaded) {
                     isSizeChanging = false;
-                };
+                    return;
+                }
+
+                OpenHeightAnim.To = _contentPresenter.ActualHeight + MainHeight + 1;
                 _main.BeginAnimation(HeightProperty,OpenHeightAnim);
-            });
+            }, DispatcherPriority.Loaded);
+        }
+    }
+
+    private void OpenHeightAnim_OnCompleted(object? sender, EventArgs e) {
+        isSizeChanging = false;
+    }
+
+    private void AttachTemplateEvents() {
+        if (_triggerBorder != null) {
+            _triggerBorder.MouseLeave -= Top_OnMouseLeave;
+            _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
+            _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
+            _triggerBorder.MouseLeave += Top_OnMouseLeave;
+            _triggerBorder.MouseLeftButtonDown += Top_OnMouseLeftButtonDown;
+            _triggerBorder.MouseLeftButtonUp += Top_OnMouseLeftButtonUp;
+        }
+        if (_contentPresenter != null) {
+            _contentPresenter.SizeChanged -= Content_OnSizeChanged;
+            _contentPresenter.SizeChanged += Content_OnSizeChanged;
+        }
+    }
+
+    private void DetachTemplateEvents() {
+        if (_triggerBorder != null) {
+            _triggerBorder.MouseLeave -= Top_OnMouseLeave;
+            _triggerBorder.MouseLeftButtonDown -= Top_OnMouseLeftButtonDown;
+            _triggerBorder.MouseLeftButtonUp -= Top_OnMouseLeftButtonUp;
+        }
+        if (_contentPresenter != null) {
+            _contentPresenter.SizeChanged -= Content_OnSizeChanged;
         }
     }
     

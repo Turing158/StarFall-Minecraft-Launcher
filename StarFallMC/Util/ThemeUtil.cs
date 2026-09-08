@@ -5,24 +5,35 @@ using StarFallMC.Entity;
 
 namespace StarFallMC.Util;
 
-public class ThemeUtil {
+public static class ThemeUtil {
     public enum ThemeType {
         Puce,
         Ebony
     }
     
-    private static ThemeColor puce = new ("#D7C6C5", "#C4ABAA", "#B2908F", "#957A78", "#513938", "#264446", "#113032", "#001D1F");
-    private static ThemeColor ebony = new ("#E0E3DE", "#C8CDC5", "#B1B8AD","#6C7665 ","#555D50", "#385A80", "#204569", "#003153");
-    public static SolidColorBrush PrimaryBrush;
-    public static SolidColorBrush PrimaryBrush_1;
-    public static SolidColorBrush PrimaryBrush_2;
-    public static SolidColorBrush PrimaryBrush_3;
-    public static SolidColorBrush PrimaryBrush_4;
-    public static SolidColorBrush SecondaryBrush;
-    public static SolidColorBrush SecondaryBrush_1;
-    public static SolidColorBrush SecondaryBrush_2;
+    private static readonly ThemeColor puce = new ("#D7C6C5", "#C4ABAA", "#B2908F", "#957A78", "#513938", "#264446", "#113032", "#001D1F");
+    private static readonly ThemeColor ebony = new ("#E0E3DE", "#C8CDC5", "#B1B8AD","#6C7665 ","#555D50", "#385A80", "#204569", "#003153");
+    private static readonly ThemeChangeSource ChangeSource = new();
+    public static SolidColorBrush PrimaryBrush = null!;
+    public static SolidColorBrush PrimaryBrush_1 = null!;
+    public static SolidColorBrush PrimaryBrush_2 = null!;
+    public static SolidColorBrush PrimaryBrush_3 = null!;
+    public static SolidColorBrush PrimaryBrush_4 = null!;
+    public static SolidColorBrush SecondaryBrush = null!;
+    public static SolidColorBrush SecondaryBrush_1 = null!;
+    public static SolidColorBrush SecondaryBrush_2 = null!;
 
-    public static Action updateColor;
+    public static void AddColorChangedHandler(EventHandler<EventArgs> handler) =>
+        WeakEventManager<ThemeChangeSource, EventArgs>.AddHandler(
+            ChangeSource,
+            nameof(ThemeChangeSource.Changed),
+            handler);
+
+    public static void RemoveColorChangedHandler(EventHandler<EventArgs> handler) =>
+        WeakEventManager<ThemeChangeSource, EventArgs>.RemoveHandler(
+            ChangeSource,
+            nameof(ThemeChangeSource.Changed),
+            handler);
 
     public static void init() {
         var typeStr = PropertiesUtil.launcherArgs.ThemeType;
@@ -71,7 +82,7 @@ public class ThemeUtil {
         ColorChange(ref SecondaryBrush, nameof(SecondaryBrush), color.Secondary);
         ColorChange(ref SecondaryBrush_1, nameof(SecondaryBrush_1), color.Secondary_1);
         ColorChange(ref SecondaryBrush_2, nameof(SecondaryBrush_2), color.Secondary_2);
-        updateColor();
+        ChangeSource.Raise();
         PropertiesUtil.launcherArgs.ThemeType = ParseThemeTypeToString(type);
     }
 
@@ -105,4 +116,11 @@ public class ThemeUtil {
         ThemeType.Ebony => ebony,
         _ => puce
     };
+
+    private sealed class ThemeChangeSource
+    {
+        public event EventHandler<EventArgs>? Changed;
+
+        public void Raise() => Changed?.Invoke(this, EventArgs.Empty);
+    }
 }

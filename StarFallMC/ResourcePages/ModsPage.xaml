@@ -7,9 +7,7 @@
       xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="ModsPage" MinHeight="380" MinWidth="640"
-      Loaded="ModsPage_OnLoaded"
-      Unloaded="ModsPage_OnUnloaded">
+      Title="ModsPage" MinHeight="380" MinWidth="640">
     <Page.Resources>
         <ResourceDictionary>
             <Style x:Key="ModsListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
@@ -45,7 +43,9 @@
                                             VerticalAlignment="Center"
                                             Margin="5 0">
                                         <Image Width="30" Height="30"
-                                               Source="{Binding Logo}"></Image>
+                                               Source="{Binding LogoImage}"
+                                               Loaded="LogoImage_OnLoaded"
+                                               DataContextChanged="LogoImage_OnDataContextChanged"></Image>
                                     </Border>
                                     <StackPanel Name="ModTitle" 
                                                 HorizontalAlignment="Left" 
@@ -106,24 +106,20 @@
                                                Opacity="0"
                                                Text="{Binding Description}">
                                     </TextBlock>
-                                    <Border Name="DisabledBg" 
-                                            CornerRadius="5" 
-                                            Background="{DynamicResource SecondaryBrush}" 
-                                            Opacity="0.2"
-                                            RenderTransformOrigin="0.5,0.5"
-                                            Tag="{Binding Disabled}"
-                                            Loaded="Disabled_OnLoaded">
-                                    </Border>
+                                     <Border Name="DisabledBg"
+                                             CornerRadius="5"
+                                             Background="{DynamicResource SecondaryBrush}"
+                                             Opacity="0.2"
+                                             Style="{DynamicResource DisabledOverlayStyle}">
+                                     </Border>
                                     <Border Name="Disabled" 
                                             Width="{Binding ActualWidth,ElementName=ModTitle}" 
                                             Height="2" Margin="40 10 0 0" 
-                                            VerticalAlignment="Top" 
-                                            HorizontalAlignment="Left" 
-                                            Background="{DynamicResource SecondaryBrush}"
-                                            RenderTransformOrigin="0.5,0.5"
-                                            Tag="{Binding Disabled}"
-                                            Loaded="Disabled_OnLoaded">
-                                    </Border>
+                                             VerticalAlignment="Top"
+                                             HorizontalAlignment="Left"
+                                             Background="{DynamicResource SecondaryBrush}"
+                                             Style="{DynamicResource DisabledOverlayStyle}">
+                                     </Border>
                                     <Grid Name="Operate" Width="80"
                                           HorizontalAlignment="Right"
                                           VerticalAlignment="Center"
@@ -193,6 +189,34 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+             </Style>
+            <Style x:Key="DisabledOverlayStyle" TargetType="Border">
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"></Setter>
+                <Setter Property="RenderTransform">
+                    <Setter.Value>
+                        <ScaleTransform ScaleX="0"></ScaleTransform>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Disabled}" Value="True">
+                        <DataTrigger.EnterActions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                     To="1" Duration="0:0:0.2"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </DataTrigger.EnterActions>
+                        <DataTrigger.ExitActions>
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                     To="0" Duration="0:0:0.2"></DoubleAnimation>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </DataTrigger.ExitActions>
+                    </DataTrigger>
+                </Style.Triggers>
             </Style>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="./Style/ResourcePageStyle.xaml"></ResourceDictionary>
@@ -201,11 +225,13 @@
     </Page.Resources>
     <Grid>
         <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
-        <ScrollViewer Name="MainScrollViewer"
-                      Margin="0 0 2 0"
-                      Style="{StaticResource ResourcePageScrollViewer}">
-            <StackPanel Margin="0 0 20 0">
-                <Border Height="100" Style="{StaticResource RectByMargin}">
+        <Grid Name="MainScrollViewer" Margin="0 0 22 0" Opacity="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Height="100" Style="{StaticResource RectByMargin}">
                     <Grid>
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
                         <comp:TextButton Content="&#xe60c;" 
@@ -216,8 +242,8 @@
                                          VerticalAlignment="Top"
                                          ToolTip="刷新"></comp:TextButton>
                     </Grid>
-                </Border>
-                <Border Style="{StaticResource NoAnimRect}" Margin="20 5">
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource NoAnimRect}" Margin="20 5">
                     <Grid>
                         <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
                             <TextBlock HorizontalAlignment="Center" 
@@ -228,10 +254,15 @@
                         <Grid>
                             <Border Name="LimitListViewItemDescriptionBorder" Height="1" VerticalAlignment="Top" Margin="60 0 10 0"></Border>
                             <Border Name="LimitListViewItemDescriptionLimitBorder" Height="1" VerticalAlignment="Top" Margin="140 0 10 0"></Border>
-                            <ListView Name="ListView" 
+                            <ListView Name="ListView"
                                       ItemContainerStyle="{StaticResource ModsListViewStyle}"
                                       ItemsSource="{Binding Mods}"
-                                      Margin="0 10">
+                                      Margin="0 10"
+                                      ScrollViewer.CanContentScroll="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      VirtualizingPanel.IsVirtualizing="True"
+                                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                      VirtualizingPanel.VirtualizationMode="Recycling">
                                 <ListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingStackPanel VirtualizationMode="Recycling"/>
@@ -240,15 +271,14 @@
                             </ListView>
                         </Grid>
                     </Grid>
-                </Border>
-                <comp:Pagination x:Name="Pagination" 
-                                 Height="32" 
-                                 HorizontalAlignment="Right" 
-                                 Margin="0 0 40 0"
-                                 PageChanged="Pagination_OnPageChanged"></comp:Pagination>
-            </StackPanel>
-        </ScrollViewer>
+            </Border>
+            <comp:Pagination Grid.Row="2" x:Name="Pagination"
+                             Height="32"
+                             HorizontalAlignment="Right"
+                             Margin="0 0 40 0"
+                             PageChanged="Pagination_OnPageChanged"></comp:Pagination>
+        </Grid>
         <comp:Loading x:Name="LoadingBorder" Width="150" Height="100" PercentText="{Binding PercentText}"></comp:Loading>
-        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
+        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=ListView}"></comp:TopButton>
     </Grid>
 </Page>

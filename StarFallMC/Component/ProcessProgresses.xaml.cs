@@ -27,6 +27,9 @@ public partial class ProcessProgresses : UserControl {
     
     public void ChangeProcessStatus(string key,ProcessStatus status,bool ChangeNextStep) {
         var process = Progresses.FirstOrDefault(p => p.ProgressKey == key);
+        if (process == null) {
+            return;
+        }
         int processIndex = Progresses.IndexOf(process);
         if (processIndex != -1 && process.CurrentStep is int currentStep && currentStep < process.Progesses.Count && !process.IsComplete) {
             if (currentStep < 0) {
@@ -47,8 +50,11 @@ public partial class ProcessProgresses : UserControl {
         }
     }
 
-    public void ChangeProcessStatusWithIndex(string key,ProcessStatus status,int progressIndex, string progressName = null) {
+    public void ChangeProcessStatusWithIndex(string key,ProcessStatus status,int progressIndex, string? progressName = null) {
         var process = Progresses.FirstOrDefault(p => p.ProgressKey == key);
+        if (process == null) {
+            return;
+        }
         int processIndex = Progresses.IndexOf(process);
         if (processIndex != -1) {
             Progresses[processIndex].Progesses[progressIndex].Status = status;
@@ -60,6 +66,9 @@ public partial class ProcessProgresses : UserControl {
     
     public void ResetProcessStatus(string key, bool autoDoingFirst = false) {
         var process = Progresses.FirstOrDefault(p => p.ProgressKey == key);
+        if (process == null) {
+            return;
+        }
         int processIndex = Progresses.IndexOf(process);
         if (processIndex != -1) {
             process.IsComplete = false;
@@ -135,7 +144,7 @@ public partial class ProcessProgresses : UserControl {
 
     private void ProcessDelete_OnClick(object sender, RoutedEventArgs e) {
         var button = sender as TextButton;
-        string key = button?.Tag?.ToString();
+        string? key = button?.Tag?.ToString();
         if (string.IsNullOrEmpty(key)) {
             return;
         }

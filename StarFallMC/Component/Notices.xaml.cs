@@ -9,11 +9,16 @@ namespace StarFallMC.Component;
 
 public partial class Notices : UserControl {
     private string SettingFile = $"{DirFileUtil.LauncherSettingsDir}/Notices.json";
-    public static Action RefreshNotices;
+    private static WeakReference<Notices>? _current;
+    public static void RefreshAll() {
+        if (_current != null && _current.TryGetTarget(out var notices)) {
+            notices.Dispatcher.BeginInvoke(notices.refreshNotices);
+        }
+    }
     public Notices() {
         InitializeComponent();
         InitNotices();
-        RefreshNotices = refreshNotices;
+        _current = new WeakReference<Notices>(this);
     }
 
     public void InitNotices() {

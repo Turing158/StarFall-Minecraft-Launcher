@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -7,52 +8,59 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using StarFallMC.Component;
 using StarFallMC.Entity;
 using StarFallMC.Entity.Enum;
 using StarFallMC.Util;
+using StarFallMC.Navigation;
+using StarFallMC.Services;
+using StarFallMC.Services.Minecraft;
+using StarFallMC.Services.Resources;
 using MessageBox = StarFallMC.Component.MessageBox;
 using MessageBoxResult = StarFallMC.Entity.Enum.MessageBoxResult;
 
 namespace StarFallMC;
 
-public partial class Home : Page {
+public partial class Home : Page, IPageLifecycle {
 
     private ViewModel viewModel = new ViewModel();
+    private readonly MinecraftServiceContainer minecraftServices;
+    private readonly LauncherUiCoordinator uiCoordinator;
 
     private Storyboard Downloading;
+    private readonly DispatcherTimer backgroundResizeTimer;
+    private readonly Dictionary<string, long> resourceImageVersions = new();
+    private CancellationTokenSource backgroundLoadCts = new();
+    private CancellationTokenSource resourceImageLoadCts = new();
+    private Task backgroundReloadTask = Task.CompletedTask;
+    private Task resourceVersionChangeTask = Task.CompletedTask;
+    private Task gameIconLoadTask = Task.CompletedTask;
+    private Task playerSkinLoadTask = Task.CompletedTask;
+    private Window? hostWindow;
+    private string? loadedBackgroundRequestSource;
+    private int loadedBackgroundWidth;
+    private int loadedBackgroundHeight;
+    private long backgroundRequestVersion;
     
-    public static Action<MinecraftItem> SetGameInfo;
-    public static Action<Player> SetPlayer;
-    public static Action<bool> HideLaunching;
-    public static Action<MinecraftItem> ErrorLaunch;
-    public static Action<bool> DownloadState;
-    public static Action<string> StartingState;
-    public static Action SettingBackground;
-    public static Func<ViewModel> GetViewModel;
-    public static Action<bool> SwitchHomeNotice;
-    public static Action<bool> SwitchDownloadBtnShow;
-    public static bool GameStarting = false;
+    internal bool IsGameStarting { get; private set; }
     
-    public Home() {
+    public Home(LauncherUiCoordinator? uiCoordinator = null, MinecraftServiceContainer? services = null) {
+        this.uiCoordinator = uiCoordinator ?? new LauncherUiCoordinator();
+        minecraftServices = services ?? MinecraftServices.Current;
         
         InitializeComponent();
         
         DataContext = viewModel;
 
+        backgroundResizeTimer = new DispatcherTimer(DispatcherPriority.Background) {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
+        backgroundResizeTimer.Tick += BackgroundResizeTimer_OnTick;
+
         viewModel.PlayerName = "";
         
-        SetGameInfo = setGameInfo;
-        SetPlayer = setPlayerFunc;
-        HideLaunching = hideLaunching;
-        ErrorLaunch = errorLaunch;
-        DownloadState = downloadState;
-        StartingState = startingState;
-        SettingBackground = settingBackground;
-        GetViewModel = getViewModel;
-        SwitchHomeNotice = switchHomeNotice;
-        SwitchDownloadBtnShow = switchDownloadBtnShow;
+        this.uiCoordinator.Register(this);
         
         
         Downloading = (Storyboard)FindResource("Downloading");
@@ -60,28 +68,30 @@ public partial class Home : Page {
         DownloadBtn.Visibility =
             PropertiesUtil.launcherArgs.ShowDownloadBtn ? Visibility.Visible : Visibility.Collapsed;
         
+        var savedGame = ApplicationState.GameSelection.CurrentGame;
+        setGameInfo(savedGame is { Name: { Length: > 0 } } ? savedGame : null, notifyResourceChange: false);
+
         var (player, players) = PropertiesUtil.loadPlayers();
         setPlayerFunc(player);
-        settingBackground();
         
     }
     
     public class ViewModel : INotifyPropertyChanged {
         
-        private string _playerName;
+        private string _playerName = string.Empty;
         public string PlayerName {
             get => _playerName;
             set => SetField(ref _playerName, value);
         }
 
-        private MinecraftItem _currentGame;
+        private MinecraftItem _currentGame = new("未选择版本", MinecraftLoader.Unknown, string.Empty, "/assets/DefaultGameIcon/unknowGame.png");
         public MinecraftItem CurrentGame {
             get => _currentGame;
             set => SetField(ref _currentGame, value);
         }
         
-        private Player _currentPlayer;
-        public Player CurrentPlayer {
+        private Player? _currentPlayer;
+        public Player? CurrentPlayer {
             get => _currentPlayer;
             set => SetField(ref _currentPlayer, value);
         }
@@ -106,21 +116,16 @@ public partial class Home : Page {
         }
     }
 
-    private ViewModel getViewModel() {
-        return viewModel;
+    private async void CurrentGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        await uiCoordinator.NavigateSubPageAsync("SelectGame", "Minecraft - 我的世界");
+    }
+
+    private async void CurrentPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+        await uiCoordinator.NavigateSubPageAsync("PlayerManage", "Players - 玩家");
     }
     
 
-    private void CurrentGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        MainWindow.SubFrameNavigate?.Invoke("SelectGame", "Minecraft - 我的世界");
-    }
-
-    private void CurrentPlayer_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
-        MainWindow.SubFrameNavigate?.Invoke("PlayerManage", "Players - 玩家");
-    }
-    
-
-    private void setGameInfo(MinecraftItem item) {
+    private void setGameInfo(MinecraftItem? item, bool notifyResourceChange = true) {
         string iconPath = "/assets/DefaultGameIcon/unknowGame.png";
         if (item == null) {
             GameName.Text = "未选择版本";
@@ -131,12 +136,18 @@ public partial class Home : Page {
             viewModel.CurrentGame = item;
         }
         if (!iconPath.Contains(":")) {
-            iconPath = "pack://application:,,,/;component"+iconPath;
+            iconPath = "pack://application:,,,/StarFallMC;component"+iconPath;
         }
-        ResourceUtil.ClearLocalResources();
-        ResourcePage.ChangeVersionAction?.Invoke();
+        ResourceServices.Current.Cache.Clear();
+        ApplicationState.GameSelection.CurrentGame = viewModel.CurrentGame;
+        if (notifyResourceChange) {
+            resourceVersionChangeTask = uiCoordinator.ChangeResourceVersionAsync();
+        }
         
-        updateBitmapImage( "CurrentGameIcon",iconPath);
+        gameIconLoadTask = UpdateBitmapImageAsync(
+            "CurrentGameIcon",
+            iconPath,
+            "pack://application:,,,/StarFallMC;component/assets/DefaultGameIcon/unknowGame.png");
         Console.WriteLine(item);
     }
     
@@ -152,27 +163,54 @@ public partial class Home : Page {
             skin = player.Skin;
             viewModel.CurrentPlayer = player;
         }
-        updateBitmapImage("PlayerSkin",skin);
+        playerSkinLoadTask = UpdateBitmapImageAsync("PlayerSkin", skin, PlayerManage.DefaultSKin);
     }
     
-    private void updateBitmapImage(string resourceKey, string uri) {
-        if (uri.Contains(":") && !uri.StartsWith("pack") && !uri.StartsWith("http")) {
-            if (!File.Exists(uri)) {
-                uri = "pack://application:,,,/;component/assets/DefaultGameIcon/unknowGame.png";
+    private async Task UpdateBitmapImageAsync(string resourceKey, string source, string fallbackSource) {
+        var requestVersion = resourceImageVersions.TryGetValue(resourceKey, out var currentVersion)
+            ? currentVersion + 1
+            : 1;
+        resourceImageVersions[resourceKey] = requestVersion;
+        source = ResolveImageSource(source, fallbackSource);
+
+        try {
+            var image = await ImageLoader.LoadSourceAsync(source, 256, 256, resourceImageLoadCts.Token);
+            if (ImageLoader.IsPlaceholder(image) && !string.Equals(source, fallbackSource, StringComparison.Ordinal)) {
+                image = await ImageLoader.LoadSourceAsync(
+                    fallbackSource,
+                    256,
+                    256,
+                    resourceImageLoadCts.Token);
+            }
+
+            if (!resourceImageLoadCts.IsCancellationRequested &&
+                resourceImageVersions.TryGetValue(resourceKey, out var latestVersion) &&
+                latestVersion == requestVersion &&
+                !ImageLoader.IsPlaceholder(image)) {
+                Application.Current.Resources[resourceKey] = image;
             }
         }
-        BitmapImage newImage = new BitmapImage();
-        newImage.BeginInit();
-        newImage.UriSource = new Uri(uri, UriKind.RelativeOrAbsolute);
-        newImage.CacheOption = BitmapCacheOption.OnLoad;
-        newImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-        newImage.EndInit();
-        Application.Current.Resources[resourceKey] = newImage;
+        catch (OperationCanceledException) {
+        }
+    }
+
+    private static string ResolveImageSource(string? source, string fallbackSource) {
+        if (string.IsNullOrWhiteSpace(source)) {
+            return fallbackSource;
+        }
+
+        if (Uri.TryCreate(source, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == "pack" || uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)) {
+            return source;
+        }
+
+        return Path.IsPathRooted(source) && !File.Exists(source) ? fallbackSource : source;
     }
     
-    private CancellationTokenSource minecraftStartCts;
-    private void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
-        if (!GameStarting) {
+    private CancellationTokenSource? minecraftStartCts;
+    private Task<MinecraftLaunchResult> minecraftStartTask = Task.FromResult(new MinecraftLaunchResult(true, false));
+    private async void StartGameBtn_OnClick(object sender, RoutedEventArgs e) {
+        if (!IsGameStarting) {
             bool flag = true;
             StringBuilder tips = new StringBuilder();
             if (viewModel.CurrentGame == null || viewModel.CurrentGame.Name == "未选择版本") {
@@ -191,43 +229,81 @@ public partial class Home : Page {
             if (!string.IsNullOrEmpty(tips.ToString())) {
                 MessageTips.Show(tips.ToString(), MessageTips.MessageType.Warning);
             }
-            if (MinecraftUtil.GetJavaVersions().Count == 0) {
+            if (minecraftServices.Java.DiscoverInstalled().Count == 0 && ApplicationState.GameSettings.JavaVersions.Count <= 1) {
                 MessageBox.Show("未检测到系统安装的Java版本。\n    1.请前往设置或Oracle官网下载！\n    2.前往设置自行添加Java版本", "未检测到Java版本");
                 flag = false;
             }
             if (!flag) {
                 return;
             }
-            minecraftStartCts = new CancellationTokenSource();
-            GameStarting = true;
+            if (viewModel.CurrentPlayer is not { } currentPlayer) {
+                return;
+            }
+            if (viewModel.CurrentGame is not { } currentGame) {
+                return;
+            }
+            await CancelMinecraftStartAsync();
+            var currentCts = new CancellationTokenSource();
+            minecraftStartCts = currentCts;
+            IsGameStarting = true;
             StartingBorder.Visibility = Visibility.Visible;
             ((Storyboard)FindResource("Starting")).Begin(this, true);
             HomeTips.Show();
             Console.WriteLine("开始游戏");
-            MinecraftUtil.StartMinecraft(viewModel.CurrentGame, viewModel.CurrentPlayer,cancellationToken:minecraftStartCts.Token);
+            currentPlayer.AccessToken = "00000FFFFFFFFFFFFFFFFFFFFFF1414F";
+            string currentDir = DirFileUtil.GetParentPath(DirFileUtil.GetParentPath(currentGame.Path));
+            minecraftStartTask = minecraftServices.Launch.StartAsync(
+                new MinecraftLaunchRequest(
+                    currentGame,
+                    currentPlayer,
+                    ApplicationState.GameSettings,
+                    currentDir,
+                    PropertiesUtil.LauncherName,
+                    PropertiesUtil.LauncherVersion,
+                    AuthenticateAsync: async (player, token) => (Player?)await LoginUtil.RefreshMicrosoftToken(player, token)),
+                currentCts.Token);
+            try {
+                var result = await minecraftStartTask;
+                if (!result.Success && !result.Cancelled) await HideLaunchingAsync(false);
+            }
+            catch (Exception exception) {
+                Console.WriteLine(exception);
+                await HideLaunchingAsync(false);
+            }
+            finally {
+                if (ReferenceEquals(minecraftStartCts, currentCts)) {
+                    minecraftStartCts = null;
+            minecraftStartTask = Task.FromResult(new MinecraftLaunchResult(true, false));
+                    currentCts.Dispose();
+                }
+            }
         }
     }
 
-    private void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
-        hideLaunching(true);
+    private async void StartingBtn_OnClick(object sender, RoutedEventArgs e) {
+        await HideLaunchingAsync(true);
     }
 
-    private void hideLaunching(bool isStop = false) {
-        Dispatcher.Invoke(() => {
+    private async Task HideLaunchingAsync(bool isStop = false) {
+        if (isStop) {
+            await CancelMinecraftStartAsync();
+        }
+
+        await Dispatcher.InvokeAsync(() => {
             try {
-                GameStarting = false;
+                IsGameStarting = false;
                 StartingBorder.Visibility = Visibility.Collapsed;
                 HomeTips.Hide();
                 ((Storyboard)FindResource("Started")).Begin(this, true);
-                if (isStop) {
-                    minecraftStartCts?.Cancel();
-                    MinecraftUtil.StopMinecraft();
-                }
             }
             catch (Exception e){
                 Console.WriteLine(e);
             }
         });
+
+        if (isStop) {
+            await minecraftServices.Launch.StopAsync();
+        }
     }
 
     private void errorLaunch(MinecraftItem item) {
@@ -247,7 +323,7 @@ public partial class Home : Page {
     }
 
     private void DownloadBtn_OnClick(object sender, RoutedEventArgs e) {
-        MainWindow.DownloadPageShow?.Invoke();
+        uiCoordinator.ShowDownloadPage();
         DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty,mouseUpAnimation);
         DownloadBtn.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty,mouseUpAnimation);
     }
@@ -268,47 +344,206 @@ public partial class Home : Page {
         });
     }
 
-    private void Home_OnLoaded(object sender, RoutedEventArgs e) {
-        settingBackground();
+    private async void Home_OnLoaded(object sender, RoutedEventArgs e) {
+        AttachHostWindow();
+        backgroundReloadTask = ReloadBackgroundAsync(force: false);
+        await backgroundReloadTask;
     }
 
-    private void settingBackground() {
-        var bgPath = PropertiesUtil.launcherArgs.BgPath;
-        var bgType = PropertiesUtil.launcherArgs.BgType;
-        BitmapImage bgImage = new BitmapImage();
-        bgImage.BeginInit();
-        if (bgType == "default") {
-            string defaultPath = $"{DirFileUtil.LauncherSettingsDir}/bg";
-            string[] bgSuffix = { ".jpg", ".jpeg", ".png" };
-            foreach (var i in bgSuffix) {
-                string path = $"{defaultPath}{i}";
-                if (File.Exists(path)) {
-                    bgImage.UriSource = new Uri(path, UriKind.RelativeOrAbsolute);
-                    break;
-                }
-            }
-        }
-        else if (bgType == "local") {
-            if (File.Exists(bgPath)) {
-                bgImage.UriSource = new Uri(bgPath, UriKind.RelativeOrAbsolute);
-            }
-        }
-        else if (bgType == "network") {
-            if (!string.IsNullOrEmpty(bgPath)) {
-                bgImage.UriSource = new Uri(bgPath, UriKind.RelativeOrAbsolute);
-            }
-        }
-        
-        if (bgImage.UriSource != null) {
-            bgImage.CacheOption = BitmapCacheOption.OnLoad;
-            bgImage.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-            bgImage.EndInit();
-            Bg.Background = new ImageBrush(bgImage);
-        }
-        else {
-            Bg.Background = null;
+    private void Home_OnSizeChanged(object sender, SizeChangedEventArgs e) {
+        if (IsLoaded) {
+            ScheduleBackgroundResize();
         }
     }
+
+    private void HomeWindow_OnDpiChanged(object sender, DpiChangedEventArgs e) {
+        ScheduleBackgroundResize();
+    }
+
+    private async void BackgroundResizeTimer_OnTick(object? sender, EventArgs e) {
+        backgroundResizeTimer.Stop();
+        backgroundReloadTask = ReloadBackgroundAsync(force: false);
+        await backgroundReloadTask;
+    }
+
+    private void ScheduleBackgroundResize() {
+        backgroundResizeTimer.Stop();
+        backgroundResizeTimer.Start();
+    }
+
+    private async Task ReloadBackgroundAsync(bool force) {
+        var requestedSource = ResolveConfiguredBackgroundSource();
+        if (string.IsNullOrWhiteSpace(requestedSource)) {
+            CancelBackgroundLoad();
+            Bg.Background = null;
+            loadedBackgroundRequestSource = null;
+            loadedBackgroundWidth = 0;
+            loadedBackgroundHeight = 0;
+            return;
+        }
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var target = CalculateBackgroundDecodeSize(
+            Bg.ActualWidth > 0 ? Bg.ActualWidth : ActualWidth,
+            Bg.ActualHeight > 0 ? Bg.ActualHeight : ActualHeight,
+            dpi.DpiScaleX,
+            dpi.DpiScaleY);
+        if (target.Width <= 0 || target.Height <= 0) {
+            return;
+        }
+
+        if (!force &&
+            string.Equals(requestedSource, loadedBackgroundRequestSource, StringComparison.Ordinal) &&
+            !ShouldReloadBackground(
+                loadedBackgroundWidth,
+                loadedBackgroundHeight,
+                target.Width,
+                target.Height)) {
+            return;
+        }
+
+        CancelBackgroundLoad();
+        var token = backgroundLoadCts.Token;
+        var requestVersion = Interlocked.Increment(ref backgroundRequestVersion);
+        try {
+            var image = await ImageLoader.LoadBackgroundAsync(
+                requestedSource,
+                target.Width,
+                target.Height,
+                Math.Max(dpi.DpiScaleX, dpi.DpiScaleY),
+                token);
+
+            if (ImageLoader.IsPlaceholder(image)) {
+                var defaultSource = FindDefaultBackgroundSource();
+                if (!string.IsNullOrWhiteSpace(defaultSource) &&
+                    !string.Equals(defaultSource, requestedSource, StringComparison.OrdinalIgnoreCase)) {
+                    image = await ImageLoader.LoadBackgroundAsync(
+                        defaultSource,
+                        target.Width,
+                        target.Height,
+                        Math.Max(dpi.DpiScaleX, dpi.DpiScaleY),
+                        token);
+                }
+            }
+
+            if (token.IsCancellationRequested ||
+                requestVersion != Volatile.Read(ref backgroundRequestVersion) ||
+                ImageLoader.IsPlaceholder(image)) {
+                if (!token.IsCancellationRequested && ImageLoader.IsPlaceholder(image)) {
+                    Debug.WriteLine("Background image load failed; keeping the current background.");
+                }
+                return;
+            }
+
+            var brush = new ImageBrush(image);
+            brush.Freeze();
+            Bg.Background = brush;
+            loadedBackgroundRequestSource = requestedSource;
+            loadedBackgroundWidth = target.Width;
+            loadedBackgroundHeight = target.Height;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) {
+        }
+    }
+
+    private string? ResolveConfiguredBackgroundSource() {
+        var defaultSource = FindDefaultBackgroundSource();
+        var backgroundType = PropertiesUtil.launcherArgs.BgType;
+        var backgroundPath = PropertiesUtil.launcherArgs.BgPath;
+        if (backgroundType == "default") {
+            return defaultSource;
+        }
+
+        if (backgroundType == "local") {
+            return !string.IsNullOrWhiteSpace(backgroundPath) && File.Exists(backgroundPath)
+                ? backgroundPath
+                : defaultSource;
+        }
+
+        if (backgroundType == "network" &&
+            Uri.TryCreate(backgroundPath, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)) {
+            return backgroundPath;
+        }
+
+        return defaultSource;
+    }
+
+    private static string? FindDefaultBackgroundSource() {
+        var defaultPath = Path.Combine(DirFileUtil.LauncherSettingsDir, "bg");
+        foreach (var extension in new[] { ".jpg", ".jpeg", ".png" }) {
+            var path = defaultPath + extension;
+            if (File.Exists(path)) {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    private void CancelBackgroundLoad() {
+        backgroundLoadCts.Cancel();
+        backgroundLoadCts.Dispose();
+        backgroundLoadCts = new CancellationTokenSource();
+    }
+
+    private void AttachHostWindow() {
+        var window = Window.GetWindow(this);
+        if (ReferenceEquals(window, hostWindow)) {
+            return;
+        }
+
+        DetachHostWindow();
+        hostWindow = window;
+        if (hostWindow != null) {
+            hostWindow.DpiChanged += HomeWindow_OnDpiChanged;
+        }
+    }
+
+    private void DetachHostWindow() {
+        if (hostWindow != null) {
+            hostWindow.DpiChanged -= HomeWindow_OnDpiChanged;
+            hostWindow = null;
+        }
+    }
+
+    internal static BackgroundDecodeSize CalculateBackgroundDecodeSize(
+        double widthInDips,
+        double heightInDips,
+        double dpiScaleX,
+        double dpiScaleY) {
+        if (widthInDips <= 0 || heightInDips <= 0) {
+            return new BackgroundDecodeSize(0, 0);
+        }
+
+        var width = Math.Max(1, (int)Math.Ceiling(widthInDips * Math.Max(1, dpiScaleX)));
+        var height = Math.Max(1, (int)Math.Ceiling(heightInDips * Math.Max(1, dpiScaleY)));
+        const int maximumEdge = 4096;
+        const long maximumPixels = 16_000_000;
+        var scale = Math.Min(1d, (double)maximumEdge / Math.Max(width, height));
+        if ((long)width * height * scale * scale > maximumPixels) {
+            scale = Math.Sqrt((double)maximumPixels / ((long)width * height));
+        }
+
+        return new BackgroundDecodeSize(
+            Math.Max(1, (int)Math.Floor(width * scale)),
+            Math.Max(1, (int)Math.Floor(height * scale)));
+    }
+
+    internal static bool ShouldReloadBackground(
+        int currentWidth,
+        int currentHeight,
+        int requestedWidth,
+        int requestedHeight) {
+        if (currentWidth <= 0 || currentHeight <= 0) {
+            return true;
+        }
+
+        return Math.Abs(requestedWidth - currentWidth) / (double)currentWidth >= 0.25 ||
+               Math.Abs(requestedHeight - currentHeight) / (double)currentHeight >= 0.25;
+    }
+
+    internal readonly record struct BackgroundDecodeSize(int Width, int Height);
     
     private DoubleAnimation mouseDownAnimation = new() {
         To = 0.9,
@@ -345,12 +580,13 @@ public partial class Home : Page {
         Duration = TimeSpan.FromMilliseconds(200),
     };
 
-    private Timer DownloadBtnShowTimer;
+    private DispatcherTimer? DownloadBtnShowTimer;
     private void switchDownloadBtnShow(bool flag) {
         this.Dispatcher.BeginInvoke(() => {
             DownloadBtn.BeginAnimation(OpacityProperty,flag ? ToOneAnimation : ToZeroAnimation);
             if (DownloadBtnShowTimer != null) {
-                DownloadBtnShowTimer.Dispose();
+                DownloadBtnShowTimer.Stop();
+                DownloadBtnShowTimer.Tick -= DownloadBtnShowTimer_OnTick;
                 DownloadBtnShowTimer = null;
             }
 
@@ -359,12 +595,93 @@ public partial class Home : Page {
                 
             }
             else {
-                DownloadBtnShowTimer = new Timer(s => {
-                    this.Dispatcher.BeginInvoke(() => {
-                        DownloadBtn.Visibility = Visibility.Collapsed;
-                    });
-                },null,300,0);
+                DownloadBtnShowTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher) {
+                    Interval = TimeSpan.FromMilliseconds(300)
+                };
+                DownloadBtnShowTimer.Tick += DownloadBtnShowTimer_OnTick;
+                DownloadBtnShowTimer.Start();
             }
         });
+    }
+
+    private void DownloadBtnShowTimer_OnTick(object? sender, EventArgs e) {
+        if (DownloadBtnShowTimer != null) {
+            DownloadBtnShowTimer.Stop();
+            DownloadBtnShowTimer.Tick -= DownloadBtnShowTimer_OnTick;
+            DownloadBtnShowTimer = null;
+        }
+        DownloadBtn.Visibility = Visibility.Collapsed;
+    }
+
+    internal void SetGameInfoFromService(MinecraftItem? item) => setGameInfo(item);
+    internal void SetPlayerFromService(Player player) => setPlayerFunc(player);
+    internal Task HideLaunchingFromServiceAsync(bool isStop) => HideLaunchingAsync(isStop);
+    internal void ErrorLaunchFromService(MinecraftItem item) => errorLaunch(item);
+    internal void SetDownloadStateFromService(bool downloading) => downloadState(downloading);
+    internal void SetStartingStateFromService(string state) => startingState(state);
+    internal void SettingBackgroundFromService() => backgroundReloadTask = ReloadBackgroundAsync(force: true);
+    internal void SwitchHomeNoticeFromService(bool visible) => switchHomeNotice(visible);
+    internal void SwitchDownloadButtonFromService(bool visible) => switchDownloadBtnShow(visible);
+
+    public async Task ActivateAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (resourceImageLoadCts.IsCancellationRequested) {
+            resourceImageLoadCts.Dispose();
+            resourceImageLoadCts = new CancellationTokenSource();
+        }
+        uiCoordinator.Register(this);
+        AttachHostWindow();
+        backgroundReloadTask = ReloadBackgroundAsync(force: false);
+        await backgroundReloadTask;
+    }
+
+    public async Task DeactivateAsync()
+    {
+        await CancelMinecraftStartAsync();
+        if (DownloadBtnShowTimer != null) {
+            DownloadBtnShowTimer.Stop();
+            DownloadBtnShowTimer.Tick -= DownloadBtnShowTimer_OnTick;
+            DownloadBtnShowTimer = null;
+        }
+        backgroundResizeTimer.Stop();
+        CancelBackgroundLoad();
+        resourceImageLoadCts.Cancel();
+        await AwaitOwnedTaskAsync(backgroundReloadTask);
+        await AwaitOwnedTaskAsync(resourceVersionChangeTask);
+        await AwaitOwnedTaskAsync(gameIconLoadTask);
+        await AwaitOwnedTaskAsync(playerSkinLoadTask);
+        DetachHostWindow();
+        uiCoordinator.Unregister(this);
+    }
+
+    private async Task CancelMinecraftStartAsync() {
+        var cts = minecraftStartCts;
+        var task = minecraftStartTask;
+        minecraftStartCts = null;
+                    minecraftStartTask = Task.FromResult(new MinecraftLaunchResult(true, false));
+        cts?.Cancel();
+        try {
+            await task;
+        }
+        catch (OperationCanceledException) {
+        }
+        catch (Exception exception) {
+            Console.WriteLine(exception);
+        }
+        finally {
+            cts?.Dispose();
+        }
+    }
+
+    private static async Task AwaitOwnedTaskAsync(Task task) {
+        try {
+            await task;
+        }
+        catch (OperationCanceledException) {
+        }
+        catch (Exception exception) {
+            Console.WriteLine(exception);
+        }
     }
 }

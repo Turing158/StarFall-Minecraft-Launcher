@@ -73,7 +73,7 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             _leftMask.Height = _leftPresenter.ActualHeight;
             _rightMask.Width = _rightPresenter.ActualWidth;
             _rightMask.Height = _rightPresenter.ActualHeight;
-            ThemeUtil.updateColor += initColor;
+            ThemeUtil.AddColorChangedHandler(OnThemeColorChanged);
             if (IsChecked.Value) {
                 moveRight();
             }
@@ -82,7 +82,7 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             }
         };
         Unloaded += (sender, args) => {
-            ThemeUtil.updateColor -= initColor;
+            ThemeUtil.RemoveColorChangedHandler(OnThemeColorChanged);
         };
         isInit = false;
     }
@@ -96,6 +96,8 @@ public class ToggleButton : System.Windows.Controls.Primitives.ToggleButton {
             rightContentTextBlock.Foreground = ThemeUtil.SecondaryBrush;
         }
     }
+
+    private void OnThemeColorChanged(object? sender, EventArgs e) => initColor();
     
     private void initAnimation(){
         ScaleAnim = new () {

@@ -60,12 +60,19 @@ public class MaskControl : UserControl {
             To = 0,
             Duration = TimeSpan.FromSeconds(0.2)
         };
+        MaskHideAnim.Completed += MaskHideAnim_OnCompleted;
+        Unloaded += MaskControl_OnUnloaded;
     }
 
     public override void OnApplyTemplate() {
         base.OnApplyTemplate();
+        if (_mask != null) {
+            _mask.MouseLeftButtonDown -= Mask_OnMouseLeftButtonDown;
+        }
         _mask = Template.FindName("Mask", this) as Border;
-        _mask.MouseLeftButtonDown += Mask_OnMouseLeftButtonDown;
+        if (_mask != null) {
+            _mask.MouseLeftButtonDown += Mask_OnMouseLeftButtonDown;
+        }
     }
 
     public void Show(double fadeIn = -1) {
@@ -82,11 +89,18 @@ public class MaskControl : UserControl {
         if (fadeIn >= 0) {
             MaskHideAnim.Duration = TimeSpan.FromSeconds(fadeIn);
         }
-        MaskHideAnim.Completed += (s, e) => {
-            Visibility = Visibility.Collapsed;
-        };
         BeginAnimation(OpacityProperty, MaskHideAnim);
         IsHitTestVisible = false;
+    }
+
+    private void MaskHideAnim_OnCompleted(object? sender, EventArgs e) {
+        if (!IsHitTestVisible) {
+            Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void MaskControl_OnUnloaded(object sender, RoutedEventArgs e) {
+        BeginAnimation(OpacityProperty, null);
     }
 
     private void Mask_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e) {

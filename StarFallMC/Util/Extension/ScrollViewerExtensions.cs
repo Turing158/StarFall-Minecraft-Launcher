@@ -1,10 +1,35 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
 
 namespace StarFallMC.Util.Extension;
 public static class ScrollViewerExtensions {
+
+    public static ScrollViewer? FindScrollViewer(DependencyObject? root) {
+        if (root is null) {
+            return null;
+        }
+
+        if (root is ScrollViewer scrollViewer) {
+            return scrollViewer;
+        }
+
+        if (root is FrameworkElement element) {
+            element.ApplyTemplate();
+        }
+
+        var childCount = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < childCount; i++) {
+            var result = FindScrollViewer(VisualTreeHelper.GetChild(root, i));
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return null;
+    }
     
     public static readonly DependencyProperty SmoothScrollProperty =
         DependencyProperty.RegisterAttached(

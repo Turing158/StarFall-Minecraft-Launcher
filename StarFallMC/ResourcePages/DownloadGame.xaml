@@ -8,9 +8,7 @@
       xmlns:util="clr-namespace:StarFallMC.Util"
       xmlns:extension="clr-namespace:StarFallMC.Util.Extension"
       mc:Ignorable="d"
-      Title="DownloadGame" MinHeight="380" MinWidth="600"
-      Loaded="DownloadGame_OnLoaded"
-      Unloaded="DownloadGame_OnUnloaded">
+      Title="DownloadGame" MinHeight="380" MinWidth="600">
     <Page.Resources>
         <ResourceDictionary>
             <Style x:Key="ClassTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">

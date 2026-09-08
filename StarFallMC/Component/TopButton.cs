@@ -6,12 +6,13 @@ using StarFallMC.Util.Extension;
 namespace StarFallMC.Component;
 
 public class TopButton : ButtonBase{
-    public ScrollViewer BindingScrollViewer {
-        get => (ScrollViewer)GetValue(BindingScrollViewerProperty);
+    public FrameworkElement? BindingScrollViewer {
+        get => (FrameworkElement?)GetValue(BindingScrollViewerProperty);
         set => SetValue(BindingScrollViewerProperty, value);
     }
     public static readonly DependencyProperty BindingScrollViewerProperty =
-        DependencyProperty.Register(nameof(BindingScrollViewer), typeof(ScrollViewer), typeof(TopButton), new PropertyMetadata(null));
+        DependencyProperty.Register(nameof(BindingScrollViewer), typeof(FrameworkElement), typeof(TopButton),
+            new PropertyMetadata(null, OnBindingScrollViewerChanged));
     
     public double ShowToOffsetY {
         get => (double)GetValue(ShowToOffsetYProperty);
@@ -30,6 +31,7 @@ public class TopButton : ButtonBase{
     private DoubleAnimation showAnimation;
     private DoubleAnimation hideAnimation;
     private bool isVisible = false;
+    private ScrollViewer? resolvedScrollViewer;
     public TopButton() {
         Opacity = 0;
         Visibility = Visibility.Collapsed;
@@ -53,22 +55,43 @@ public class TopButton : ButtonBase{
     }
     
     private void LoadedHandle(object sender, RoutedEventArgs e) {
-        if (BindingScrollViewer is null) return;
-        BindingScrollViewer.ScrollChanged += ScrollChangedHandle;
+        RebindScrollViewer();
+        Dispatcher.BeginInvoke(RebindScrollViewer);
     }
 
     private void UnloadedHandle(object sender, RoutedEventArgs e) {
-        if (BindingScrollViewer is null) return;
-        BindingScrollViewer.ScrollChanged -= ScrollChangedHandle;
+        UnbindScrollViewer();
+    }
+
+    private static void OnBindingScrollViewerChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        if (d is TopButton button && button.IsLoaded) {
+            button.RebindScrollViewer();
+        }
+    }
+
+    private void RebindScrollViewer() {
+        UnbindScrollViewer();
+        resolvedScrollViewer = BindingScrollViewer as ScrollViewer
+            ?? ScrollViewerExtensions.FindScrollViewer(BindingScrollViewer);
+        if (resolvedScrollViewer != null) {
+            resolvedScrollViewer.ScrollChanged += ScrollChangedHandle;
+        }
+    }
+
+    private void UnbindScrollViewer() {
+        if (resolvedScrollViewer != null) {
+            resolvedScrollViewer.ScrollChanged -= ScrollChangedHandle;
+            resolvedScrollViewer = null;
+        }
     }
     
     private void ScrollChangedHandle(object sender, ScrollChangedEventArgs e) {
-        if (BindingScrollViewer is null) return;
-        if (BindingScrollViewer.VerticalOffset >= ShowToOffsetY) {
+        if (resolvedScrollViewer is null) return;
+        if (resolvedScrollViewer.VerticalOffset >= ShowToOffsetY) {
             Visibility = Visibility.Visible;
             isVisible = true;
             BeginAnimation(OpacityProperty, showAnimation);
-        } else if (isVisible && BindingScrollViewer.VerticalOffset < CloseToOffsetY) {
+        } else if (isVisible && resolvedScrollViewer.VerticalOffset < CloseToOffsetY) {
             isVisible = false;
             BeginAnimation(OpacityProperty, hideAnimation);
         }
@@ -76,9 +99,9 @@ public class TopButton : ButtonBase{
 
     protected override void OnClick() {
         base.OnClick();
-        if (BindingScrollViewer is null) return;
-        BindingScrollViewer.BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, new DoubleAnimation() {
-            From = BindingScrollViewer.VerticalOffset,
+        if (resolvedScrollViewer is null) return;
+        resolvedScrollViewer.BeginAnimation(ScrollViewerBehavior.VerticalOffsetProperty, new DoubleAnimation() {
+            From = resolvedScrollViewer.VerticalOffset,
             To = 0,
             Duration = TimeSpan.FromMilliseconds(200),
             EasingFunction = new CubicEase() 

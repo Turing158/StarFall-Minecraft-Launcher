@@ -48,7 +48,7 @@ public class Slider : System.Windows.Controls.Slider{
         _border = Template.FindName("Border", this) as Border;
         initColor();
         initAnimation();
-        ThemeUtil.updateColor += OnThemeColorChanged;
+        ThemeUtil.AddColorChangedHandler(OnThemeColorChanged);
         Unloaded += OnUnloaded;
         IsEnabledChanged += (sender, args) => {
             if (IsEnabled) {
@@ -61,11 +61,11 @@ public class Slider : System.Windows.Controls.Slider{
     }
     
     private void OnUnloaded(object sender, RoutedEventArgs e) {
-        ThemeUtil.updateColor -= OnThemeColorChanged;
+        ThemeUtil.RemoveColorChangedHandler(OnThemeColorChanged);
         Unloaded -= OnUnloaded;
     }
 
-    private void OnThemeColorChanged() {
+    private void OnThemeColorChanged(object? sender, EventArgs e) {
         initColor();
         initAnimation();
     }
@@ -93,6 +93,7 @@ public class Slider : System.Windows.Controls.Slider{
                 Duration = TimeSpan.FromMilliseconds(100),
                 EasingFunction = new CubicEase(),
             };
+            ValueAnimation.Completed += ValueAnimation_OnCompleted;
         }
     }
     
@@ -156,10 +157,13 @@ public class Slider : System.Windows.Controls.Slider{
         }
         isAnimating = true;
         ValueAnimation.To = value;
-        ValueAnimation.Completed += (sender, args) => {
-            Value = value;
-            isAnimating = false;
-        };
         BeginAnimation(ValueProperty, ValueAnimation);
+    }
+
+    private void ValueAnimation_OnCompleted(object? sender, EventArgs e) {
+        if (ValueAnimation.To is double value) {
+            Value = value;
+        }
+        isAnimating = false;
     }
 }

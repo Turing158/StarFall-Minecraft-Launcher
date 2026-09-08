@@ -6,9 +6,7 @@
       xmlns:local="clr-namespace:StarFallMC.ResourcePages"
       xmlns:comp="clr-namespace:StarFallMC.Component"
       mc:Ignorable="d"
-      Title="TexturePacksPage" MinHeight="380" MinWidth="640"
-      Loaded="TexturePacksPage_OnLoaded"
-      Unloaded="TexturePacksPage_OnUnloaded">
+      Title="TexturePacksPage" MinHeight="380" MinWidth="640">
     <Page.Resources>
         <ResourceDictionary>
             <Style x:Key="ListViewStyle" TargetType="ListViewItem" BasedOn="{StaticResource {x:Type ListViewItem}}">
@@ -46,7 +44,9 @@
                                             Margin="5 0"
                                             Background="{DynamicResource PrimaryBrush}">
                                         <Image Width="30" Height="30"
-                                               Source="{Binding Icon}">
+                                               Source="{Binding Icon}"
+                                               Loaded="IconImage_OnLoaded"
+                                               DataContextChanged="IconImage_OnDataContextChanged">
                                         </Image>
                                     </Border>
                                     <TextBlock Text="{Binding Name}"
@@ -143,11 +143,12 @@
     </Page.Resources>
     <Grid>
         <Border Style="{StaticResource ResourcePageBgBorder}"></Border>
-        <ScrollViewer Name="MainScrollViewer" 
-                      Margin="0 0 2 0"
-                      Style="{StaticResource ResourcePageScrollViewer}">
-            <StackPanel Margin="0 0 20 0">
-                <Border Height="100" Style="{StaticResource RectByMargin}">
+        <Grid Name="MainScrollViewer" Margin="0 0 22 0" Opacity="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Height="100" Style="{StaticResource RectByMargin}">
                     <Grid>
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Text="搜索[暂未开发]"></TextBlock>
                         <comp:TextButton Content="&#xe60c;" 
@@ -158,8 +159,8 @@
                                          VerticalAlignment="Top"
                                          ToolTip="刷新"></comp:TextButton>
                     </Grid>
-                </Border>
-                <Border Style="{StaticResource NoAnimRect}" Margin="20 5">
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource NoAnimRect}" Margin="20 5">
                     <Grid>
                         <Grid Name="NotExist" Height="50" Margin="0 20" Visibility="Collapsed">
                             <TextBlock HorizontalAlignment="Center" 
@@ -168,10 +169,15 @@
                                        Foreground="{DynamicResource SecondaryBrush}"></TextBlock>
                         </Grid>
                         <Grid>
-                            <ListView Name="ListView" 
+                            <ListView Name="ListView"
                                       ItemContainerStyle="{StaticResource ListViewStyle}"
-                                      ItemsSource="{Binding TexturePacks}" 
-                                      Margin="0 10">
+                                      ItemsSource="{Binding TexturePacks}"
+                                      Margin="0 10"
+                                      ScrollViewer.CanContentScroll="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      VirtualizingPanel.IsVirtualizing="True"
+                                      VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                      VirtualizingPanel.VirtualizationMode="Recycling">
                                 <ListView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <VirtualizingStackPanel VirtualizationMode="Recycling"/>
@@ -180,10 +186,9 @@
                             </ListView>
                         </Grid>
                     </Grid>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+            </Border>
+        </Grid>
         <comp:Loading x:Name="LoadingBorder" Width="150" Height="100" PercentText="{Binding PercentText}"></comp:Loading>
-        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=MainScrollViewer}"></comp:TopButton>
+        <comp:TopButton Margin="20 40" BindingScrollViewer="{Binding ElementName=ListView}"></comp:TopButton>
     </Grid>
 </Page>
